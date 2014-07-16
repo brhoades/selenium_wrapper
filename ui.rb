@@ -1,7 +1,7 @@
 require 'tk'
 
 ###################################################################################################
-# Render UI
+# UI Logic
 ###################################################################################################
 
 # Creates our root window and frame with appropriate dimensions
@@ -39,14 +39,24 @@ end
 # Input Browse button logic. Basically update the entry field and then, if the output filename is empty,
 # update it with the file name as a folder
 bBrowseIn_click = Proc.new do
-  eFilename.value = $filename = Tk.getOpenFile
+  if eFilename.value != ""
+    $filename = eFilename.value
+  else
+    $filename = './'
+  end
+  
+  out = Tk.getOpenFile 'filetypes' => [ [ 'Python Scripts', '*.py' ] ], 'initialdir' => File.dirname( $filename )
 
-  if $filename != nil and $filename != ""
-    if $filename !~ /\.py$/
-      Tk::messageBox :message => "Input file must be a python file (end in .py)."
-    elsif eOutputfn.value == ""
-      fn = /.*([\/\\])([^\\\/\n]+)\.py$/.match( $filename )
-      $outputfn = eOutputfn.value = File.dirname( $filename ) + fn[1] + fn[2] + fn[1]
+  if out != ""
+    eFilename.value = $filename = out
+
+    if $filename != nil and $filename != ""
+      if $filename !~ /\.py$/
+        Tk::messageBox :message => "Input file must be a python file (end in .py)."
+      elsif eOutputfn.value == ""
+        fn = /.*([\/\\])([^\\\/\n]+)\.py$/.match( $filename )
+        $outputfn = eOutputfn.value = File.dirname( $filename ) + fn[1] + fn[2] + fn[1]
+      end
     end
   end
 end
@@ -59,7 +69,17 @@ bBrowseIn.comman = bBrowseIn_click
 
 # Output browse button logic, fairly straight forward except chooseDirectory instead of chooseFile
 bBrowseOut_click = Proc.new do
-  eOutputfn.value = $outputfn = Tk.chooseDirectory
+  if eOutputfn.value != ""
+    $outputfn = eOutputfn.value
+  else
+    $outputfn = './'
+  end
+  
+  out = Tk.chooseDirectory 'initialdir' => File.dirname( $outputfn )
+
+  if out != ""
+    eOutputfn.value = $outputfn = out
+  end
 end
 
 # Output browse button, linked into logic
@@ -69,8 +89,41 @@ end
 bBrowseOut.comman = bBrowseOut_click
 
 # Convert button logic
-bSubmit_click = Proc.new do
-   
+bSubmit_click = Proc.new do  
+  # Pull one final time from entry fields
+  $outputfn = eOutputfn.value
+  $filename = eFilename.value
+
+  ### Check input
+  # Check that input file exists and is from Selenium
+  if not File.file? $filename and isSeleniumFile? $filename
+    action = Tk::messageBox \
+      :type => 'yesno', :icon => 'question', :title => 'File unrecognized', \
+      :message => "Input file does not appear to be exported from them Selenium RC " \
+                  + "in the proper format. It should be a Python 2.7 unittest-wrapped for Webdriver. " \
+                  + "Continuing may have unknown effects, are you sure you wish to continue?" 
+    if action == "no"
+      return
+    end
+  end
+
+  # Check if output folder exists
+  if File.directory? $outputfn and Dir.exists? $outputfn and not File.file? $outputfn
+    action = Tk::messageBox \
+      :type => 'yesno', :icon => 'question', :title => 'Folder Exists', \
+      :message => "Output folder already exists. Files within the folder that conflict will be " \
+                  + "overwritten. Continue with conversion?"
+    if action == "no"
+      return
+    end
+  end
+
+  if File.file? $outputfn
+    Tk::messageBox :message => "Output folder is a file, it should be a folder or nonexistant."
+    return
+  end
+
+  res = convert $filename, $outputfn   
 end
 
 # Convert button, linked into logic
@@ -79,8 +132,10 @@ bSubmit = TkButton.new content do
 end
 bSubmit.comman = bSubmit_click
 
+###################################################################################################
+# UI Positioning
+###################################################################################################
 
-# Position everything appropriately. 
 content.grid :column => 0, :row => 0
 frame.grid :column => 0, :row => 0, :columnspan => 8, :rowspan => 4 
 
