@@ -9,26 +9,29 @@ READY = 3
 def jQCheck( driver ):
     cwd = os.path.dirname(os.path.abspath(__file__))
     jq = cwd + "\includes\jquery-1.11.1.min.js"
-    timeout = 5
+    timeout = 1 
     i = 0
 
     if bool(driver.execute_script("return typeof jQuery == 'undefined'")):
+        start = time.clock( )
         driver.execute_script( "var jq = document.createElement('script');jq.src = '" + jq + "';document.getElementsByTagName('head')[0].appendChild(jq);" )
         print( "JQuery Load Failed: " ),
-        while bool(driver.execute_script("return typeof jQuery == 'undefined'")) or i > 20:
+        while bool(driver.execute_script("return typeof jQuery == 'undefined'")) and time.clock( ) - start < timeout:
             if i % 10:
                 driver.execute_script( "var jq = document.createElement('script');jq.src = '" + jq + "';document.getElementsByTagName('head')[0].appendChild(jq);" )
             i += 1
             time.sleep( 0.1 )
+        if bool(driver.execute_script("return typeof jQuery == 'undefined'")):
+            print( "True" )
+            return False
         else:
+            print( "False" )
             return True
-
-        return False
 
 def exists( driver, element, type="id" ):
     res = ""
 
-    if type == "xpath" or type == "link_text":
+    if type == "xpath" or type == "link_text" or type == "css_selector":
         if not jQCheck( driver ):
             res = True
 
@@ -41,6 +44,8 @@ def exists( driver, element, type="id" ):
             res = driver.execute_script( "return( !!document.evaluate( '" + element + "', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null ).singleNodeValue )" )
         elif type == "link_text":
             res = driver.execute_script( "return( !!jQuery( \"a:contains('" + element + "')\" ).length > 0 )" )
+        elif type == "css_selector":
+            res = driver.execute_script( "return( jQuery( \"" + element + "\" ).length > 0 )" )
 
     if res == True:
         e = ""
@@ -52,6 +57,8 @@ def exists( driver, element, type="id" ):
             e = driver.find_element_by_xpath( element )
         elif type == "link_text":
             e = driver.find_element_by_link_text( element )
+        elif type == "css_selector":
+            e = driver.find_element_by_css_selector( element )
 
         if e.is_displayed( ):
             return True
@@ -62,6 +69,7 @@ def sleepwait( driver, element, type, timeout=15 ):
     start = time.clock( )
     while not exists( driver, element, type ) and int( time.clock( ) - start ) < timeout:
         time.sleep( .1 )
+        print( "ELEMENT ("+type+"): " + element )
     else:
         return element 
 
