@@ -44,6 +44,11 @@ def convert( filename, outputfn, options={} )
         next
       end
 
+      # Catch for assetions, currently just removing
+      if l =~ /^[\s]+self\.assert/
+        next
+      end
+
       func << l
     end
   end
@@ -80,7 +85,7 @@ def convert( filename, outputfn, options={} )
   # and the footer
   func << "\n" << "\n"
   func << "if __name__ == '__main__':\n" 
-  func << " "*4 + "main( )\n"
+  func << " "*4 + "main( test_func )\n"
 
   ################
   # Output to file
