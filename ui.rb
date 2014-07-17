@@ -133,6 +133,7 @@ bSubmit_click = Proc.new do
 
   $th = Thread.new do 
     $res = convert $filename, $outputfn 
+    error "Complete!"
   end
 end
 

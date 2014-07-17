@@ -50,7 +50,10 @@ def convert( filename, outputfn, options={} )
 
   # Now apply regexes for my custom functions
   func.map! do |l|
-    l.sub /find_element_by_([A-Za-z_]+)\((".+")\)/, "find_element_by_#{$1}( sleepwait( driver, #{$2}, \"#{$1}\" ) )" 
+    #                                            The positive lookahead here is to make sure we don't get greedy with the .+ and capture .send_keys or .select_by_text
+    l.sub /find_element_by_([A-Za-z_]+)\((".+")\)(?=\.[A-Za-z_]{3,}|\s?\)\.[A-Za-z_]{3,})/ do
+      "find_element_by_#{$1}( sleepwait( driver, #{$2}, \"#{$1}\" ) )" 
+    end
   end
 
   # Change the definition to not use self, it should have "driver"
@@ -71,6 +74,7 @@ def convert( filename, outputfn, options={} )
   # Now prepare the header
   func.unshift "\n"
   func.unshift "import time\n"
+  func.unshift "from selenium.webdriver.support.ui import Select\n"
   func.unshift "from selenium_wrapper import *\n"
 
   # and the footer
@@ -143,6 +147,8 @@ def phasePrint( title, num, max )
   print "Phase ", num, " of ", max, ": ", title, "\n"
 end
 
+# Does a simple, dirty check to see if the file is of a typical Selenium webdriver format.
+# It just scans the imports...
 def isSeleniumFile?( filename )
   i = 0
   unittest = false
@@ -172,6 +178,7 @@ def isSeleniumFile?( filename )
   return unittest & selenium & webdriver
 end
 
+# Found online then modified to my liking. Just recursively unzips to a destination
 def unzip( fn, dest )
   Zip::ZipFile.open fn do |z|
     z.each do |f|
