@@ -145,6 +145,8 @@ def prepareDirectory( outputfn )
 
   FileUtils.cp cf + "selenium_wrapper.py", outputfn
 
+  FileUtils.cp_r cf + "includes", outputfn
+
   return File.new( outputfn + "run_test.py", "w+" )
 end
 

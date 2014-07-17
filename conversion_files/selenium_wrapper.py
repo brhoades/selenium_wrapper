@@ -7,27 +7,40 @@ from datetime import datetime
 READY = 3
 
 def jQCheck( driver ):
+    cwd = os.path.dirname(os.path.abspath(__file__))
+    jq = cwd + "\includes\jquery-1.11.1.min.js"
+    timeout = 5
+    i = 0
+
     if bool(driver.execute_script("return typeof jQuery == 'undefined'")):
-        driver.execute_script( "var jq = document.createElement('script');jq.src = '//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js';document.getElementsByTagName('head')[0].appendChild(jq);" )
+        driver.execute_script( "var jq = document.createElement('script');jq.src = '" + jq + "';document.getElementsByTagName('head')[0].appendChild(jq);" )
         print( "JQuery Load Failed: " ),
-        while bool(driver.execute_script("return typeof jQuery == 'undefined'")):
-            print( "." ),
+        while bool(driver.execute_script("return typeof jQuery == 'undefined'")) or i > 20:
+            if i % 10:
+                driver.execute_script( "var jq = document.createElement('script');jq.src = '" + jq + "';document.getElementsByTagName('head')[0].appendChild(jq);" )
+            i += 1
             time.sleep( 0.1 )
-    print( "" )
+        else:
+            return True
+
+        return False
 
 def exists( driver, element, type="id" ):
     res = ""
 
-    if type == "id": 
-        res = driver.execute_script( "return( !!document.getElementById('" + element + "') )" )
-    elif type == "name":
-        res = driver.execute_script( "return( document.getElementsByName('" + element + "').length > 0 )" )
-    elif type == "xpath":
-        jQCheck( driver )
-        res = driver.execute_script( "return( !!document.evaluate( '" + element + "', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null ).singleNodeValue )" )
-    elif type == "link_text":
-        jQCheck( driver )
-        res = driver.execute_script( "return( !!jQuery( \"a:contains('" + element + "')\" ).length > 0 )" )
+    if type == "xpath" or type == "link_text":
+        if not jQCheck( driver ):
+            res = True
+
+    if res == "":
+        if type == "id": 
+            res = driver.execute_script( "return( !!document.getElementById('" + element + "') )" )
+        elif type == "name":
+            res = driver.execute_script( "return( document.getElementsByName('" + element + "').length > 0 )" )
+        elif type == "xpath":
+            res = driver.execute_script( "return( !!document.evaluate( '" + element + "', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null ).singleNodeValue )" )
+        elif type == "link_text":
+            res = driver.execute_script( "return( !!jQuery( \"a:contains('" + element + "')\" ).length > 0 )" )
 
     if res == True:
         e = ""
@@ -70,6 +83,7 @@ def format( t ):
 
 def runFullTest( numtimes, q, func, d ):
     DesiredCapabilities.PHANTOMJS['phantomjs.page.settings.userAgent'] = 'Mozilla/5.0 (Windows NT 5.1; rv:31.0) Gecko/20100101 Firefox/31.0'
+    DesiredCapabilities.PHANTOMJS['phantomjs.page.settings.loadImages'] = False
     dcaps = { 'acceptSslCerts': True }
     error_path = os.path.dirname(os.path.abspath(__file__)) + "\\logs\\" + d[0] + "\\" + str(d[1]) + "\\"
     if not os.path.isdir( error_path ):
