@@ -14,18 +14,14 @@ def jQCheck( driver ):
 
     if bool(driver.execute_script("return typeof jQuery == 'undefined'")):
         start = time.clock( )
-        driver.execute_script( "var jq = document.createElement('script');jq.src = '" + jq + "';document.getElementsByTagName('head')[0].appendChild(jq);" )
-        print( "JQuery Load Failed: " ),
         while bool(driver.execute_script("return typeof jQuery == 'undefined'")) and time.clock( ) - start < timeout:
             if i % 10:
                 driver.execute_script( "var jq = document.createElement('script');jq.src = '" + jq + "';document.getElementsByTagName('head')[0].appendChild(jq);" )
             i += 1
             time.sleep( 0.1 )
         if bool(driver.execute_script("return typeof jQuery == 'undefined'")):
-            print( "True" )
             return False
         else:
-            print( "False" )
             return True
 
 def exists( driver, element, type="id" ):
@@ -140,7 +136,7 @@ def stats( good, bad, timetaken, children, times ):
                + format(60*60/avg) + (" "*3) + "Orders/day: " + format(60*60*24/avg) )
     else:
         print "No data to extrapolate or average from"
-        print( ( "="*40 ) + "\n" )
+    print( ( "="*40 ) + "\n" )
 
 def formatError( res ):
     a = re.compile(r"Message: [a-z]'([A-Za-z\s\:]+)\\n")
@@ -175,7 +171,7 @@ def main( func ):
     for x in range(children):
         q = Queue( )
 
-        childstats.append( [ datetime.now( ).strftime( "%Y-%m-%d_%H-%M-%S" ), x+1, 1 ] ) 
+        childstats.append( [ datetime.now( ).strftime( "%Y-%m-%d_%H-%M-%S" ), x+1, 1, 0, True ] )
 
         childMessage( x, "LOADING" )
         p = Process( target=runFullTest, args=( numtimes, q, func, childstats[-1] ) )
@@ -187,49 +183,49 @@ def main( func ):
     print( "\n" + ("="*40) )
   
     last = 0
-    try:
-        # Cycle and watch
-        while True:
-            time.sleep( 1 )
-            for q in queues:
-                x = queues.index( q )
-                while not q.empty( ):
-                    res = q.get( )
-                    if res[0] == False:
-                        res[2] = formatError( res[2] )
-                        childMessage( x, "ERROR - " + res[2] )
-                        results.append( res[0] )
-                    elif res[0] == True:
-                        times.append( res[1] )
-                        childMessage( x, "DONE (" + format( res[1] ) + "s)" )
-                        results.append( res[0] )
-                    elif res[0] == READY:
-                        childMessage( x, "STARTING" )
+    # Cycle and watch
+    while len( processes ) > 0:
+        time.sleep( 1 )
+        for q in queues:
+            x = queues.index( q )
+            while not q.empty( ):
+                res = q.get( )
+                if res[0] == False:
+                    res[2] = formatError( res[2] )
+                    childMessage( x, "ERROR - " + res[2] )
+                    results.append( res[0] )
+                elif res[0] == True:
+                    times.append( res[1] )
+                    childMessage( x, "DONE (" + format( res[1] ) + "s)" )
+                    results.append( res[0] )
+                    childstats[x][3] += 1
+                elif res[0] == READY:
+                    childMessage( x, "STARTING" )
 
-            for p in processes:
-                if not p.is_alive( ):
-                    i = processes.index( p )
-                    childMessage( i, "DEAD" )
-                    p.join( )
-
-                    childstats[i][2] += 1
-                    processes[i] = Process( target=runFullTest, args=( numtimes, queues[i], func, childstats[i] ) )
-                    processes[i].start( )
-                    childMessage( i, "LOADING" ) 
-
-            if len(results) >= step+last:
-                last = len(results)
-                good = 0
-                bad = 0
-                for r in results:
-                    if r == True:
-                        good += 1   
-                    else:
-                        bad += 1
-                stats( good, bad, times, processes, numtimes )
-    except:
         for p in processes:
-            p.terminate( )
-            p.join( )
-            childMessage( processes.index( p ), "KILLED" )
+            i = processes.index( p )
+            if not p.is_alive( ) and childstats[i][4]:
+                if childstats[i][3] >= numtimes: 
+                    childMessage( i, "FINISHED" )
+                    childstats[i][4] = False
+                    p.join( )
+                    next
+                else:
+                    childMessage( i, "DEAD" )
+                p.join( )
 
+                childstats[i][2] += 1
+                processes[i] = Process( target=runFullTest, args=( numtimes, queues[i], func, childstats[i] ) )
+                processes[i].start( )
+                childMessage( i, "LOADING" ) 
+
+        if len(results) >= step+last:
+            last = len(results)
+            good = 0
+            bad = 0
+            for r in results:
+                if r == True:
+                    good += 1   
+                else:
+                    bad += 1
+            stats( good, bad, times, processes, numtimes )
