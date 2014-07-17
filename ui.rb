@@ -5,7 +5,7 @@ require 'tk'
 ###################################################################################################
 
 # Creates our root window and frame with appropriate dimensions
-root = TkRoot.new 
+root = TkRoot.new
 root.title = "Selenium Script Converter"
 
 content = Tk::Tile::Frame.new root
@@ -93,6 +93,14 @@ bSubmit_click = Proc.new do
   # Pull one final time from entry fields
   $outputfn = eOutputfn.value
   $filename = eFilename.value
+  
+  # Check that we aren't running
+  if $th.is_a? Thread and $th.alive? 
+    error "Already running conversion routine, please wait. You will be prompted on completion."
+    return
+  elsif $th.is_a? Thread
+    $th.join
+  end
 
   ### Check input
   # Check that input file exists and is from Selenium
@@ -119,11 +127,13 @@ bSubmit_click = Proc.new do
   end
 
   if File.file? $outputfn
-    Tk::messageBox :message => "Output folder is a file, it should be a folder or nonexistant."
+    error "Output folder is a file, it should be a folder or nonexistant."
     return
   end
 
-  res = convert $filename, $outputfn   
+  $th = Thread.new do 
+    $res = convert $filename, $outputfn 
+  end
 end
 
 # Convert button, linked into logic
@@ -148,3 +158,44 @@ bSubmit.grid :column => 7, :row => 3, :sticky => 'we', :pady => 5, :padx => 5
 
 lOut.grid :column => 0, :row => 2, :sticky => 'w', :pady => 5, :padx => 10
 lIn.grid :column => 0, :row => 1, :sticky => 'w', :pady => 5, :padx => 10
+
+###################################################################################################
+# Miscellaneous UI-related Functions
+###################################################################################################
+
+# Throw up an error window
+def error( text, die=false )
+  Tk::messageBox :message => text
+
+  exit if die
+end
+
+##Unused
+# Intended to be a console window so you can monitor progress
+def prepareOutputWin( root )
+  window = TkToplevel.new root
+  window['title'] = "Conversion Details"
+  window['geometry'] = "400x500"
+
+  text = TkText.new window do
+    width 350
+    height 400
+    state 'disabled'
+    wrap 'none'
+    borderwidth 1
+  end
+
+  eCancel = TkButton.new window
+
+  eCancel_click = Proc.new do
+  end
+
+  eCancel = TkButton.new window do
+    text "Cancel"
+  end
+  eCancel.comman = eCancel_click
+
+  window.grid :row => 0, :column => 0, :rowspan => 6, :columnspan => 1
+  text.grid :row => 0, :column => 0, :rowspan => 5
+  eCancel.grid :row => 5, :column => 0
+end
