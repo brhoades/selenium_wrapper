@@ -4,7 +4,7 @@ DONE           = 1
 
 # data indicies
 FAILURES       = 0
-SUCESSES       = 1
+SUCCESSES      = 1
 TIMES          = 2
 
 # childQueue indicies

@@ -1,6 +1,6 @@
 from selenium.webdriver import PhantomJS
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-from sw.pool import ChildPool
+from sw.pool import *
 import re, sys, time, os
 
 def main( func ):
@@ -15,7 +15,7 @@ def main( func ):
      
     print( "\n" + ( "=" * 40 ) )
 
-    pool = ChildPool( numTimes, children, func )
+    pool = ChildPool( children, numTimes, func )
 
     mainLoop( pool )
 

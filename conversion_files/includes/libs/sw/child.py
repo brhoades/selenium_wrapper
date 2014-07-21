@@ -3,12 +3,15 @@ from datetime import datetime
 from selenium.webdriver import PhantomJS
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from const import * # Constants
-import os
+import os, time
 
 class Child:
-    def __init__( self, pool, num ):
-        # Our Pool
-        self.pool = pool
+    def __init__( self, cq, wq, num, runnum ):
+        # Our output queue (childqueue)
+        self.cq = cq
+
+        # Our input queue (workqueue)
+        self.wq = wq
 
         # Our child number
         self.num = num
@@ -20,13 +23,13 @@ class Child:
         self.log = os.path.dirname( os.path.abspath( __file__ ) ) + "\\logs\\" + self.timestamp + "\\" + str( num + 1 ) + "\\"
 
         # Run number, used to have different logs and error screenshots
-        self.run = str( self.pool.data[num][FAILURES] )
+        self.run = str( runnum )
         
         # Our driver instance
         self.driver = None
 
         # Our process        
-        self.proc = Process( target=self.think, args=() )
+        self.proc = Process( target=self.think, args=( ) )
         
         self.msg( "LOADING" )
 
@@ -41,6 +44,9 @@ class Child:
         
 
     def think( self ):
+        wq = self.wq
+        cq = self.cq
+
         DesiredCapabilities.PHANTOMJS['phantomjs.page.settings.userAgent'] = 'Mozilla/5.0 (Windows NT 5.1; rv:31.0) Gecko/20100101 Firefox/31.0'
         dcaps = { 'acceptSslCerts': True, 'loadImages': False }
 
@@ -51,8 +57,8 @@ class Child:
      
         self.msg( "STARTING" )
 
-        while not self.pool.workQueue.empty( ):
-            func = self.pool.workQueue.get( True, 5 )
+        while not wq.empty( ):
+            func = wq.get( True, 5 )
             res = []
             start = 0
             
@@ -61,11 +67,10 @@ class Child:
                 func( self.driver )
             except Exception as e:
                 self.logError( str( e ) )
-                self.pool.childQueue.put( [ self.num, FAILURE, ( time.clock( ) - start ), str( e ) ] )
+                cq.put( [ self.num, FAILED, ( time.clock( ) - start ), str( e ) ] )
             else:
-                self.pool.childQueue.put( [ self.num, SUCCESS, ( time.clock( ) - start ), "" ] )
+                cq.put( [ self.num, DONE, ( time.clock( ) - start ), "" ] )
 
-            q.put( res )
        # self.driver.quit( )
 
     def logError( self, e ):
@@ -73,3 +78,6 @@ class Child:
 
     def is_alive( self ):
         return self.proc.is_alive( )
+
+    def restart( self ):
+        return

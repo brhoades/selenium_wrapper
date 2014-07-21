@@ -1,3 +1,5 @@
+import re
+
 ####################################################################################################
 # format( t )
 # Formats a Float into a displayable form (rounds it and converts to string)

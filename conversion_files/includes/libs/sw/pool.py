@@ -2,6 +2,7 @@ from multiprocessing import Process, Queue
 from sw.child import Child
 import time
 from const import * # Constants
+from sw.formatting import * 
 
 
 class ChildPool:
@@ -50,7 +51,7 @@ class ChildPool:
                 if c == None:
                     break # This gets us our first empty i
         
-        self.children[i] = Child( self, i )
+        self.children[i] = Child( self.childQueue, self.workQueue, i, self.data[i][FAILURES] )
 
     def reportStatistics( self ):
         # Check if it's time yet
@@ -91,4 +92,3 @@ class ChildPool:
 
         # Statistics reporting
         self.reportStatistics( )
-

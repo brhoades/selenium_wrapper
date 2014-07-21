@@ -81,6 +81,7 @@ def convert( filename, outputfn, options={} )
   func.unshift "import time\n"
   func.unshift "from selenium.webdriver.support.ui import Select\n"
   func.unshift "from sw.wrapper import main\n"
+  func.unshift "from sw.utils import *\n"
   func.unshift "sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '\\\\includes\\\\libs\\\\')\n"
   func.unshift "import sys, os\n"
 
