@@ -80,7 +80,9 @@ def convert( filename, outputfn, options={} )
   func.unshift "\n"
   func.unshift "import time\n"
   func.unshift "from selenium.webdriver.support.ui import Select\n"
-  func.unshift "from selenium_wrapper import *\n"
+  func.unshift "from sw.wrapper import main\n"
+  func.unshift "sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '\\\\includes\\\\libs\\\\')\n"
+  func.unshift "import sys, os\n"
 
   # and the footer
   func << "\n" << "\n"
@@ -143,10 +145,8 @@ def prepareDirectory( outputfn )
   phasePrint "Initializing File Structure", i+=1, max
   FileUtils.cp cf + "run.bat", outputfn
 
-  FileUtils.cp cf + "selenium_wrapper.py", outputfn
-
   FileUtils.cp_r cf + "includes", outputfn
-
+  
   return File.new( outputfn + "run_test.py", "w+" )
 end
 
