@@ -1,9 +1,9 @@
 from multiprocessing import Process, Queue
-
-import datetime
+from datetime import datetime
 from selenium.webdriver import PhantomJS
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-from childpool import *
+from const import * # Constants
+import os
 
 class Child:
     def __init__( self, pool, num ):
@@ -26,13 +26,11 @@ class Child:
         self.driver = None
 
         # Our process        
-        self.proc = Process( target=self.think, args=( self ) )
+        self.proc = Process( target=self.think, args=() )
         
         self.msg( "LOADING" )
 
         self.proc.start( )
-
-        return self
     
     ####################################################################################################
     # msg( msg )
@@ -46,10 +44,10 @@ class Child:
         DesiredCapabilities.PHANTOMJS['phantomjs.page.settings.userAgent'] = 'Mozilla/5.0 (Windows NT 5.1; rv:31.0) Gecko/20100101 Firefox/31.0'
         dcaps = { 'acceptSslCerts': True, 'loadImages': False }
 
-        if not os.path.isdir( error_path ):
-            os.makedirs( error_path )
+        if not os.path.isdir( self.log ):
+            os.makedirs( self.log )
 
-        self.driver = PhantomJS( desired_capabilities=dcaps, service_args=['--ignore-ssl-errors=true'], service_log_path=( error_path + "ghostdriver_" + self.run + ".log" ) )
+        self.driver = PhantomJS( desired_capabilities=dcaps, service_args=['--ignore-ssl-errors=true'], service_log_path=( self.log + "ghostdriver_" + self.run + ".log" ) )
      
         self.msg( "STARTING" )
 
@@ -71,4 +69,7 @@ class Child:
        # self.driver.quit( )
 
     def logError( self, e ):
-        self.driver.save_screenshot( error_path + 'error_' + self.run + '.png' )
+        self.driver.save_screenshot( self.log + 'error_' + self.run + '.png' ) 
+
+    def is_alive( self ):
+        return self.proc.is_alive( )

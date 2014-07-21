@@ -1,36 +1,26 @@
 from multiprocessing import Process, Queue
-from Child import Child
-from time import clock
-
-# Child Queue Results
-FAILED         = 0
-DONE           = 1
-
-# data indicies
-FAILURES       = 0
-SUCESSES       = 1
-TIMES          = 2
-
-# childQueue indicies
-NUMBER         = 0
-RESULT         = 1 
-TIME           = 2
-ERROR          = 3
+from sw.child import Child
+import time
+from const import * # Constants
 
 
 class ChildPool:
     def __init__( self, numChildren, numJobs, func ):
         # Our children
-        self.children = [ None for x in numChildren ]
+        self.children = [ None for x in range(numChildren) ]
         
         # Statistics and data per child
-        self.data = [ [ 0, 0, [ ] ] for x in numChildren ]
+        self.data = [ [ 0, 0, [ ] ] for x in range(numChildren) ]
 
         # Our one way queue from our children
         self.childQueue = Queue( )
 
         # Our work for children
-        self.workQueue = Queue( func for x in numJobs )
+        self.workQueue = Queue( )
+
+        # Populate our work queue
+        for x in range(numJobs):
+            self.workQueue.put( func )
 
         # Number of times each child runs, stored on the child statistics list
         #   as a countdown later
@@ -48,7 +38,7 @@ class ChildPool:
         # Don't report statistics for another minute
         self.nextStat = time.clock( ) + int( self.timePerReport*1.1 )
 
-        print( "Preparing " + str( children ) + " children to make " + str( numJobs ) + " orders total." )
+        print( "Preparing " + str( numChildren ) + " children to make " + str( numJobs ) + " orders total." )
         for i in range( numChildren ):
             self.newChild( )
 
@@ -81,7 +71,7 @@ class ChildPool:
     def think( self ): 
         # Check that children are alive, restart
         for i in range(self.numChildren):
-            if not self.children[i].isAlive( ) and not self.workQueue.empty( ):
+            if not self.children[i].is_alive( ) and not self.workQueue.empty( ):
                 self.children[i].restart( )
         
         # Check our queues

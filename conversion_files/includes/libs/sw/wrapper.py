@@ -1,5 +1,6 @@
 from selenium.webdriver import PhantomJS
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from sw.pool import ChildPool
 import re, sys, time, os
 
 def main( func ):
