@@ -11,9 +11,9 @@ def format( t ):
 ####################################################################################################
 # formatError( res )
 # Formats an Error Message
-#   Previously formatted an error message provided by ChromeDriver via regex.
+#   Formats the GhostDriver json-encoded error message for easier printing.
 def formatError( res ):
-    a = re.compile( r"Message: [a-z]'({.+})'" )             # Currently in the format for chromeDriver
+    a = re.compile( r"Message: [a-z]'({.+})'" )
 
     res = re.sub( r"\\'", "'", res )                        # unescape single quotes or json freaks out
     res = re.sub( r"\\\\\"", "\\\"", res )                    # same but with double escaped quotes

@@ -108,7 +108,7 @@ class ChildPool:
                 self.children[i].msg( formatError( r[ERROR] ) ) 
 
         # Check that children are alive, restart
-        for i in range(self.numChildren): #FIXME: Restart
+        for i in range(self.numChildren):
             if not self.children[i].is_alive( ) and not self.workQueue.empty( ):
                 self.children[i].restart( )
             elif not self.children[i].is_alive( ) \

@@ -93,7 +93,6 @@ class Child:
     # logError( self, e )
     # Log Screenshot of Error
     #   Renders a screenshot of what it sees then writes it to our log directory as error_#.png
-    #FIXME: Eventually, log/parse the JSON-encoded error message
     def logError( self, e ):
         self.driver.save_screenshot( self.log + 'error_' + self.run + '.png' ) 
     ################################################################################################
