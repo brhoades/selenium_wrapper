@@ -6,6 +6,11 @@ from sw.formatting import *
 
 
 class ChildPool:
+    ################################################################################################
+    # __init__( self, numChildren, numJobs, func )
+    # Initializes our Pool
+    #   Takes in number of desired children, number of jobs to queue up, and the function to run 
+    #   numJobs times. After storing, it initializes numChildren children which then start themselves. 
     def __init__( self, numChildren, numJobs, func ):
         # Our children
         self.children = [ None for x in range(numChildren) ]
@@ -34,7 +39,7 @@ class ChildPool:
         self.func = func
 
         # Time between statistics reporting
-        self.timePerReport = 30 
+        self.timePerReport = 60 
 
         # Don't report statistics for another minute
         self.nextStat = time.clock( ) + int( self.timePerReport*1.1 )
@@ -42,8 +47,14 @@ class ChildPool:
         print( "Preparing " + str( numChildren ) + " children to make " + str( numJobs ) + " orders total." )
         for i in range( numChildren ):
             self.newChild( )
+    ################################################################################################
 
 
+    ################################################################################################
+    # newChild( self, i=None )
+    # Makes a New Child
+    #   Creates a new child which starts itself. If i is none, it grabs the next available array
+    #   index, assuming it was initialized for this many children.
     def newChild( self, i=None ):
         # Create our data's home
         if i == None:
@@ -52,7 +63,14 @@ class ChildPool:
                     break # This gets us our first empty i
         
         self.children[i] = Child( self.childQueue, self.workQueue, i, self.data[i][FAILURES] )
+    ################################################################################################
 
+    ################################################################################################
+    # reportStatistics( self )
+    # Reports Statistics
+    #   Translates statistics into the archaic form used by my old stats function in utils.py.
+    #   Map and reduce are used to get things quickly out of the self.data 2-d array. This function
+    #   is only called every self.timePerReport seconds as set in this class's initialization func.
     def reportStatistics( self ):
         # Check if it's time yet
         if time.clock( ) >= self.nextStat and len( self.data[0] ) > 0:
@@ -66,10 +84,13 @@ class ChildPool:
             timetaken = [ item for sublist in timetaken for item in sublist ] # Flatten
             
             stats( good, bad, timetaken, self.children, self.numJobs ) 
+    ################################################################################################
 
-    # Runs through a single think loop. Called as many times as our main loop pleases.
-    # Check children are alive/restart if there are more jobs
-    # Check queues, parse data
+    ################################################################################################
+    # think( self )
+    # Pool's Think Function
+    #   Runs through a single think loop; called as many times as our main loop pleases.
+    #   Check children are alive/restart if there are more jobs. Checks queues and parses any data.
     def think( self ): 
         # Check our queues
         while not self.childQueue.empty( ):
@@ -87,16 +108,22 @@ class ChildPool:
                 self.children[i].msg( formatError( r[ERROR] ) ) 
 
         # Check that children are alive, restart
-        for i in range(self.numChildren):
+        for i in range(self.numChildren): #FIXME: Restart
             if not self.children[i].is_alive( ) and not self.workQueue.empty( ):
                 self.children[i].restart( )
             elif not self.children[i].is_alive( ) \
-                 and not self.children[i].is_dead( ) and self.workQueue.empty( ):
+                 and not self.children[i].is_done( ) and self.workQueue.empty( ):
                 self.children[i].stop( "DONE" )
 
         # Statistics reporting
         self.reportStatistics( )
+    ################################################################################################
 
+    ################################################################################################
+    # done( self )
+    # Are We Done?
+    #   Returns a True/False if the pool is done processing jobs. Called continuously by our main 
+    #   loop. When False, the program terminates.
     def done( self ):
         if self.childQueue.empty( ) and self.workQueue.empty( ):
             for c in self.children:
@@ -105,9 +132,14 @@ class ChildPool:
         else:
             return False
         return True
+    ################################################################################################
 
 
+    ################################################################################################
+    # stop( self )
+    # Stop the Pool
+    #   Stops our pool, killing all children.
     def stop( self ):
         for c in self.children:
             c.stop( )
-
+    ################################################################################################
