@@ -104,10 +104,10 @@ bSubmit_click = Proc.new do
 
   ### Check input
   # Check that input file exists and is from Selenium
-  if not File.file? $filename and isSeleniumFile? $filename
+  if File.file? $filename and not isSeleniumFile? $filename
     action = Tk::messageBox \
       :type => 'yesno', :icon => 'question', :title => 'File unrecognized', \
-      :message => "Input file does not appear to be exported from them Selenium RC " \
+      :message => "Input file does not appear to be exported from the Selenium IDE " \
                   + "in the proper format. It should be a Python 2.7 unittest-wrapped for Webdriver. " \
                   + "Continuing may have unknown effects, are you sure you wish to continue?" 
     if action == "no"
