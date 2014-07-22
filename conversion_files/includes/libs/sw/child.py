@@ -25,7 +25,8 @@ class Child:
         self.timestamp = datetime.now( ).strftime( "%Y-%m-%d_%H-%M-%S" )
 
         # Log directory
-        self.log = os.path.dirname( os.path.abspath( __file__ ) ) + "\\logs\\" + self.timestamp + "\\" + str( num + 1 ) + "\\"
+        self.log = os.path.dirname( os.path.abspath( __file__ ) ) + "\\logs\\" + self.timestamp \
+            + "\\" + str( num + 1 ) + "\\"
 
         # Run number, used to have different logs and error screenshots
         self.run = str( runnum )
@@ -33,12 +34,7 @@ class Child:
         # Our driver instance
         self.driver = None
 
-        # Our process        
-        self.proc = Process( target=self.think, args=( ) )
-        
-        self.msg( "LOADING" )
-
-        self.proc.start( )
+        self.start( )
     ################################################################################################
 
     ################################################################################################
@@ -47,7 +43,6 @@ class Child:
     def msg( self, message ):
         print( "Child #" + str( self.num + 1 ) + ": " + message )
     ################################################################################################
-        
 
     ################################################################################################
     # think( self )
@@ -59,7 +54,8 @@ class Child:
         cq = self.cq
 
         # This changes our useragent to something that shouldn't trigger websense
-        DesiredCapabilities.PHANTOMJS['phantomjs.page.settings.userAgent'] = 'Mozilla/5.0 (Windows NT 5.1; rv:31.0) Gecko/20100101 Firefox/31.0'
+        DesiredCapabilities.PHANTOMJS['phantomjs.page.settings.userAgent'] = \
+            'Mozilla/5.0 (Windows NT 5.1; rv:31.0) Gecko/20100101 Firefox/31.0'
 
         # Although ignoring sslcerts works, not loading images does not.
         dcaps = { 'acceptSslCerts': True, 'loadImages': False }
@@ -68,7 +64,8 @@ class Child:
             os.makedirs( self.log )
 
         # Initialize our driver with our custom log directories and preferences (capabilities)
-        self.driver = PhantomJS( desired_capabilities=dcaps, service_args=['--ignore-ssl-errors=true'], service_log_path=( self.log + "ghostdriver_" + self.run + ".log" ) )
+        self.driver = PhantomJS( desired_capabilities=dcaps, service_args=['--ignore-ssl-errors=true'], \
+            service_log_path=( self.log + "ghostdriver_" + self.run + ".log" ) )
      
         self.msg( "STARTING" )
 
@@ -122,12 +119,25 @@ class Child:
     ################################################################################################
 
     ################################################################################################
+    # start( self )
+    # Start Child
+    #   Starts our child process off properly, used after a restart typically.
+    def start( self ):
+        # Our process        
+        self.proc = Process( target=self.think, args=( ) )
+        self.msg( "LOADING" )
+        self.proc.start( )
+    ################################################################################################
+
+    ################################################################################################
     # restart( self )
     # Restarts Child
     #   Restarts the child process and gets webdriver running again.
-    #FIXME: Do this
     def restart( self ):
-        self.msg( "RESTARTING" )
+        self.run = str( int( self.run ) + 1 )
+        self.stop( "RESTARTING" )
+        self.start( )
+
     ################################################################################################
 
     ################################################################################################
