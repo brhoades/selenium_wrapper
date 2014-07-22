@@ -89,6 +89,9 @@ class Child:
         self.msg( "RESTARTING" )
 
     def stop( self, msg="" ):
+        if self.proc == None:
+            return
+
         if msg != "":
             self.msg( "STOPPING (" + msg + ")" )
         else:

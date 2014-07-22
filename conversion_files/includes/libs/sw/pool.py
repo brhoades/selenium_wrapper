@@ -100,8 +100,11 @@ class ChildPool:
     def done( self ):
         if self.childQueue.empty( ) and self.workQueue.empty( ):
             for c in self.children:
-                if c.is_alive( ) or not c.is_dead( ):
+                if c.is_alive( ):
                     return False
+        else:
+            return False
+        return True
 
 
     def stop( self ):
