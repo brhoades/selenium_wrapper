@@ -1,7 +1,5 @@
-from selenium.webdriver import PhantomJS
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from sw.pool import *
-import re, sys, time, os
+import sys, time
 
 def main( func ):
     print( "\nLibraries loaded!\n\n" )
@@ -20,5 +18,8 @@ def main( func ):
     mainLoop( pool )
 
 def mainLoop( pool ):
-    while True:
+    while not pool.done( ):
         pool.think( )
+        time.sleep( 0.1 )
+    
+    pool.stop( )

@@ -71,13 +71,30 @@ class Child:
             else:
                 cq.put( [ self.num, DONE, ( time.clock( ) - start ), "" ] )
 
-       # self.driver.quit( )
+        self.driver.quit( )
 
     def logError( self, e ):
         self.driver.save_screenshot( self.log + 'error_' + self.run + '.png' ) 
 
     def is_alive( self ):
-        return self.proc.is_alive( )
+        if self.proc != None:
+            return self.proc.is_alive( )
+        else:  
+            return False
+
+    def is_dead( self ):
+        return self.proc == None
 
     def restart( self ):
-        return
+        self.msg( "RESTARTING" )
+
+    def stop( self, msg="" ):
+        if msg != "":
+            self.msg( "STOPPING (" + msg + ")" )
+        else:
+            self.msg( "STOPPING" )
+
+        self.proc.terminate( )
+        self.proc.join( )
+        self.proc = None
+

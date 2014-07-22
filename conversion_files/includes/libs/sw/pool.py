@@ -34,7 +34,7 @@ class ChildPool:
         self.func = func
 
         # Time between statistics reporting
-        self.timePerReport = 180
+        self.timePerReport = 30 
 
         # Don't report statistics for another minute
         self.nextStat = time.clock( ) + int( self.timePerReport*1.1 )
@@ -56,25 +56,21 @@ class ChildPool:
     def reportStatistics( self ):
         # Check if it's time yet
         if time.clock( ) >= self.nextStat and len( self.data[0] ) > 0:
-            self.lastStat = time.clock( ) + self.timePerReport
+            self.nextStat = time.clock( ) + self.timePerReport
             
             # Reduces our good/bad results into a single "this many succeeded, this many failed" number.
             # Maps our times into a single list.
             good = reduce( lambda x, y: x + y, map( lambda x: x[SUCCESSES], self.data ) )
             bad  = reduce( lambda x, y: x + y, map( lambda x: x[FAILURES], self.data ) )
             timetaken = map( lambda x: x[TIMES], self.data )
-    
+            timetaken = [ item for sublist in timetaken for item in sublist ] # Flatten
+            
             stats( good, bad, timetaken, self.children, self.numJobs ) 
 
     # Runs through a single think loop. Called as many times as our main loop pleases.
     # Check children are alive/restart if there are more jobs
     # Check queues, parse data
     def think( self ): 
-        # Check that children are alive, restart
-        for i in range(self.numChildren):
-            if not self.children[i].is_alive( ) and not self.workQueue.empty( ):
-                self.children[i].restart( )
-        
         # Check our queues
         while not self.childQueue.empty( ):
             r = self.childQueue.get( False )
@@ -90,5 +86,25 @@ class ChildPool:
                 self.workQueue.put( self.func )
                 self.children[i].msg( formatError( r[ERROR] ) ) 
 
+        # Check that children are alive, restart
+        for i in range(self.numChildren):
+            if not self.children[i].is_alive( ) and not self.workQueue.empty( ):
+                self.children[i].restart( )
+            elif not self.children[i].is_alive( ) \
+                 and not self.children[i].is_dead( ) and self.workQueue.empty( ):
+                self.children[i].stop( "DONE" )
+
         # Statistics reporting
         self.reportStatistics( )
+
+    def done( self ):
+        if self.childQueue.empty( ) and self.workQueue.empty( ):
+            for c in self.children:
+                if c.is_alive( ) or not c.is_dead( ):
+                    return False
+
+
+    def stop( self ):
+        for c in self.children:
+            c.stop( )
+
