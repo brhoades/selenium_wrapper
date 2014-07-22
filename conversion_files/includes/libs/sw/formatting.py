@@ -1,4 +1,4 @@
-import re
+import re, json
 
 ####################################################################################################
 # format( t )
@@ -13,16 +13,23 @@ def format( t ):
 # Formats an Error Message
 #   Previously formatted an error message provided by ChromeDriver via regex.
 def formatError( res ):
-    a = re.compile(r"Message: [a-z]'([A-Za-z\s\:]+)\\n")             # Currently in the format for chromeDriver
-                                                                     #FIXME: Should read JSON from GhostDriver
+    a = re.compile( r"Message: [a-z]'({.+})'" )             # Currently in the format for chromeDriver
+
+    res = re.sub( r"\\'", "'", res )                        # unescape single quotes or json freaks out
+    res = re.sub( r"\\\\\"", "\\\"", res )                    # same but with double escaped quotes
+
     if a.match( str( res ) ):
-        r = a.match( str( res ) )
-        return "ERROR: \"" + r.groups( )[0] + "\""
-    else:
-        if len( res ) > 40:
-            res = res[0:40]
-        return res
+        res = a.match( str( res ) )
+        res = res.groups( )[0]
+        
+        res = json.loads( res )
+        res = res['errorMessage']
+
+    if len( res ) > 80:
+        res = res[0:80]
+    return res
 ####################################################################################################
+
 
 ####################################################################################################
 # childMessage( num, msg )
@@ -30,6 +37,7 @@ def formatError( res ):
 def childMessage( num, msg ):
     print( "Child #" + str( num + 1 ) + ": " + msg )
 ####################################################################################################
+
 
 ####################################################################################################
 # stats( good, bad, timetaken, children, times )
