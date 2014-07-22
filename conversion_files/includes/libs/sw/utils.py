@@ -15,18 +15,21 @@ import os, time
 def jQCheck( driver ):
     cwd = os.path.dirname( os.path.abspath( __file__ ) )
     jq = cwd + "\includes\jquery-1.11.1.min.js"       # Our locally available jQuery script
-    jqCheck = "return typeof jQuery == 'undefined'"   # Some StackOverflow post recommended this bit of code
+    jqCheck = "return typeof jQuery != 'undefined'"   # Some StackOverflow post recommended this bit of code
     timeout = 1                                       # Number of seconds before we give up 
 
-    if bool( driver.execute_script( jqCheck ) ):      #FIXME: Add a check that makes sure we haven't held up
-                                                      #       on this page already
+    if not bool( driver.execute_script( jqCheck ) ):      #FIXME: Add a check that makes sure we haven't held up
+                                                          #       on this page already
         start = time.clock( )
-        while bool( driver.execute_script( jqCheck ) ) and time.clock( ) - start < timeout:
+        while not bool( driver.execute_script( jqCheck ) ) and time.clock( ) - start < timeout:
             time.sleep( 0.1 )
-        if bool( driver.execute_script( jqCheck ) ):
+        if not bool( driver.execute_script( jqCheck ) ):
             return False                              # False, jQuery isn't running
         else:
             return True                               # True, it is
+    else:
+        return True
+
 ####################################################################################################
 
 
