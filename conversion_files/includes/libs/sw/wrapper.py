@@ -3,9 +3,10 @@ import sys, time
 
 
 ####################################################################################################
-# main( func )
+# main( func, file )
 #   Just gets called from our selenium script and wraps around our mainloop / pool coordination.
-def main( func ):
+#   Takes __file__ from our main file in to make a log folder in the proper location.
+def main( func, file ):
     print( "\nLibraries loaded!\n\n" )
     numTimes = 1
     children = 3 
@@ -17,7 +18,7 @@ def main( func ):
      
     print( "\n" + ( "=" * 40 ) )
 
-    pool = ChildPool( children, numTimes, func )
+    pool = ChildPool( children, numTimes, func, file )
 
     mainLoop( pool )
 

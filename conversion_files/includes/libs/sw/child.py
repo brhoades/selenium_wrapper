@@ -1,17 +1,16 @@
 from multiprocessing import Process, Queue
-from datetime import datetime
 from selenium.webdriver import PhantomJS
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from const import * # Constants
-import os, time
+import time, os
 
 class Child:
     ################################################################################################
-    # __init__( self, cq, wq, num, runnum )
+    # __init__( self, cq, wq, num, log )
     # Initialize our Child
     #   Initializes our child and then starts it. It takes our pool's childqueue, our pool's workqueue,
-    #   our child's number to report back statuses, and our run number (for unique error reporting).
-    def __init__( self, cq, wq, num, runnum ):
+    #   our child's number to report back statuses, and our base log directory.
+    def __init__( self, cq, wq, num, log ):
         # Our output queue (childqueue)
         self.cq = cq
 
@@ -21,18 +20,18 @@ class Child:
         # Our child number
         self.num = num
 
-        # Our timestamp
-        self.timestamp = datetime.now( ).strftime( "%Y-%m-%d_%H-%M-%S" )
-
-        # Log directory
-        self.log = os.path.dirname( os.path.abspath( __file__ ) ) + "\\logs\\" + self.timestamp \
-            + "\\" + str( num + 1 ) + "\\"
-
-        # Run number, used to have different logs and error screenshots
-        self.run = str( runnum )
+        # Run number, used to have different logs and error screenshots after restarting
+        self.run = 0 
         
         # Our driver instance
         self.driver = None
+
+        # Our log folder, which is changed each time start is called (so see start)
+        self.log = ""
+
+        print( "Child log in: " + log )
+        # The base log folder, which never changes.
+        self.baselog = log
 
         self.start( )
     ################################################################################################
@@ -60,6 +59,7 @@ class Child:
         # Although ignoring sslcerts works, not loading images does not.
         dcaps = { 'acceptSslCerts': True, 'loadImages': False }
 
+        print( "Log: " + self.log + "\n" )
         if not os.path.isdir( self.log ):
             os.makedirs( self.log )
 
@@ -122,10 +122,17 @@ class Child:
     # Start Child
     #   Starts our child process off properly, used after a restart typically.
     def start( self ):
+        # Move our run number up since we are starting
+        self.run = str( int( self.run ) + 1 )
+
+        # Log directory, unique so that each
+        self.log = self.baselog + str( self.num + 1 ) + "-" + self.run + "\\"
+
         # Our process        
         self.proc = Process( target=self.think, args=( ) )
         self.msg( "LOADING" )
         self.proc.start( )
+
     ################################################################################################
 
     ################################################################################################
@@ -133,7 +140,6 @@ class Child:
     # Restarts Child
     #   Restarts the child process and gets webdriver running again.
     def restart( self ):
-        self.run = str( int( self.run ) + 1 )
         self.stop( "RESTARTING" )
         self.start( )
 

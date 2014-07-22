@@ -1,6 +1,7 @@
 from multiprocessing import Process, Queue
 from sw.child import Child
-import time
+import time, os
+from datetime import datetime
 from const import * # Constants
 from sw.formatting import * 
 
@@ -11,7 +12,8 @@ class ChildPool:
     # Initializes our Pool
     #   Takes in number of desired children, number of jobs to queue up, and the function to run 
     #   numJobs times. After storing, it initializes numChildren children which then start themselves. 
-    def __init__( self, numChildren, numJobs, func ):
+    #   Also grabs our main file location to make a log folder in an appropriate location.
+    def __init__( self, numChildren, numJobs, func, file ):
         # Our children
         self.children = [ None for x in range(numChildren) ]
         
@@ -44,7 +46,15 @@ class ChildPool:
         # Don't report statistics for another minute
         self.nextStat = time.clock( ) + int( self.timePerReport*1.1 )
 
-        print( "Preparing " + str( numChildren ) + " children to make " + str( numJobs ) + " orders total." )
+        # Our timestamp
+        self.timestamp = datetime.now( ).strftime( "%Y-%m-%d_%H-%M-%S" )
+
+        # General log directory, shared by all children
+        self.log = os.path.dirname( os.path.abspath( file ) ) + "\\logs\\" + self.timestamp + "\\"
+
+        print( "Pool Log: " + self.log )
+
+        print( "Preparing " + str( numChildren ) + " children to make " + str( numJobs ) + " orders." )
         for i in range( numChildren ):
             self.newChild( )
     ################################################################################################
@@ -62,7 +72,7 @@ class ChildPool:
                 if c == None:
                     break # This gets us our first empty i
         
-        self.children[i] = Child( self.childQueue, self.workQueue, i, self.data[i][FAILURES] )
+        self.children[i] = Child( self.childQueue, self.workQueue, i, self.log )
     ################################################################################################
 
     ################################################################################################
@@ -109,9 +119,9 @@ class ChildPool:
 
         # Check that children are alive, restart
         for i in range(self.numChildren):
-            if not self.children[i].is_alive( ) and not self.workQueue.empty( ):
-                self.children[i].restart( )
-            elif not self.children[i].is_alive( ) \
+            #if not self.children[i].is_alive( ) and not self.workQueue.empty( ):
+                #self.children[i].restart( )
+            if not self.children[i].is_alive( ) \
                  and not self.children[i].is_done( ) and self.workQueue.empty( ):
                 self.children[i].stop( "DONE" )
 

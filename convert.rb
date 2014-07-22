@@ -88,7 +88,7 @@ def convert( filename, outputfn, options={} )
   # and the footer
   func << "\n" << "\n"
   func << "if __name__ == '__main__':\n" 
-  func << " "*4 + "main( test_func )\n"
+  func << " "*4 + "main( test_func, __file__ )\n"
 
   ################
   # Output to file
