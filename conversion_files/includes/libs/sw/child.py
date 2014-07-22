@@ -29,7 +29,6 @@ class Child:
         # Our log folder, which is changed each time start is called (so see start)
         self.log = ""
 
-        print( "Child log in: " + log )
         # The base log folder, which never changes.
         self.baselog = log
 
@@ -59,7 +58,6 @@ class Child:
         # Although ignoring sslcerts works, not loading images does not.
         dcaps = { 'acceptSslCerts': True, 'loadImages': False }
 
-        print( "Log: " + self.log + "\n" )
         if not os.path.isdir( self.log ):
             os.makedirs( self.log )
 

@@ -52,8 +52,6 @@ class ChildPool:
         # General log directory, shared by all children
         self.log = os.path.dirname( os.path.abspath( file ) ) + "\\logs\\" + self.timestamp + "\\"
 
-        print( "Pool Log: " + self.log )
-
         print( "Preparing " + str( numChildren ) + " children to make " + str( numJobs ) + " orders." )
         for i in range( numChildren ):
             self.newChild( )
@@ -119,9 +117,9 @@ class ChildPool:
 
         # Check that children are alive, restart
         for i in range(self.numChildren):
-            #if not self.children[i].is_alive( ) and not self.workQueue.empty( ):
-                #self.children[i].restart( )
-            if not self.children[i].is_alive( ) \
+            if not self.children[i].is_alive( ) and not self.workQueue.empty( ):
+                self.children[i].restart( )
+            elif not self.children[i].is_alive( ) \
                  and not self.children[i].is_done( ) and self.workQueue.empty( ):
                 self.children[i].stop( "DONE" )
 
