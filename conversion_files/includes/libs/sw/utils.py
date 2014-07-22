@@ -59,9 +59,9 @@ def exists( driver, element, type ):
         elif type == "xpath":                       # Currently just throws an error
             res = driver.execute_script( "return( !!document.evaluate( '" + element + "', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null ).singleNodeValue )" )
         elif type == "link_text":
-            res = driver.execute_script( "return( !!jQuery( \"a:contains('" + element + "')\" ).length > 0 )" )
+            res = driver.execute_script( "return( !!jQuery( 'a:contains(\\'" + element + "\\')' ).length > 0 )" )
         elif type == "css_selector":
-            res = driver.execute_script( "return( jQuery( \"" + element + "\" ).length > 0 )" )
+            res = driver.execute_script( "return( jQuery( '" + element + "' ).length > 0 )" )
 
     if res == True:
         e = ""
@@ -118,3 +118,14 @@ def blurrywait( driver ):
         if not exists( driver, element ):
           break
 ####################################################################################################
+
+
+
+####################################################################################################
+# urlExtractRedirect( driver, variable, url )
+# URL Extract and Redirect
+#   Should extract a variable from driver.current_url, then plop its value on to url and redirect.
+def urlExtractRedirect( driver, variable, url ):
+    return
+####################################################################################################
+

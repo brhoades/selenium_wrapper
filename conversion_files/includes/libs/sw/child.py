@@ -92,7 +92,11 @@ class Child:
     # Log Screenshot of Error
     #   Renders a screenshot of what it sees then writes it to our log directory as error_#.png
     def logError( self, e ):
-        self.driver.save_screenshot( self.log + 'error_' + self.run + '.png' ) 
+        self.driver.save_screenshot( self.log + 'error.png' ) 
+        
+        f = open( self.log + 'error_log.txt', 'w' )
+        f.write( e )
+        f.close( )
     ################################################################################################
 
     ################################################################################################
