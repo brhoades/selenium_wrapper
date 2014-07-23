@@ -6,6 +6,19 @@ Utilities
 import os, time
 
 ####################################################################################################
+# loadScript( driver )
+# jQuery Check
+#   This function takes our webdriver object in and checks if the current loaded page has jQuery on it.
+def loadScript( driver, scriptfn ):
+    driver.execute_script( \
+        "var script = document.createElement( 'script' ); \
+        script.src = '" + scriptfn + "'; \
+        script.type = 'text/javascript'; \
+        document.getElementsByTagName('head')[0].appendChild( script );" );
+
+
+
+####################################################################################################
 # jQCheck( driver )
 # jQuery Check
 #   This function takes our webdriver object in and checks if the current loaded page has jQuery on it.
@@ -15,11 +28,14 @@ import os, time
 def jQCheck( driver ):
     cwd = os.path.dirname( os.path.abspath( __file__ ) )
     jq = cwd + "\includes\jquery-1.11.1.min.js"       # Our locally available jQuery script
+    jq2 = cwd + "\includes\jquery-xpath.js"           # Our xpath script
     jqCheck = "return typeof jQuery != 'undefined'"   # Some StackOverflow post recommended this bit of code
     timeout = 1                                       # Number of seconds before we give up 
 
     if not bool( driver.execute_script( jqCheck ) ):      #FIXME: Add a check that makes sure we haven't held up
-                                                          #       on this page already
+        loadScript( driver, jq )
+        loadScript( driver, jq2 )
+
         start = time.clock( )
         while not bool( driver.execute_script( jqCheck ) ) and time.clock( ) - start < timeout:
             time.sleep( 0.1 )
@@ -48,16 +64,17 @@ def exists( driver, element, type ):
     if type == "link_text" or type == "css_selector":
         if not jQCheck( driver ):
             res = True
-    elif type == "xpath":                            #FIXME: xpath doesn't work
-        res = True
+    if type == "xpath":
+        res = True #still broken
 
     if res == "":
         if type == "id": 
             res = driver.execute_script( "return( !!document.getElementById('" + element + "') )" )
         elif type == "name":
             res = driver.execute_script( "return( document.getElementsByName('" + element + "').length > 0 )" )
-        elif type == "xpath":                       # Currently just throws an error
-            res = driver.execute_script( "return( !!document.evaluate( '" + element + "', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null ).singleNodeValue )" )
+        elif type == "xpath":
+            print( element )
+            res = driver.execute_script( "return( jQuery( document ).xpathEvaluate( \"" + element + "\" ) ).length > 0" )
         elif type == "link_text":
             res = driver.execute_script( "return( !!jQuery( 'a:contains(\\'" + element + "\\')' ).length > 0 )" )
         elif type == "css_selector":

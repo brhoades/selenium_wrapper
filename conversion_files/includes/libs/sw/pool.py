@@ -2,7 +2,7 @@ from multiprocessing import Process, Queue
 from sw.child import Child
 import time, os
 from datetime import datetime
-from const import * # Constants
+from sw.const import * # Constants
 from sw.formatting import * 
 
 

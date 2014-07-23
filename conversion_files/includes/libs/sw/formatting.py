@@ -12,7 +12,7 @@ def format( t ):
 # formatError( res )
 # Formats an Error Message
 #   Formats the GhostDriver json-encoded error message for easier printing.
-def formatError( res ):
+def formatError( res, type="message" ):
     a = re.compile( r"Message: [a-z]'({.+})'" )
 
     res = re.sub( r"\\'", "'", res )                        # unescape single quotes or json freaks out
@@ -21,9 +21,12 @@ def formatError( res ):
     if a.match( str( res ) ):
         res = a.match( str( res ) )
         res = res.groups( )[0]
-        
         res = json.loads( res )
-        res = res['errorMessage']
+        
+        if type == "message":
+            res = res['errorMessage']
+        else:
+            return res
 
     if len( res ) > 80:
         res = res[0:80]

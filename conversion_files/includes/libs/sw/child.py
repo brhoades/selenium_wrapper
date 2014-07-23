@@ -1,8 +1,10 @@
 from multiprocessing import Process, Queue
 from selenium.webdriver import PhantomJS
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-from const import * # Constants
+from sw.const import * # Constants
+from sw.formatting import formatError
 import time, os
+from pprint import pprint
 
 class Child:
     ################################################################################################
@@ -95,7 +97,7 @@ class Child:
         self.driver.save_screenshot( self.log + 'error.png' ) 
         
         f = open( self.log + 'error_log.txt', 'w' )
-        f.write( e )
+        pprint( formatError( e, "log" ), stream=f ) 
         f.close( )
     ################################################################################################
 
