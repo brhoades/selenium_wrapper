@@ -17,7 +17,7 @@ def convert( filename, outputfn, options={} )
   # Now find our "main" test method (should == file name) in a loop
   fn = File.basename filename, ".py"
   file.each do |l|
-    if l =~ /^[\s]{4}def\s#{fn}\(self\):$/ 
+    if l =~ /^[\s]{4}def\s(test_)?#{fn}\(self\):$/ 
       start = true
       func << l
       next

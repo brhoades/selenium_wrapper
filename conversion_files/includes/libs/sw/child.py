@@ -4,7 +4,7 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from sw.const import * # Constants
 from sw.formatting import formatError
 import time, os
-from pprint import pprint
+from pprint import pformat
 
 class Child:
     ################################################################################################
@@ -77,13 +77,13 @@ class Child:
             
             # Try, if an element isn't found an exception is thrown
             try:
-                start = time.clock( )
+                start = time.time( )
                 func( self.driver )
             except Exception as e:
                 self.logError( str( e ) ) # Capture the exception and log it
-                cq.put( [ self.num, FAILED, ( time.clock( ) - start ), str( e ) ] )
+                cq.put( [ self.num, FAILED, ( time.time( ) - start ), str( e ) ] )
             else:
-                cq.put( [ self.num, DONE, ( time.clock( ) - start ), "" ] )
+                cq.put( [ self.num, DONE, ( time.time( ) - start ), "" ] )
 
         # Quit after we have finished our work queue, this kills the phantomjs process.
         self.driver.quit( )
@@ -91,13 +91,24 @@ class Child:
 
     ################################################################################################
     # logError( self, e )
-    # Log Screenshot of Error
+    # Log Screenshot of Error with Exception
     #   Renders a screenshot of what it sees then writes it to our log directory as error_#.png
+    #   Also takes the exception we received and exports it as text
     def logError( self, e ):
         self.driver.save_screenshot( self.log + 'error.png' ) 
+
+        o = pformat( formatError( e, "log" ) )
+        self.logMsg( o )
         
-        f = open( self.log + 'error_log.txt', 'w' )
-        pprint( formatError( e, "log" ), stream=f ) 
+    ################################################################################################
+
+    ################################################################################################
+    # logMsg( self, e )
+    # Logs a Message
+    #   Writes to our message log
+    def logMsg( self, e ):
+        f = open( self.log + 'error_log.txt', 'a+' )
+        f.write( e + "\n" ) 
         f.close( )
     ################################################################################################
 

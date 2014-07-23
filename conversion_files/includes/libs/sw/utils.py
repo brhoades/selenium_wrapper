@@ -95,7 +95,7 @@ def exists( driver, element, type ):
         elif type == "css_selector":
             e = driver.find_element_by_css_selector( element )
 
-        if e.is_displayed( ):
+        if e.is_displayed( ) and e.is_enabled( ):
             return True                             # This prevents things such as clear overlays from confusing our exist check
 
     return False
