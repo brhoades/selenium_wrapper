@@ -47,6 +47,7 @@ def exists( driver, element, type ):
 
     if type == "link_text" or type == "css_selector":
         if not jQCheck( driver ):
+            print( "jQuery not Loaded, ele: \"" + element + "\"" )
             res = True
     elif type == "xpath":                            #FIXME: xpath doesn't work
         res = True
@@ -62,6 +63,8 @@ def exists( driver, element, type ):
             res = driver.execute_script( "return( !!jQuery( 'a:contains(\\'" + element + "\\')' ).length > 0 )" )
         elif type == "css_selector":
             res = driver.execute_script( "return( jQuery( '" + element + "' ).length > 0 )" )
+
+    res = bool( res )
 
     if res == True:
         e = ""
@@ -90,8 +93,8 @@ def exists( driver, element, type ):
 #   The original brainchild of my wrapper, this function simply checks if an element exists( ) and 
 #   sleeps until timeout for it. It always returns the element even if it fails.
 def sleepwait( driver, element, type, timeout=15 ):
-    start = time.clock( )
-    while not exists( driver, element, type ) and time.clock( ) - start < timeout:
+    start = time.time( )
+    while not exists( driver, element, type ) and time.time( ) - start < timeout:
         time.sleep( .1 )
         print( "ELEMENT ("+type+"): " + element )
     else:
