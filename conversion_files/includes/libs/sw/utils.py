@@ -47,7 +47,6 @@ def exists( driver, element, type ):
 
     if type == "link_text" or type == "css_selector":
         if not jQCheck( driver ):
-            print( "jQuery not Loaded, ele: \"" + element + "\"" )
             res = True
     elif type == "xpath":                            #FIXME: xpath doesn't work
         res = True
@@ -96,7 +95,6 @@ def sleepwait( driver, element, type, timeout=15 ):
     start = time.time( )
     while not exists( driver, element, type ) and time.time( ) - start < timeout:
         time.sleep( .1 )
-        print( "ELEMENT ("+type+"): " + element )
     else:
         return element 
 

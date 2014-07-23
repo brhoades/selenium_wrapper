@@ -79,9 +79,9 @@ class ChildPool:
     #   Translates statistics into the archaic form used by my old stats function in utils.py.
     #   Map and reduce are used to get things quickly out of the self.data 2-d array. This function
     #   is only called every self.timePerReport seconds as set in this class's initialization func.
-    def reportStatistics( self ):
+    def reportStatistics( self, force=False ):
         # Check if it's time yet
-        if time.clock( ) >= self.nextStat and len( self.data[0] ) > 0:
+        if force or ( time.clock( ) >= self.nextStat and len( self.data[0] ) > 0 ):
             self.nextStat = time.clock( ) + self.timePerReport
             
             # Reduces our good/bad results into a single "this many succeeded, this many failed" number.

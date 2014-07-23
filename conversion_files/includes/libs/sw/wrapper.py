@@ -22,7 +22,7 @@ def main( func, file ):
 
     mainLoop( pool )
 
-    pool.reportStatistics( )
+    pool.reportStatistics( True )
 
     pool.stop( )
 ####################################################################################################
