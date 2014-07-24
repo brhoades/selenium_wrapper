@@ -66,7 +66,7 @@ def convert( filename, outputfn, options={} )
   func.first.sub! /[^\s\(\)]+\(self\)/, "test_func( driver )"
 
   # Right afterwards set the window resolution
-  func.insert( 1, ( " "*8 ) + "driver.set_window_size( 1920, 1080 )" )
+  func.insert( 1, ( " "*8 ) + "driver.set_window_size( 1920, 1080 )\n" )
 
 
   ##################
