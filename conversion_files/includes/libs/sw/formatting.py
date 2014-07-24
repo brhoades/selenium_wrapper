@@ -1,4 +1,4 @@
-import re, json
+import re, json, time
 
 ####################################################################################################
 # format( t )
@@ -46,27 +46,31 @@ def childMessage( num, msg ):
 
 
 ####################################################################################################
-# stats( good, bad, timetaken, children, times )
+# stats( good, bad, timetaken, children, times, starttime )
 # Prints Statistics
 #   Prints out success / fail counts, total / remaining jobs, failure rate, number of children,
 #   and then averages / extrapolations. It requires good / bad count (#), and then arrays of times taken,
-#   the child processes, and number of times (#). 
-def stats( good, bad, timetaken, children, times ):   
+#   the child processes, number of times (#), and our start time in seconds. 
+def stats( good, bad, timetaken, children, times, starttime ):   
     print( "\n" + ( "=" * 40 ) )
     print( "Successful: " + str( good ) + ( " " * 3 ) + "Failed: " + str( bad ) )
-    print( "Total: " + str( good + bad ) + ( " " * 3 ) + "Remaining: " + str( times * len( children ) - good ) )
+    print( "Total: " + str( good + bad ) + ( " " * 3 ) + "Remaining: " + str( times - good ) )
     print( "Children: " + str( len( children ) ) )
     avg = 0
-    for time in timetaken:
-        avg += time
+    for t in timetaken:
+        avg += t
+
     if len( timetaken ) > 0:
         print( "Failure Rate: " + format( bad / float( good + bad ) * 100 ) + "%" );
+
+        # This gives us our jobs per second
+        jps = good / ( time.time( ) - starttime )
 
         avg /= len( timetaken )
         print( "Average / Estimates:" )
         print( "  Time per job: " + format( avg ) + " seconds" )
-        print( "  Jobs/s: " + format( 1 / avg ) + ( " " * 3 ) + "Jobs/m: "  + format( 60 / avg ) + ( " " * 3 )+ "Jobs/hr: " 
-               + format( 60 * 60 / avg ) + ( " " * 3 ) + "Jobs/day: " + format( 60 * 60 * 24 / avg ) )
+        print( "  Jobs/s: " + format( jps ) + ( " " * 3 ) + "Jobs/m: "  + format( jps * 60 ) + ( " " * 3 )+ "Jobs/hr: " 
+               + format( jps * 60 * 60 ) + ( " " * 3 ) + "Jobs/day: " + format( jps * 60 * 60 * 24 ) )
     else:
         print "No data to extrapolate or average from"
     print( ( "=" * 40 ) + "\n" )

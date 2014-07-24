@@ -55,6 +55,9 @@ class ChildPool:
         print( "Preparing " + str( numChildren ) + " children to do " + str( numJobs ) + " jobs." )
         for i in range( numChildren ):
             self.newChild( )
+
+        # Mark our start time
+        self.started = time.time( )
     ################################################################################################
 
 
@@ -91,7 +94,7 @@ class ChildPool:
             timetaken = map( lambda x: x[TIMES], self.data )
             timetaken = [ item for sublist in timetaken for item in sublist ] # Flatten
             
-            stats( good, bad, timetaken, self.children, self.numJobs ) 
+            stats( good, bad, timetaken, self.children, self.numJobs, self.started ) 
     ################################################################################################
 
     ################################################################################################
