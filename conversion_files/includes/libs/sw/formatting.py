@@ -48,7 +48,7 @@ def childMessage( num, msg ):
 ####################################################################################################
 # stats( good, bad, timetaken, children, times )
 # Prints Statistics
-#   Prints out success / fail counts, total / remaining orders, failure rate, number of children,
+#   Prints out success / fail counts, total / remaining jobs, failure rate, number of children,
 #   and then averages / extrapolations. It requires good / bad count (#), and then arrays of times taken,
 #   the child processes, and number of times (#). 
 def stats( good, bad, timetaken, children, times ):   
@@ -64,9 +64,9 @@ def stats( good, bad, timetaken, children, times ):
 
         avg /= len( timetaken )
         print( "Average / Estimates:" )
-        print( "  Time per order: " + format( avg ) + " seconds" )
-        print( "  Orders/s: " + format( 1 / avg ) + ( " " * 3 ) + "Orders/m: "  + format( 60 / avg ) + ( " " * 3 )+ "Orders/hr: " 
-               + format( 60 * 60 / avg ) + ( " " * 3 ) + "Orders/day: " + format( 60 * 60 * 24 / avg ) )
+        print( "  Time per job: " + format( avg ) + " seconds" )
+        print( "  Jobs/s: " + format( 1 / avg ) + ( " " * 3 ) + "Jobs/m: "  + format( 60 / avg ) + ( " " * 3 )+ "Jobs/hr: " 
+               + format( 60 * 60 / avg ) + ( " " * 3 ) + "Jobs/day: " + format( 60 * 60 * 24 / avg ) )
     else:
         print "No data to extrapolate or average from"
     print( ( "=" * 40 ) + "\n" )

@@ -52,7 +52,7 @@ class ChildPool:
         # General log directory, shared by all children
         self.log = os.path.dirname( os.path.abspath( file ) ) + "\\logs\\" + self.timestamp + "\\"
 
-        print( "Preparing " + str( numChildren ) + " children to make " + str( numJobs ) + " orders." )
+        print( "Preparing " + str( numChildren ) + " children to do " + str( numJobs ) + " jobs." )
         for i in range( numChildren ):
             self.newChild( )
     ################################################################################################

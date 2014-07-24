@@ -7,7 +7,7 @@ set times=3
 echo You may press enter to use the default values in parenthesis.
 
 set /p child=Number of Children (%child%): 
-set /p times=Number of Order Attempts (%times%): 
+set /p times=Number of Jobs to Run (%times%): 
 python.exe "%~dp0\run_test.py" "%times%" "%child%"
 
 pause
