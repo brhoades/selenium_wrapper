@@ -12,7 +12,7 @@ def convert( filename, outputfn, options={} )
   start = false
 
   # Read in our input file  
-  File.new( filename, "r" ).each_line { |l| file << l }
+  File.new( filename, "r:UTF-8" ).each_line { |l| file << l }
 
   # Now find our "main" test method (should == file name) in a loop
   fn = File.basename filename, ".py"
