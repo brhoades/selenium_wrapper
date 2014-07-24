@@ -21,12 +21,15 @@ def formatError( res, type="message" ):
     if a.match( str( res ) ):
         res = a.match( str( res ) )
         res = res.groups( )[0]
-        res = json.loads( res )
+
+        try: 
+            t = json.loads( res )
+            res = t
+        except:
+            type = None
         
         if type == "message":
             res = res['errorMessage']
-        else:
-            return res
 
     if len( res ) > 80 and type != "log":
         res = res[0:80]
