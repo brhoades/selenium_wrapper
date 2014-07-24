@@ -65,6 +65,9 @@ def convert( filename, outputfn, options={} )
   # For simplicity's sake, the name of the function will be static too
   func.first.sub! /[^\s\(\)]+\(self\)/, "test_func( driver )"
 
+  # Right afterwards set the window resolution
+  func.insert( 1, ( " "*8 ) + "driver.set_window_size( 1920, 1080 )" )
+
 
   ##################
   # Prep for printing
@@ -113,7 +116,7 @@ def prepareDirectory( outputfn )
   phasePrint "Create Base Folder / Check Dependencies", i+=1, max
   # Make our base directory
   if not Dir.exists? outputfn
-    Dir.mkdir outputfn
+    FileUtils.mkdir_p outputfn
   end
 
   # See if our conversion_files folder exists, this is required

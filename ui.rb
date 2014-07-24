@@ -53,9 +53,16 @@ bBrowseIn_click = Proc.new do
     if $filename != nil and $filename != ""
       if $filename !~ /\.py$/
         Tk::messageBox :message => "Input file must be a python file (end in .py)."
-      elsif eOutputfn.value == ""
-        fn = /.*([\/\\])([^\\\/\n]+)\.py$/.match( $filename )
-        $outputfn = eOutputfn.value = File.dirname( $filename ) + fn[1] + fn[2] + fn[1]
+      else  # This just gets whatever slash type we're using, then spits out an appropriate folder with it
+        inp = /[\/\\]in(put)?/
+
+        # Get rid of any input or in folders
+        $filename.sub!( inp, "" ) if inp.match( $filename )
+
+        # Splits apart our directory and file name
+        fn = /.*([\/\\])([^\\\/\n]+)\.py$/.match $filename
+
+        $outputfn = eOutputfn.value = File.dirname( $filename ) + fn[1] + "out" + fn[1] + fn[2] + fn[1]
       end
     end
   end
