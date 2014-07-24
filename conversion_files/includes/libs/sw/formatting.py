@@ -28,7 +28,7 @@ def formatError( res, type="message" ):
         else:
             return res
 
-    if len( res ) > 80:
+    if len( res ) > 80 and type != "log":
         res = res[0:80]
     return res
 ####################################################################################################

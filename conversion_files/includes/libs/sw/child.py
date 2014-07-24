@@ -63,9 +63,18 @@ class Child:
         if not os.path.isdir( self.log ):
             os.makedirs( self.log )
 
-        # Initialize our driver with our custom log directories and preferences (capabilities)
-        self.driver = PhantomJS( desired_capabilities=dcaps, service_args=['--ignore-ssl-errors=true'], \
-            service_log_path=( self.log + "ghostdriver_" + self.run + ".log" ) )
+        try: 
+            # Initialize our driver with our custom log directories and preferences (capabilities)
+            self.driver = PhantomJS( desired_capabilities=dcaps, service_args=['--ignore-ssl-errors=true'], \
+                service_log_path=( self.log + "ghostdriver_" + self.run + ".log" ) )
+        except Exception as e:
+            self.logError( str( e ), True )
+            self.msg( "WEBDRIVER ERROR" )
+            try: 
+                self.driver.quit( )
+            except:
+                return
+            return
      
         self.msg( "STARTING" )
 
@@ -94,8 +103,9 @@ class Child:
     # Log Screenshot of Error with Exception
     #   Renders a screenshot of what it sees then writes it to our log directory as error_#.png
     #   Also takes the exception we received and exports it as text
-    def logError( self, e ):
-        self.driver.save_screenshot( self.log + 'error.png' ) 
+    def logError( self, e, noScreenshot=False ):
+        if not noScreenshot:
+            self.driver.save_screenshot( self.log + 'error.png' ) 
 
         o = pformat( formatError( e, "log" ) )
         self.logMsg( o )
