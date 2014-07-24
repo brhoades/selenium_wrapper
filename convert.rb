@@ -56,7 +56,7 @@ def convert( filename, outputfn, options={} )
   # Now apply regexes for my custom functions
   func.map! do |l|
     #                                            The positive lookahead here is to make sure we don't get greedy with the .+ and capture .send_keys or .select_by_text
-    l.sub /find_element_by_([A-Za-z_]+)\((".+")\)(?=\.[A-Za-z_]{3,}|\s?\)\.[A-Za-z_]{3,})/ do
+    l.sub /find_element_by_([A-Za-z_]+)\(([ur]?".+")\)(?=\.[A-Za-z_]{3,}|\s?\)\.[A-Za-z_]{3,})/ do
       "find_element_by_#{$1}( sleepwait( driver, #{$2}, \"#{$1}\" ) )" 
     end
   end
@@ -87,6 +87,9 @@ def convert( filename, outputfn, options={} )
   func.unshift "from sw.utils import *\n"
   func.unshift "sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '\\\\includes\\\\libs\\\\')\n"
   func.unshift "import sys, os\n"
+
+  # Declare UTF-8
+  func.unshift "# -*- coding: utf-8 -*-\n"
 
   # and the footer
   func << "\n" << "\n"
@@ -152,7 +155,7 @@ def prepareDirectory( outputfn )
 
   FileUtils.cp_r cf + "includes", outputfn
   
-  return File.new( outputfn + "run_test.py", "w+" )
+  return File.new( outputfn + "run_test.py", "w+:UTF-8" )
 end
 
 def phasePrint( title, num, max )
@@ -167,7 +170,7 @@ def isSeleniumFile?( filename )
   selenium = false
   webdriver = false
   
-  File.new( filename, "r" ).each_line do |l|
+  File.new( filename, "r:UTF-8" ).each_line do |l|
     i += 1
 
     if l =~ /^from selenium/
