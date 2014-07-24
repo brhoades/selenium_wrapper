@@ -17,7 +17,7 @@ def convert( filename, outputfn, options={} )
   # Now find our "main" test method (should == file name) in a loop
   fn = File.basename filename, ".py"
   file.each do |l|
-    if l =~ /^[\s]{4}def\s(test_)?#{fn}\(self\):$/ 
+    if l =~ /^[\s]{4}def\stest_[^\(]+\(self\):$/ 
       start = true
       func << l
       next
@@ -140,6 +140,7 @@ def prepareDirectory( outputfn )
 
   i = i.floor if i.is_a? Float
   phasePrint "Copying Python to Output Folder", i+=1, max
+  print "  This will take some time\n"
   #FIXME: see if they want python copied over or not
   # Copy Python over to the directory
   if not Dir.exists? outputfn + "python277/" 
