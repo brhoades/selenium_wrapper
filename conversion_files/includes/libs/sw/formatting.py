@@ -55,12 +55,13 @@ def stats( good, bad, timetaken, children, times ):
     print( "\n" + ( "=" * 40 ) )
     print( "Successful: " + str( good ) + ( " " * 3 ) + "Failed: " + str( bad ) )
     print( "Total: " + str( good + bad ) + ( " " * 3 ) + "Remaining: " + str( times * len( children ) - good ) )
-    print( "Failure Rate: " + format( bad / float( good + bad ) * 100 ) + "%" );
     print( "Children: " + str( len( children ) ) )
     avg = 0
     for time in timetaken:
         avg += time
     if len( timetaken ) > 0:
+        print( "Failure Rate: " + format( bad / float( good + bad ) * 100 ) + "%" );
+
         avg /= len( timetaken )
         print( "Average / Estimates:" )
         print( "  Time per order: " + format( avg ) + " seconds" )
