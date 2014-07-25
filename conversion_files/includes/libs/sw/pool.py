@@ -112,11 +112,16 @@ class ChildPool:
                 self.data[i][SUCCESSES] += 1
                 self.data[i][TIMES].append( r[TIMES] )
                 self.children[i].msg( "DONE (" + str( format( r[TIME] ) ) + "s)" )
+
             elif r[RESULT] == FAILED:
                 self.data[i][FAILURES] += 1
+
                 # When we get a failure we put the job back on the queue
                 self.workQueue.put( self.func )
                 self.children[i].msg( formatError( r[ERROR] ) ) 
+
+            elif r[RESULT] == READY:
+                self.children[i].msg( "STARTING" )
 
         # Check that children are alive, restart
         for i in range(self.numChildren):

@@ -82,8 +82,9 @@ class Child:
 
         # Insert ourself into webdriver
         self.driver.child = self
-     
-        self.msg( "STARTING" )
+
+        # Push a STARTING message to our pool, if we print it we risk scrambling text in stdout
+        cq.put( [ self.num, READY, time.time( ), "" ] )
 
         # While our work queue isn't empty...
         while not wq.empty( ):

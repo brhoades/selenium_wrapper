@@ -3,6 +3,7 @@
 #   Used to communicate via pool's childQueue in the first array slot.
 FAILED         = 0
 DONE           = 1
+READY          = 2 
 ####################################################################################################
 
 ####################################################################################################
@@ -28,9 +29,9 @@ ERROR          = 3
 # Error Log Levels
 #   Error log levels are used to mark a message as a certain category, then output it if that level
 #   of detail is requested.
-NOTICE   = 0
-WARNING  = 1
-ERROR    = 2
-CRITICAL = 3
-NONE     = 5
+NOTICE         = 0
+WARNING        = 1
+ERROR          = 2
+CRITICAL       = 3
+NONE           = 5
 ####################################################################################################
