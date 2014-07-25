@@ -75,6 +75,9 @@ class Child:
             except:
                 return
             return
+
+        # Insert ourself into webdriver
+        self.driver.child = self
      
         self.msg( "STARTING" )
 
