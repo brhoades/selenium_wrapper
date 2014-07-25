@@ -4,6 +4,7 @@ Utilities
     determined to be fit.
 """
 import os, time
+from const import *
 
 ####################################################################################################
 # loadScript( driver )
@@ -33,6 +34,7 @@ def jQCheck( driver ):
     timeout = 1                                       # Number of seconds before we give up 
 
     if not bool( driver.execute_script( jqCheck ) ):      #FIXME: Add a check that makes sure we haven't held up
+        driver.child.logMsg( "jQuery not loaded into browser, inserting manually." )
         loadScript( driver, jq )
         loadScript( driver, jq2 )
 
@@ -40,8 +42,10 @@ def jQCheck( driver ):
         while not bool( driver.execute_script( jqCheck ) ) and time.clock( ) - start < timeout:
             time.sleep( 0.1 )
         if not bool( driver.execute_script( jqCheck ) ):
+            driver.child.logMsg( "jQuery failed to load into browser after " + str( timeout ) + "s." )
             return False                              # False, jQuery isn't running
         else:
+            driver.child.logMsg( "jQuery loaded into browser successfully after " + format( str( time.clock - start ) ) + "s." )
             return True                               # True, it is
     else:
         return True
@@ -65,6 +69,7 @@ def exists( driver, element, type ):
         if not jQCheck( driver ):
             res = True
     if type == "xpath":
+        driver.child.logMsg( "Bypassing Javascript-based xpath check." )
         res = True #still broken
 
     if res == "":
@@ -110,25 +115,29 @@ def exists( driver, element, type ):
 #   sleeps until timeout for it. It always returns the element even if it fails.
 def sleepwait( driver, element, type, timeout=15 ):
     start = time.time( )
-    while not exists( driver, element, type ) and time.time( ) - start < timeout:
-        time.sleep( .1 )
+    
+    if not exists( driver, element, type ):
+        driver.child.logMsg( "Beginning wait for element \"%s\" of type \"%s\"." % ( element, type ) )
+        while not exists( driver, element, type ) and time.time( ) - start < timeout:
+            time.sleep( .1 )
+        else:
+            return element 
     else:
-        return element 
+        return element
 
     print( "WARNING: " + element + " will not be found!" )              # I've never seen this appear
+    driver.child.logMsg( "FAILURE: Element \"%s\" of type \"%s\" will not be found on page \"%s\"." % ( element, type, driver.current_url ) )
     return element
 ####################################################################################################
 
 
 
 ####################################################################################################
-# blurrywait( driver )
-# Waits for the Blurry Div to Disappear
-#   Used previously a great deal, but not anymore, it waits for the salesforce blurry semitransparent
-#   divider to disappear. This has fallen wayward since I discovered element.is_visible( )
-def blurrywait( driver ):
-    element = "salesforceSource_blurybackground"
-
+# waitToDisappear( driver, element )
+# Waits for a Element to Disappear
+#   Adapted from a previous, more specialized function to wait for any div with the id element 
+#   to disappear, and wait until then.
+def waitToDisappear( driver, element ):
     i = 0
     if exists( driver, element ):
       e = driver.find_element_by_id( element ) 
@@ -145,17 +154,36 @@ def blurrywait( driver ):
 #   Should extract a variable from driver.current_url, then plop its value on to url and redirect.
 def urlExtractRedirect( driver, variable, value ):
     url = driver.current_url
+
+    driver.child.logMsg( "urlExtractRedirect\nBEFORE: " + url )
     
-    r = re.compile( r"(?P<start>[\?\&])%s=(?P<value>[^\&]+)$", variable )
+    r = re.compile( r"(?P<start>[\?\&])%s=(?P<value>[^\&]+)$" % variable )
 
     if not url.match( r ):
-        print( "URL Doesn't appear to contain a variable in this manner: ?" + variable + "= or &" + variable + "=" )
+        driver.logMsg( "WARNING: URL Doesn't appear to contain a variable in this manner: ?" + variable + "= or &" + variable + "=" )
         return
     
     re.sub( r, "\g<start>" + variable + "=" + value, url )
 
+    driver.logMsg( "AFTER: " + url )
     driver.get( url )
     
     return
 ####################################################################################################
-
+# errorLevelToStr( level )
+# Translates an Error Level to a String
+#   This function takes a numeric error level and translates it into a string for displaying in a 
+#   log.
+def errorLevelToStr( level ):
+    if level == NOTICE:
+        return "NOTICE"
+    if level == WARNING:
+        return "WARNING"
+    if level == ERROR: 
+        return "ERROR"
+    if level == CRITICAL:
+        return "CRITICAL"
+    if level == NONE:
+        return ""
+    return
+####################################################################################################

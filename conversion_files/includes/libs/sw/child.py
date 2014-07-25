@@ -5,6 +5,7 @@ from sw.const import * # Constants
 from sw.formatting import formatError
 import time, os
 from pprint import pformat
+from datetime import datetime
 
 class Child:
     ################################################################################################
@@ -33,6 +34,9 @@ class Child:
 
         # The base log folder, which never changes.
         self.baselog = log
+
+        # Logging level
+        self.level = NOTICE 
 
         self.start( )
     ################################################################################################
@@ -119,10 +123,15 @@ class Child:
     # logMsg( self, e )
     # Logs a Message
     #   Writes to our message log
-    def logMsg( self, e ):
-        f = open( self.log + 'error_log.txt', 'a+' )
-        f.write( e + "\n" ) 
-        f.close( )
+    def logMsg( self, e, level=NOTICE ):
+        # Get our timestamp
+        timestamp = datetime.now( ).strftime( "%H:%M:%S" )
+
+        # Determine if we're logging this low
+        if level >= self.level:
+            f = open( self.log + 'error_log.txt', 'a+' )
+            f.write( "[%s]: %s\n" % ( timestamp, e ) ) 
+            f.close( )
     ################################################################################################
 
     ################################################################################################
