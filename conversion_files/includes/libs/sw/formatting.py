@@ -56,7 +56,12 @@ def stats( good, bad, timetaken, children, times, starttime ):
     print( "\n" + ( "=" * 40 ) )
     print( "Successful: " + str( good ) + ( " " * 3 ) + "Failed: " + str( bad ) )
     print( "Total: " + str( good + bad ) + ( " " * 3 ) + "Remaining: " + str( times - good ) )
-    print( "Children: " + str( len( children ) ) )
+
+    active = 0
+    for c in children:
+        if c.is_alive( ) and not c.is_done( ):
+            active += 1
+    print( "Children (peak): " + str( len( children ) ) + ( " " * 3 ) + "Children (active): " + str( active ) )
     avg = 0
     for t in timetaken:
         avg += t
