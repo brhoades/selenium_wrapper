@@ -17,8 +17,6 @@ def loadScript( driver, scriptfn ):
         script.type = 'text/javascript'; \
         document.getElementsByTagName('head')[0].appendChild( script );" )
 
-
-
 ####################################################################################################
 # jQCheck( driver )
 # jQuery Check
@@ -34,7 +32,7 @@ def jQCheck( driver ):
     timeout = 1                                       # Number of seconds before we give up 
 
     if not bool( driver.execute_script( jqCheck ) ):      #FIXME: Add a check that makes sure we haven't held up
-        driver.child.logMsg( "jQuery not loaded into browser, inserting manually." )
+        driver.child.logMsg( "jQuery not loaded into browser, inserting manually.", NOTICE )
         loadScript( driver, jq )
         loadScript( driver, jq2 )
 
@@ -42,10 +40,10 @@ def jQCheck( driver ):
         while not bool( driver.execute_script( jqCheck ) ) and time.clock( ) - start < timeout:
             time.sleep( 0.1 )
         if not bool( driver.execute_script( jqCheck ) ):
-            driver.child.logMsg( "jQuery failed to load into browser after " + str( timeout ) + "s." )
+            driver.child.logMsg( "jQuery failed to load into browser after " + str( timeout ) + "s.", WARNING  )
             return False                              # False, jQuery isn't running
         else:
-            driver.child.logMsg( "jQuery loaded into browser successfully after " + format( str( time.clock - start ) ) + "s." )
+            driver.child.logMsg( "jQuery loaded into browser successfully after " + format( str( time.clock - start ) ) + "s.", NOTICE )
             return True                               # True, it is
     else:
         return True
@@ -69,7 +67,7 @@ def exists( driver, element, type ):
         if not jQCheck( driver ):
             res = True
     if type == "xpath":
-        driver.child.logMsg( "Bypassing Javascript-based xpath check." )
+        driver.child.logMsg( "Bypassing Javascript-based xpath check.", NOTICE )
         res = True #still broken
 
     if res == "":
@@ -117,7 +115,8 @@ def sleepwait( driver, element, type, timeout=15 ):
     start = time.time( )
     
     if not exists( driver, element, type ):
-        driver.child.logMsg( "Beginning wait for element \"%s\" of type \"%s\"." % ( element, type ) )
+        driver.child.logMsg( "Beginning wait for element \"%s\" of type \"%s\"." % ( element, type ), NOTICE )
+
         while not exists( driver, element, type ) and time.time( ) - start < timeout:
             time.sleep( .1 )
         else:
@@ -125,8 +124,7 @@ def sleepwait( driver, element, type, timeout=15 ):
     else:
         return element
 
-    print( "WARNING: " + element + " will not be found!" )              # I've never seen this appear
-    driver.child.logMsg( "FAILURE: Element \"%s\" of type \"%s\" will not be found on page \"%s\"." % ( element, type, driver.current_url ) )
+    driver.child.logMsg( "Element \"%s\" of type \"%s\" will not be found on page \"%s\"." % ( element, type, driver.current_url ), ERROR )
     return element
 ####################################################################################################
 
@@ -168,22 +166,5 @@ def urlExtractRedirect( driver, variable, value ):
     driver.logMsg( "AFTER: " + url )
     driver.get( url )
     
-    return
-####################################################################################################
-# errorLevelToStr( level )
-# Translates an Error Level to a String
-#   This function takes a numeric error level and translates it into a string for displaying in a 
-#   log.
-def errorLevelToStr( level ):
-    if level == NOTICE:
-        return "NOTICE"
-    if level == WARNING:
-        return "WARNING"
-    if level == ERROR: 
-        return "ERROR"
-    if level == CRITICAL:
-        return "CRITICAL"
-    if level == NONE:
-        return ""
     return
 ####################################################################################################

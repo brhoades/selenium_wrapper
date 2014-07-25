@@ -2,7 +2,7 @@ from multiprocessing import Process, Queue
 from selenium.webdriver import PhantomJS
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from sw.const import * # Constants
-from sw.formatting import formatError
+from sw.formatting import formatError, errorLevelToStr
 import time, os
 from pprint import pformat
 from datetime import datetime
@@ -115,7 +115,7 @@ class Child:
             self.driver.save_screenshot( self.log + 'error.png' ) 
 
         o = pformat( formatError( e, "log" ) )
-        self.logMsg( o )
+        self.logMsg( o, CRITICAL )
         
     ################################################################################################
 
@@ -130,7 +130,7 @@ class Child:
         # Determine if we're logging this low
         if level >= self.level:
             f = open( self.log + 'error_log.txt', 'a+' )
-            f.write( "[%s]: %s\n" % ( timestamp, e ) ) 
+            f.write( "[%s] %s\t%s\n" % ( timestamp, errorLevelToStr( level ), e ) ) 
             f.close( )
     ################################################################################################
 

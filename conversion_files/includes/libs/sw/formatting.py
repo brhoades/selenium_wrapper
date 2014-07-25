@@ -1,4 +1,5 @@
 import re, json, time
+from const import *
 
 ####################################################################################################
 # format( t )
@@ -74,4 +75,25 @@ def stats( good, bad, timetaken, children, times, starttime ):
     else:
         print "No data to extrapolate or average from"
     print( ( "=" * 40 ) + "\n" )
+####################################################################################################
+
+
+
+####################################################################################################
+# errorLevelToStr( level )
+# Translates an Error Level to a String
+#   This function takes a numeric error level and translates it into a string for displaying in a 
+#   log.
+def errorLevelToStr( level ):
+    if level == NOTICE:
+        return "(NOTICE)  "
+    if level == WARNING:
+        return "(WARNING) "
+    if level == ERROR: 
+        return "(ERROR)   "
+    if level == CRITICAL:
+        return "(CRITICAL)"
+    if level == NONE:
+        return "          "
+    return
 ####################################################################################################
