@@ -14,7 +14,7 @@ def loadScript( driver, scriptfn ):
         "var script = document.createElement( 'script' ); \
         script.src = '" + scriptfn + "'; \
         script.type = 'text/javascript'; \
-        document.getElementsByTagName('head')[0].appendChild( script );" );
+        document.getElementsByTagName('head')[0].appendChild( script );" )
 
 
 
@@ -140,10 +140,22 @@ def blurrywait( driver ):
 
 
 ####################################################################################################
-# urlExtractRedirect( driver, variable, url )
+# urlExtractRedirect( driver, variable, value )
 # URL Extract and Redirect
 #   Should extract a variable from driver.current_url, then plop its value on to url and redirect.
-def urlExtractRedirect( driver, variable, url ):
+def urlExtractRedirect( driver, variable, value ):
+    url = driver.current_url
+    
+    r = re.compile( r"(?P<start>[\?\&])%s=(?P<value>[^\&]+)$", variable )
+
+    if not url.match( r ):
+        print( "URL Doesn't appear to contain a variable in this manner: ?" + variable + "= or &" + variable + "=" )
+        return
+    
+    re.sub( r, "\g<start>" + variable + "=" + value, url )
+
+    driver.get( url )
+    
     return
 ####################################################################################################
 
