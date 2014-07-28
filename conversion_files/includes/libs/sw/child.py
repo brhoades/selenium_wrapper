@@ -41,12 +41,16 @@ class Child:
         self.start( )
     ################################################################################################
 
+
+
     ################################################################################################
     # msg( self, message )
     # Formats a message for this child to be printed out.
     def msg( self, message ):
         print( "Child #" + str( self.num + 1 ) + ": " + message )
     ################################################################################################
+
+
 
     ################################################################################################
     # think( self )
@@ -86,6 +90,9 @@ class Child:
         # Push a STARTING message to our pool, if we print it we risk scrambling text in stdout
         cq.put( [ self.num, READY, time.time( ), "" ] )
 
+        # Write to our log another message indicating we are starting our runs
+        self.logMsg( "Child process started and loaded" )
+
         # While our work queue isn't empty...
         while not wq.empty( ):
             func = wq.get( True, 5 )
@@ -97,7 +104,7 @@ class Child:
                 start = time.time( )
                 func( self.driver )
             except Exception as e:
-                self.logError( str( e ) ) # Capture the exception and log it
+                self.logError( "\n" + str( e ) ) # Capture the exception and log it
                 cq.put( [ self.num, FAILED, ( time.time( ) - start ), str( e ) ] )
             else:
                 cq.put( [ self.num, DONE, ( time.time( ) - start ), "" ] )
@@ -105,6 +112,8 @@ class Child:
         # Quit after we have finished our work queue, this kills the phantomjs process.
         self.driver.quit( )
     ################################################################################################
+
+
 
     ################################################################################################
     # logError( self, e )
@@ -117,8 +126,9 @@ class Child:
 
         o = pformat( formatError( e, "log" ) )
         self.logMsg( o, CRITICAL )
-        
     ################################################################################################
+
+
 
     ################################################################################################
     # logMsg( self, e )
@@ -135,6 +145,8 @@ class Child:
             f.close( )
     ################################################################################################
 
+
+
     ################################################################################################
     # is_alive( self )
     # Is Child Alive
@@ -147,6 +159,8 @@ class Child:
             return False
     ################################################################################################
 
+
+
     ################################################################################################
     # is_done( self )
     # Is Child Done
@@ -154,6 +168,8 @@ class Child:
     def is_done( self ):
         return self.proc == None
     ################################################################################################
+
+
 
     ################################################################################################
     # start( self )
@@ -173,6 +189,8 @@ class Child:
 
     ################################################################################################
 
+
+
     ################################################################################################
     # restart( self )
     # Restarts Child
@@ -182,6 +200,8 @@ class Child:
         self.start( )
 
     ################################################################################################
+
+
 
     ################################################################################################
     # stop( self, msg="" )
@@ -193,8 +213,10 @@ class Child:
             return
 
         if msg != "":
-            self.msg( "STOPPING (" + msg + ")" )
+            self.logMsg( "Stopping child process: \"%s\"" % ( msg ) )
+            self.msg( "STOPPING (%s)"  % ( msg ) )
         else:
+            self.logMsg( "Stopping child process" )
             self.msg( "STOPPING" )
 
         self.proc.terminate( )

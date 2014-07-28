@@ -6,6 +6,7 @@ from sw.const import * # Constants
 from sw.formatting import * 
 
 
+
 class ChildPool:
     ################################################################################################
     # __init__( self, numChildren, numJobs, func )
@@ -62,6 +63,7 @@ class ChildPool:
     ################################################################################################
 
 
+
     ################################################################################################
     # newChild( self, i=None )
     # Makes a New Child
@@ -76,6 +78,8 @@ class ChildPool:
         
         self.children[i] = Child( self.childQueue, self.workQueue, i, self.log )
     ################################################################################################
+
+
 
     ################################################################################################
     # reportStatistics( self )
@@ -98,6 +102,8 @@ class ChildPool:
             stats( good, bad, timetaken, self.children, self.numJobs, self.started ) 
     ################################################################################################
 
+
+
     ################################################################################################
     # think( self )
     # Pool's Think Function
@@ -119,6 +125,9 @@ class ChildPool:
 
                 # When we get a failure we put the job back on the queue
                 self.workQueue.put( self.func )
+                print( "Error #: " + str( ERROR ) + "\n\n" )
+                print( "\n\n" + str( r[ERROR] ) + "\n" )
+                print( "\n\n" + str( r ) + "\n\n" )
                 self.children[i].msg( formatError( r[ERROR] ) ) 
 
             elif r[RESULT] == READY:
@@ -136,6 +145,8 @@ class ChildPool:
         self.reportStatistics( )
     ################################################################################################
 
+
+
     ################################################################################################
     # done( self )
     # Are We Done?
@@ -150,6 +161,7 @@ class ChildPool:
             return False
         return True
     ################################################################################################
+
 
 
     ################################################################################################

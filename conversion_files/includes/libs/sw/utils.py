@@ -1,10 +1,7 @@
-"""
-Utilities
-    This file mostly contains utilities which are automagically used within Selenium scripts as is 
-    determined to be fit.
-"""
 import os, time
 from const import *
+
+
 
 ####################################################################################################
 # loadScript( driver )
@@ -16,6 +13,9 @@ def loadScript( driver, scriptfn ):
         script.src = '" + scriptfn + "'; \
         script.type = 'text/javascript'; \
         document.getElementsByTagName('head')[0].appendChild( script );" )
+####################################################################################################
+
+
 
 ####################################################################################################
 # jQCheck( driver )
@@ -47,7 +47,6 @@ def jQCheck( driver ):
             return True                               # True, it is
     else:
         return True
-
 ####################################################################################################
 
 
