@@ -1,5 +1,6 @@
 from multiprocessing import Process, Queue
-from selenium.webdriver import PhantomJS
+from selenium import webdriver
+from selenium.webdriver.phantomjs.service import Service as PhantomJSService
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from sw.const import * # Constants
 from sw.formatting import formatError, errorLevelToStr
@@ -65,18 +66,21 @@ class Child:
         DesiredCapabilities.PHANTOMJS['phantomjs.page.settings.userAgent'] = \
             'Mozilla/5.0 (Windows NT 5.1; rv:31.0) Gecko/20100101 Firefox/31.0'
 
-        # Although ignoring sslcerts works, not loading images does not.
-        dcaps = { 'acceptSslCerts': True, 'loadImages': False }
+        # Monkeypatch our PhantomJS class in, which disables images
+        webdriver.phantomjs.webdriver.Service = PhantomJSNoImages
+
+        # Workaround for internal SSL woes
+        dcaps = { 'acceptSslCerts': True }
 
         if not os.path.isdir( self.log ):
             os.makedirs( self.log )
 
         try: 
             # Initialize our driver with our custom log directories and preferences (capabilities)
-            self.driver = PhantomJS( desired_capabilities=dcaps, service_args=['--ignore-ssl-errors=true'], \
-                service_log_path=( self.log + "ghostdriver_" + self.run + ".log" ) )
+            self.driver = webdriver.PhantomJS( desired_capabilities=dcaps, service_log_path=( self.log + "ghostdriver.log" ), \
+                                               service_args=[ '--load-images=no' ]  )
         except Exception as e:
-            self.logError( str( e ), True )
+            self.logError( "Webdriver failed to load: " + str( e ), True )
             self.msg( "WEBDRIVER ERROR" )
             try: 
                 self.driver.quit( )
@@ -104,7 +108,7 @@ class Child:
                 start = time.time( )
                 func( self.driver )
             except Exception as e:
-                self.logError( "\n" + str( e ) ) # Capture the exception and log it
+                self.logError( str( e ) ) # Capture the exception and log it
                 cq.put( [ self.num, FAILED, ( time.time( ) - start ), str( e ) ] )
             else:
                 cq.put( [ self.num, DONE, ( time.time( ) - start ), "" ] )
@@ -223,3 +227,17 @@ class Child:
         self.proc.join( )
         self.proc = None
     ################################################################################################
+
+
+
+####################################################################################################
+# PhantomJSNoImages
+# Monkey Patched Class to Disable Images
+#   This class sits atop our PhantomJSService class included in webdriver to implemention service_args
+#   inclusion, which we pass by default --load-images=no to disable images.
+class PhantomJSNoImages( PhantomJSService ):
+    def __init__( self, *args, **kwargs ):
+        service_args = kwargs.setdefault( 'service_args', [] )
+
+        super( PhantomJSNoImages, self ).__init__( *args, **kwargs )
+####################################################################################################
