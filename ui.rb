@@ -111,7 +111,7 @@ bSubmit_click = Proc.new do
 
   ### Check input
   # Check that input file exists and is from Selenium
-  if File.file? $filename and not isSeleniumFile? $filename
+  if not File.file? $filename or ( File.file? $filename and not isSeleniumFile? $filename )
     action = Tk::messageBox \
       :type => 'yesno', :icon => 'question', :title => 'File unrecognized', \
       :message => "Input file does not appear to be exported from the Selenium IDE " \
