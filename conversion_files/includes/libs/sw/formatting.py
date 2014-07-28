@@ -103,6 +103,8 @@ def errorLevelToStr( level ):
         return "(ERROR)   "
     if level == CRITICAL:
         return "(CRITICAL)"
+    if level == INFO:
+        return "(INFO)    "
     if level == NONE:
         return "          "
     return

@@ -25,25 +25,24 @@ def loadScript( driver, scriptfn ):
 #   after that it just returns False so that the exists script will stop holding things up. This
 #   usually only happens on pages where some Javascript has failed.
 def jQCheck( driver ):
-    cwd = os.path.dirname( os.path.abspath( __file__ ) )
-    jq = cwd + "\includes\jquery-1.11.1.min.js"       # Our locally available jQuery script
-    jq2 = cwd + "\includes\jquery-xpath.js"           # Our xpath script
-    jqCheck = "return typeof jQuery != 'undefined'"   # Some StackOverflow post recommended this bit of code
-    timeout = 1                                       # Number of seconds before we give up 
+    jq = "http://code.jquery.com/jquery-1.11.1.min.js"       # jQuery Script
+    jq2 = "..\..\includes\jquery-xpath.js"                   # Our xpath script
+    jqCheck = "return typeof jQuery != 'undefined'"          # Some StackOverflow post recommended this bit of code
+    timeout = 1                                              # Number of seconds before we give up 
 
-    if not bool( driver.execute_script( jqCheck ) ):      #FIXME: Add a check that makes sure we haven't held up
-        driver.child.logMsg( "jQuery not loaded into browser, inserting manually.", NOTICE )
+    if not bool( driver.execute_script( jqCheck ) ):         #FIXME: Add a check that makes sure we haven't held up
+        driver.child.logMsg( "jQuery not loaded into browser, inserting manually.", INFO )
         loadScript( driver, jq )
         loadScript( driver, jq2 )
 
-        start = time.clock( )
+        start = time.time( )
         while not bool( driver.execute_script( jqCheck ) ) and time.clock( ) - start < timeout:
             time.sleep( 0.1 )
         if not bool( driver.execute_script( jqCheck ) ):
             driver.child.logMsg( "jQuery failed to load into browser after " + str( timeout ) + "s.", WARNING  )
             return False                              # False, jQuery isn't running
         else:
-            driver.child.logMsg( "jQuery loaded into browser successfully after " + format( str( time.clock - start ) ) + "s.", NOTICE )
+            driver.child.logMsg( "jQuery loaded into browser successfully after " + format( str( time.time( ) - start ) ) + "s.", INFO )
             return True                               # True, it is
     else:
         return True
@@ -75,7 +74,6 @@ def exists( driver, element, type ):
         elif type == "name":
             res = driver.execute_script( "return( document.getElementsByName('" + element + "').length > 0 )" )
         elif type == "xpath":
-            print( element )
             res = driver.execute_script( "return( jQuery( document ).xpathEvaluate( \"" + element + "\" ) ).length > 0" )
         elif type == "link_text":
             res = driver.execute_script( "return( !!jQuery( 'a:contains(\\'" + element + "\\')' ).length > 0 )" )
