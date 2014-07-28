@@ -14,6 +14,10 @@ frame = Tk::Tile::Frame.new content do
   height 150
 end
 
+#########################################
+# Labels and their Entry Boxes
+########################################
+
 # Input File Label on the left
 lIn = Tk::Tile::Label.new content do
   text 'Input File'
@@ -35,6 +39,10 @@ $outputfn = TkVariable.new
 eOutputfn = Tk::Tile::Entry.new content do
   textvariable $outputfn
 end
+
+#########################################
+# Input/Output Buttons
+########################################
 
 # Input Browse button logic. Basically update the entry field and then, if the output filename is empty,
 # update it with the file name as a folder
@@ -95,7 +103,10 @@ bBrowseOut = TkButton.new content do
 end
 bBrowseOut.comman = bBrowseOut_click
 
-# Convert button logic
+#########################################
+# Convert Button
+########################################
+
 bSubmit_click = Proc.new do  
   # Pull one final time from entry fields
   $outputfn = eOutputfn.value
@@ -147,25 +158,47 @@ end
 # Convert button, linked into logic
 bSubmit = TkButton.new content do
   text "Convert"
+  default
 end
 bSubmit.comman = bSubmit_click
+
+#########################################
+# Checkboxes
+########################################
+
+$images = false 
+# Checkbox for disabling images
+tImages = Tk::Tile::CheckButton.new content do
+  text "Images"
+  variable TkVariable.new $images
+end
+
+$python = true
+# Checkbox for including python
+tPython = Tk::Tile::CheckButton.new content do
+  text "Python"
+  variable TkVariable.new $python
+end
 
 ###################################################################################################
 # UI Positioning
 ###################################################################################################
 
-content.grid :column => 0, :row => 0
-frame.grid :column => 0, :row => 0, :columnspan => 8, :rowspan => 4 
+content.grid          :column => 0, :row => 0
+frame.grid            :column => 0, :row => 0, :columnspan => 8, :rowspan => 4 
 
-eFilename.grid :column => 1, :row => 1, :columnspan => 6, :sticky => "ew", :pady => 10, :padx => 5
-eOutputfn.grid :column => 1, :row => 2, :columnspan => 6, :sticky => 'we', :pady => 10, :padx => 5
+eFilename.grid        :column => 1, :row => 1, :columnspan => 6, :sticky => "ew", :pady => 10, :padx => 5
+eOutputfn.grid        :column => 1, :row => 2, :columnspan => 6, :sticky => 'we', :pady => 10, :padx => 5
 
-bBrowseIn.grid :column => 7, :row => 1, :sticky => 'we', :pady => 5, :padx => 5
-bBrowseOut.grid :column => 7, :row => 2, :sticky => 'we', :pady => 5, :padx => 5
-bSubmit.grid :column => 7, :row => 3, :sticky => 'we', :pady => 5, :padx => 5
+bBrowseIn.grid        :column => 7, :row => 1, :sticky => 'we', :pady => 5, :padx => 5
+bBrowseOut.grid       :column => 7, :row => 2, :sticky => 'we', :pady => 5, :padx => 5
+bSubmit.grid          :column => 7, :row => 3, :sticky => 'we', :pady => 5, :padx => 5
 
-lOut.grid :column => 0, :row => 2, :sticky => 'w', :pady => 5, :padx => 10
-lIn.grid :column => 0, :row => 1, :sticky => 'w', :pady => 5, :padx => 10
+lOut.grid             :column => 0, :row => 2, :sticky => 'w', :pady => 5, :padx => 10
+lIn.grid              :column => 0, :row => 1, :sticky => 'w', :pady => 5, :padx => 10
+
+tImages.grid          :column => 0, :row => 3, :sticky => 'w', :pady => 5, :padx => 10
+tPython.grid          :column => 1, :row => 3, :sticky => 'w', :pady => 5
 
 ###################################################################################################
 # Miscellaneous UI-related Functions
