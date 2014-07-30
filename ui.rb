@@ -122,7 +122,12 @@ bSubmit_click = Proc.new do
 
   ### Check input
   # Check that input file exists and is from Selenium
-  if not File.file? $filename or ( File.file? $filename and not isSeleniumFile? $filename )
+  if not File.file? $filename
+    error "Input file does not appear to exist. Conversion cannot continue."  
+    return
+  end
+
+  if not isSeleniumFile? $filename
     action = Tk::messageBox \
       :type => 'yesno', :icon => 'question', :title => 'File unrecognized', \
       :message => "Input file does not appear to be exported from the Selenium IDE " \
@@ -134,7 +139,7 @@ bSubmit_click = Proc.new do
   end
 
   # Check if output folder exists
-  if File.directory? $outputfn and Dir.exists? $outputfn and not File.file? $outputfn
+  if File.directory? $outputfn and Dir.exists? $outputfn and not File.file? $outputfn and not $overwrite.value
     action = Tk::messageBox \
       :type => 'yesno', :icon => 'question', :title => 'Folder Exists', \
       :message => "Output folder already exists. Files within the folder that conflict will be " \
@@ -180,6 +185,14 @@ tPython = Tk::Tile::CheckButton.new content do
   variable TkVariable.new $python
 end
 
+overwrite = false
+$overwrite = TkVariable.new overwrite 
+# Checkbox for including python
+tOverwrite = Tk::Tile::CheckButton.new content do
+  text "Overwrite"
+  variable TkVariable.new $overwrite
+end
+
 ###################################################################################################
 # UI Positioning
 ###################################################################################################
@@ -197,8 +210,9 @@ bSubmit.grid          :column => 7, :row => 3, :sticky => 'we', :pady => 5, :pad
 lOut.grid             :column => 0, :row => 2, :sticky => 'w', :pady => 5, :padx => 10
 lIn.grid              :column => 0, :row => 1, :sticky => 'w', :pady => 5, :padx => 10
 
-tImages.grid          :column => 0, :row => 3, :sticky => 'w', :pady => 5, :padx => 10
-tPython.grid          :column => 1, :row => 3, :sticky => 'w', :pady => 5
+tImages.grid          :column => 0, :row => 3, :sticky => 'we', :pady => 5, :padx => 10
+tPython.grid          :column => 1, :row => 3, :sticky => 'e', :pady => 5
+tOverwrite.grid       :column => 2, :row => 3, :sticky => 'e', :pady => 5
 
 ###################################################################################################
 # Miscellaneous UI-related Functions
