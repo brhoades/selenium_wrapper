@@ -61,8 +61,6 @@ def jQCheck( driver ):
 def exists( driver, element, type ):
     res = ""
 
-    driver.child.logMsg( "Running '%s' check on '%s'" % ( type, element ) )
-
     if type == "link_text" or type == "css_selector":
         if not jQCheck( driver ):
             res = True
@@ -73,9 +71,7 @@ def exists( driver, element, type ):
         elif type == "name":
             res = driver.execute_script( "return( document.getElementsByName( '" + element + "' ).length > 0 )" )
         elif type == "xpath":
-            driver.child.logMsg( "Running xpath on '%s'" % element )
             res = driver.execute_script( "return( document.evaluate( \"%s\", document, null, XPathResult.ANY_TYPE, null ).iterateNext( ) != null )" % element )
-            driver.child.logMsg( "Ran xpath on '%s' with result %s" % ( element, str( res ) ) )
         elif type == "link_text":
             res = driver.execute_script( "return( !!jQuery( 'a:contains(\\'" + element + "\\')' ).length > 0 )" )
         elif type == "css_selector":
@@ -97,10 +93,8 @@ def exists( driver, element, type ):
             e = driver.find_element_by_css_selector( element )
 
         if e.is_displayed( ) and e.is_enabled( ):
-            driver.child.logMsg( "Check ran and passed!" )
             return True                             # This prevents things such as clear overlays from confusing our exist check
 
-    driver.child.logMsg( "Check ran and failed!" )
     return False
 ####################################################################################################
 
