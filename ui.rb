@@ -1,4 +1,5 @@
 require 'tk'
+require 'tkextlib/tile'  
 
 ###################################################################################################
 # UI Logic
@@ -139,7 +140,8 @@ bSubmit_click = Proc.new do
   end
 
   # Check if output folder exists
-  if File.directory? $outputfn and Dir.exists? $outputfn and not File.file? $outputfn and not $overwrite.value
+  if File.directory? $outputfn and Dir.exists? $outputfn and not File.file? $outputfn and not $overwrite.bool
+    print "OVERWRITE: ", $overwrite.bool, "\n\n"
     action = Tk::messageBox \
       :type => 'yesno', :icon => 'question', :title => 'Folder Exists', \
       :message => "Output folder already exists. Files within the folder that conflict will be " \
@@ -171,26 +173,31 @@ bSubmit.comman = bSubmit_click
 # Checkboxes
 ########################################
 
-$images = false 
 # Checkbox for disabling images
+$images = TkVariable.new
+$images.set_bool_type false
+
 tImages = Tk::Tile::CheckButton.new content do
   text "Images"
-  variable TkVariable.new $images
+  variable $images
 end
 
-$python = true
 # Checkbox for including python
+$python = TkVariable.new
+$python.set_bool_type true
+
 tPython = Tk::Tile::CheckButton.new content do
   text "Python"
-  variable TkVariable.new $python
+  variable $python
 end
 
-overwrite = false
-$overwrite = TkVariable.new overwrite 
 # Checkbox for including python
+$overwrite = TkVariable.new 
+$images.set_bool_type false
+
 tOverwrite = Tk::Tile::CheckButton.new content do
   text "Overwrite"
-  variable TkVariable.new $overwrite
+  variable $overwrite
 end
 
 ###################################################################################################
