@@ -114,6 +114,7 @@ class Child:
             except Exception as e:
                 self.logError( str( e ) ) # Capture the exception and log it
                 cq.put( [ self.num, FAILED, ( time.time( ) - start ), str( e ) ] )
+                break
             else:
                 cq.put( [ self.num, DONE, ( time.time( ) - start ), "" ] )
 
