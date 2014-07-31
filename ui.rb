@@ -141,7 +141,6 @@ bSubmit_click = Proc.new do
 
   # Check if output folder exists
   if File.directory? $outputfn and Dir.exists? $outputfn and not File.file? $outputfn and not $overwrite.bool
-    print "OVERWRITE: ", $overwrite.bool, "\n\n"
     action = Tk::messageBox \
       :type => 'yesno', :icon => 'question', :title => 'Folder Exists', \
       :message => "Output folder already exists. Files within the folder that conflict will be " \

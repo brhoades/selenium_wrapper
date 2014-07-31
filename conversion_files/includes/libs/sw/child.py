@@ -10,11 +10,12 @@ from datetime import datetime
 
 class Child:
     ################################################################################################
-    # __init__( self, cq, wq, num, log )
+    # __init__( self, cq, wq, num, log, images )
     # Initialize our Child
     #   Initializes our child and then starts it. It takes our pool's childqueue, our pool's workqueue,
-    #   our child's number to report back statuses, and our base log directory.
-    def __init__( self, cq, wq, num, log ):
+    #   our child's number to report back statuses, our base log directory, and whether or not we load 
+    #   images.
+    def __init__( self, cq, wq, num, log, images ):
         # Our output queue (childqueue)
         self.cq = cq
 
@@ -38,6 +39,9 @@ class Child:
 
         # Logging level
         self.level = NOTICE 
+
+        # Do we load images
+        self.images = images
 
         self.start( )
     ################################################################################################
@@ -78,7 +82,7 @@ class Child:
         try: 
             # Initialize our driver with our custom log directories and preferences (capabilities)
             self.driver = webdriver.PhantomJS( desired_capabilities=dcaps, service_log_path=( self.log + "ghostdriver.log" ), \
-                                               service_args=[ '--load-images=no' ]  )
+                                               service_args=[ '--load-images=' + str( self.images ).lower( ) ]  )
         except Exception as e:
             self.logError( "Webdriver failed to load: " + str( e ), True )
             self.msg( "WEBDRIVER ERROR" )
