@@ -129,7 +129,7 @@ def prepareDirectory( outputfn )
   end
 
   # Check for the python cache extracted folder
-  if not Dir.exists? cf+"python277/" #FIXME: add a check to see if they want to cache python
+  if not Dir.exists? cf+"python277/" and $python.bool
     if not File.exists? cf+"python277.zip"
       error "Missing packaged Python 2.7.7 installation folder or zip in conversion_files, this is required for the \"Include Python\" option.\n\nThe conversion process cannot continue."
       return nil
@@ -144,9 +144,8 @@ def prepareDirectory( outputfn )
   i = i.floor if i.is_a? Float
   phasePrint "Copying Python to Output Folder", i+=1, max
   print "  This will take some time\n"
-  #FIXME: see if they want python copied over or not
   # Copy Python over to the directory
-  if not Dir.exists? outputfn + "python277/" 
+  if not Dir.exists? outputfn + "python277/" and $python.bool
     FileUtils.cp_r cf + "python277", outputfn
   end
 
