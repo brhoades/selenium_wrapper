@@ -33,6 +33,9 @@ def convert( filename, outputfn, options={} )
       l.sub! /self\.base_url/, "base_url"
     end
 
+    # Replace a tab with four spaces
+    l.gsub! /[\t]/, (" "*4)
+
     # Once we find the function, copy everything until the end of the block
     if start
       if l !~ /^[\s]{8,}/
