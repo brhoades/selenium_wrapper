@@ -125,6 +125,14 @@ def sleepwait( driver, element, type, timeout=15 ):
 
 
 ####################################################################################################
+# sendKeys( driver, element, type, text )
+def sendKeys( driver, element, type, text ):
+    if type == "id":
+        driver.execute_script( "document.getElementById('" + element + "').value = '" + text + "'" )
+    elif type == "name":
+        driver.execute_script( "document.getElementsByName( '" + element + "' )[0].value = '" + text + "'" )
+
+####################################################################################################
 # waitToDisappear( driver, element )
 # Waits for a Element to Disappear
 #   Adapted from a previous, more specialized function to wait for any div with the id element 
