@@ -48,7 +48,7 @@ def convert( filename, outputfn, options={} )
       end
 
       # Catch for assetions, currently just removing
-      if l =~ /^[\s]+self\.assert/
+      if l =~ /self\.assert/ or l =~ /AssertionError/
         next
       end
 

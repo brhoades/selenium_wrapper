@@ -83,7 +83,8 @@ class Child:
             # Initialize our driver with our custom log directories and preferences (capabilities)
             self.driver = webdriver.PhantomJS( desired_capabilities=dcaps, service_log_path=( self.log + "ghostdriver.log" ), \
                                                service_args=[ '--load-images=' + str( self.images ).lower( ), 
-                                                              '--disk-cache=true' ] )
+                                                              '--disk-cache=true',
+                                                              '--ignore-ssl-errors=yes' ] )
         except Exception as e:
             self.logError( "Webdriver failed to load: " + str( e ), True )
             self.msg( "WEBDRIVER ERROR" )
