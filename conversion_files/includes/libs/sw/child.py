@@ -38,7 +38,7 @@ class Child:
         self.baselog = log
 
         # Logging level
-        self.level = NOTICE 
+        self.level = INFO 
 
         # Do we load images
         self.images = images
@@ -118,7 +118,9 @@ class Child:
                 cq.put( [ self.num, FAILED, ( time.time( ) - start ), str( e ) ] )
                 break
             else:
+                t = time.time( ) - start
                 cq.put( [ self.num, DONE, ( time.time( ) - start ), "" ] )
+                self.logMsg( "Successfully finished job (" + format( t ) + "s)" )
 
         # Quit after we have finished our work queue, this kills the phantomjs process.
         self.driver.quit( )

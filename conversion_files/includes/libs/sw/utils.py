@@ -92,7 +92,7 @@ def exists( driver, element, type ):
         elif type == "css_selector":
             e = driver.find_element_by_css_selector( element )
 
-        if e.is_displayed( ) and e.is_enabled( ):
+        if isDisplayed( e ) and isEnabled( e ):
             return True                             # This prevents things such as clear overlays from confusing our exist check
 
     return False
@@ -145,17 +145,45 @@ def sendKeys( driver, element, type, text ):
 def waitToDisappear( driver, element, waitForElement=True ):
     i = 0
 
-    driver.child.logMsg( "Waiting for \"%s\" to disappear." % ( element ), INFO )
     if waitForElement:
         sleepwait( driver, element, "id", 2 )
 
     if exists( driver, element, "id" ):
         driver.child.logMsg( "Element \"%s\" found!" % ( element ), INFO )
         e = driver.find_element_by_id( element ) 
-        while exists( driver, element, "id" ) and e.is_displayed( ):
+        while exists( driver, element, "id" ):
             time.sleep( 0.1 )
         else:
             driver.child.logMsg( "Element \"%s\" disappeared!" % ( element ), INFO )
+####################################################################################################
+
+
+
+####################################################################################################
+# isDisplayed( e )
+# Is e Displayed
+#   Does a check to see if e is displayed... Catches exceptions safely. Often when we want to see
+#   if an element is displayed, it isn't even on the page. This can kill the program.
+def isDisplayed( e ):
+    try:
+        if e.is_displayed( ):
+            return True
+    except:
+        return False
+####################################################################################################
+
+
+
+####################################################################################################
+# isEnabled( e )
+# Is e Enabled
+#   Does a check to see if e is enabled... Catches exceptions.
+def isEnabled( e ):
+    try:
+        if e.is_enabled( ):
+            return True
+    except:
+        return False
 ####################################################################################################
 
 
