@@ -141,8 +141,9 @@ def sendKeys( driver, element, type, text ):
 # waitToDisappear( driver, element )
 # Waits for a Element to Disappear
 #   Adapted from a previous, more specialized function to wait for any div with the id element 
-#   to disappear, and wait until then.
-def waitToDisappear( driver, element, waitForElement=True ):
+#   to disappear, and wait until then. If stayGone is not 0, we will keep checking for stayGone 
+#   seconds.
+def waitToDisappear( driver, element, waitForElement=True, stayGone=0 ):
     i = 0
 
     if waitForElement:
@@ -154,6 +155,12 @@ def waitToDisappear( driver, element, waitForElement=True ):
         while exists( driver, element, "id" ):
             time.sleep( 0.1 )
         else:
+            w = stayGone + time.time( )
+            while w - time.time( ) >= 0:
+                if exists( driver, element, "id" ):
+                    waitToDisappear( driver, element, waitForElement, stayGone )
+                time.sleep( 0.1 )
+
             driver.child.logMsg( "Element \"%s\" disappeared!" % ( element ), INFO )
 ####################################################################################################
 
