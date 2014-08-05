@@ -66,31 +66,39 @@ def exists( driver, element, type ):
             res = True
 
     if res == "":
-        if type == "id": 
-            res = driver.execute_script( "return( !!document.getElementById( '" + element + "' ) )" )
-        elif type == "name":
-            res = driver.execute_script( "return( document.getElementsByName( '" + element + "' ).length > 0 )" )
-        elif type == "xpath":
-            res = driver.execute_script( "return( document.evaluate( \"%s\", document, null, XPathResult.ANY_TYPE, null ).iterateNext( ) != null )" % element )
-        elif type == "link_text":
-            res = driver.execute_script( "return( !!jQuery( 'a:contains(\\'" + element + "\\')' ).length > 0 )" )
-        elif type == "css_selector":
-            res = driver.execute_script( "return( jQuery( '" + element + "' ).length > 0 )" )
+        try: 
+            if type == "id": 
+                res = driver.execute_script( "return( !!document.getElementById( '" + element + "' ) )" )
+            elif type == "name":
+                res = driver.execute_script( "return( document.getElementsByName( '" + element + "' ).length > 0 )" )
+            elif type == "xpath":
+                res = driver.execute_script( "return( document.evaluate( \"%s\", document, null, XPathResult.ANY_TYPE, null ).iterateNext( ) != null )" % element )
+            elif type == "link_text":
+                res = driver.execute_script( "return( !!jQuery( 'a:contains(\\'" + element + "\\')' ).length > 0 )" )
+            elif type == "css_selector":
+                res = driver.execute_script( "return( jQuery( '" + element + "' ).length > 0 )" )
+        except Exception as e:
+            driver.child.logError( e )
+            res = False
 
     res = bool( res )
 
     if res == True:
         e = ""
-        if type == "id":
-            e = driver.find_element_by_id( element )
-        elif type == "name":
-            e = driver.find_element_by_name( element )
-        elif type == "xpath":
-            e = driver.find_element_by_xpath( element )
-        elif type == "link_text":
-            e = driver.find_element_by_link_text( element )
-        elif type == "css_selector":
-            e = driver.find_element_by_css_selector( element )
+        try: 
+            if type == "id":
+                e = driver.find_element_by_id( element )
+            elif type == "name":
+                e = driver.find_element_by_name( element )
+            elif type == "xpath":
+                e = driver.find_element_by_xpath( element )
+            elif type == "link_text":
+                e = driver.find_element_by_link_text( element )
+            elif type == "css_selector":
+                e = driver.find_element_by_css_selector( element )
+        except Exception as e:
+            driver.child.logError( e )
+            return False
 
         if isDisplayed( e ) and isEnabled( e ):
             return True                             # This prevents things such as clear overlays from confusing our exist check
@@ -142,23 +150,26 @@ def sendKeys( driver, element, type, text ):
 # Waits for a Element to Disappear
 #   Adapted from a previous, more specialized function to wait for any div with the id element 
 #   to disappear, and wait until then. If stayGone is not 0, we will keep checking for stayGone 
-#   seconds.
-def waitToDisappear( driver, element, waitForElement=True, stayGone=0 ):
+#   seconds. If recur is selected we don't print out redundant information.
+def waitToDisappear( driver, element, waitForElement=True, stayGone=0, recur=False ):
     i = 0
 
     if waitForElement:
         sleepwait( driver, element, "id", 2 )
 
+
     if exists( driver, element, "id" ):
-        driver.child.logMsg( "Element \"%s\" found!" % ( element ), INFO )
-        e = driver.find_element_by_id( element ) 
+        if not recur:
+            driver.child.logMsg( "Waiting for %s on %s" % ( element, driver.current_url ), INFO )
+
         while exists( driver, element, "id" ):
             time.sleep( 0.1 )
         else:
             w = stayGone + time.time( )
             while w - time.time( ) >= 0:
                 if exists( driver, element, "id" ):
-                    waitToDisappear( driver, element, waitForElement, stayGone )
+                    driver.logMsg( "Element came back!" )
+                    waitToDisappear( driver, element, waitForElement, stayGone, True )
                 time.sleep( 0.1 )
 
             driver.child.logMsg( "Element \"%s\" disappeared!" % ( element ), INFO )
