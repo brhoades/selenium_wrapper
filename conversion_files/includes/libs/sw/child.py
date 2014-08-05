@@ -139,7 +139,7 @@ class Child:
             i = 0
             # If we are writing several errors, number them appropriately
             while True:
-                fn =  self.log + 'error_' + str( i ) + '.png' )
+                fn =  self.log + 'error_' + str( i ) + '.png'
                 i += 1
                 if not os.path.isfile( fn ):
                     break
