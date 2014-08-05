@@ -23,6 +23,12 @@ def convert( filename, outputfn, options={} )
       next
     end
 
+    # Custom catch
+    # salesforceSource_blurybackground
+    if l =~ /([\s]+)\#blurWait/i
+      func << ( $1 + "waitToDisappear( driver, 'salesforceSource_blurybackground' )" )
+    end
+
     # Catch for the base_url
     if l =~ /self\.base_url[\s]*=[\s]*(.*)$/
       base_url = $~.captures.first

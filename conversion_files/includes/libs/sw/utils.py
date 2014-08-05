@@ -126,24 +126,36 @@ def sleepwait( driver, element, type, timeout=15 ):
 
 ####################################################################################################
 # sendKeys( driver, element, type, text )
+# Sends Keys to Element
+#   Drop in replacement for webdriver's sendkeys.
 def sendKeys( driver, element, type, text ):
     if type == "id":
         driver.execute_script( "document.getElementById('" + element + "').value = '" + text + "'" )
     elif type == "name":
         driver.execute_script( "document.getElementsByName( '" + element + "' )[0].value = '" + text + "'" )
+####################################################################################################
+
+
 
 ####################################################################################################
 # waitToDisappear( driver, element )
 # Waits for a Element to Disappear
 #   Adapted from a previous, more specialized function to wait for any div with the id element 
 #   to disappear, and wait until then.
-def waitToDisappear( driver, element ):
+def waitToDisappear( driver, element, waitForElement=True ):
     i = 0
-    if exists( driver, element ):
-      e = driver.find_element_by_id( element ) 
-      while e.is_displayed( ):
-        if not exists( driver, element ):
-          break
+
+    driver.child.logMsg( "Waiting for \"%s\" to disappear." % ( element ), INFO )
+    if waitForElement:
+        sleepwait( driver, element, "id", 2 )
+
+    if exists( driver, element, "id" ):
+        driver.child.logMsg( "Element \"%s\" found!" % ( element ), INFO )
+        e = driver.find_element_by_id( element ) 
+        while exists( driver, element, "id" ) and e.is_displayed( ):
+            time.sleep( 0.1 )
+        else:
+            driver.child.logMsg( "Element \"%s\" disappeared!" % ( element ), INFO )
 ####################################################################################################
 
 
