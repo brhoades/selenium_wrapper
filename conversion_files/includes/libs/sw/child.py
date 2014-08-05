@@ -151,7 +151,7 @@ class Child:
 
         # Determine if we're logging this low
         if level >= self.level:
-            f = open( self.log + 'error_log.txt', 'a+' )
+            f = open( self.log + 'log.txt', 'a+' )
             f.write( "[%s] %s\t%s\n" % ( timestamp, errorLevelToStr( level ), e ) ) 
             f.close( )
     ################################################################################################
