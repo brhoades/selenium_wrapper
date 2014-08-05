@@ -23,11 +23,34 @@ def convert( filename, outputfn, options={} )
       next
     end
 
-    # Custom catch
-    # salesforceSource_blurybackground
+    ################################################################################################
+    # Custom catches for user commands
     if l =~ /([\s]+)\#blurWait/i
-      func << ( $1 + "waitToDisappear( driver, 'salesforceSource_blurybackground' )" )
+      func << ( $1 + "waitToDisappear( driver, 'salesforceSource_blurybackground' )\n" )
+      next
     end
+
+    if l =~ /([\s]+)\#log (.+)/
+      func << ( $1 + "driver.child.logMsg( '#{$2}' )\n" )
+      next
+    end
+
+    if l =~ /([\s]+)\#msg (.+)/
+      func << ( $1 + "driver.child.msg( '#{$2}' )\n" )
+      next
+    end
+
+    if l =~ /([\s]+)\#error (.+)/
+      func << ( $1 + "driver.child.errorMsg( '#{$2}' )\n" )
+      next
+    end
+
+    #if l =~ /([\s]+)\#screenshot/
+    #  func << ( $1 + "driver.
+
+
+    ################################################################################################
+
 
     # Catch for the base_url
     if l =~ /self\.base_url[\s]*=[\s]*(.*)$/
