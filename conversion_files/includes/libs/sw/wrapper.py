@@ -12,8 +12,6 @@ def main( func, file, **kwargs ):
     children = 3 
     images = False
 
-    if 'images' in kwargs:
-        images = kwargs['images']
     if len( sys.argv ) > 1:
         numTimes = int( sys.argv[1] )
     if len( sys.argv ) > 2:
@@ -21,7 +19,7 @@ def main( func, file, **kwargs ):
      
     print( "\n" + ( "=" * 40 ) )
 
-    pool = ChildPool( children, numTimes, func, file, images )
+    pool = ChildPool( children, numTimes, func, file, kwargs )
 
     mainLoop( pool )
 

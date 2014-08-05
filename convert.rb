@@ -116,12 +116,12 @@ def convert( filename, outputfn, options={} )
   # Right afterwards set the window resolution
   func.insert( 1, ( " "*8 ) + "driver.set_window_size( 1920, 1080 )\n" )
 
-  kwargs = ""
+  kwargs = [ ] 
   # Get our args sorted out
   if $images.bool == true
-    kwargs = "images=True"
+    kwargs << "images=True"
   else
-    kwargs = "images=False"
+    kwargs << "images=False"
   end
   
   ##################
@@ -149,7 +149,7 @@ def convert( filename, outputfn, options={} )
   # and the footer
   func << "\n" << "\n"
   func << "if __name__ == '__main__':\n" 
-  func << " "*4 + "main( test_func, __file__, #{kwargs} )\n"
+  func << " "*4 + "main( test_func, __file__, #{kwargs.join ","} )\n"
 
   ################
   # Output to file

@@ -10,12 +10,11 @@ from datetime import datetime
 
 class Child:
     ################################################################################################
-    # __init__( self, cq, wq, num, log, images )
+    # __init__( self, cq, wq, num, log, options )
     # Initialize our Child
     #   Initializes our child and then starts it. It takes our pool's childqueue, our pool's workqueue,
-    #   our child's number to report back statuses, our base log directory, and whether or not we load 
-    #   images.
-    def __init__( self, cq, wq, num, log, images ):
+    #   our child's number to report back statuses, our base log directory, and a collection of options.
+    def __init__( self, cq, wq, num, log, options ):
         # Our output queue (childqueue)
         self.cq = cq
 
@@ -41,7 +40,7 @@ class Child:
         self.level = INFO 
 
         # Do we load images
-        self.images = images
+        self.options = options
 
         self.start( )
     ################################################################################################
@@ -82,7 +81,7 @@ class Child:
         try: 
             # Initialize our driver with our custom log directories and preferences (capabilities)
             self.driver = webdriver.PhantomJS( desired_capabilities=dcaps, service_log_path=( self.log + "ghostdriver.log" ), \
-                                               service_args=[ '--load-images=' + str( self.images ).lower( ), 
+                                               service_args=[ '--load-images=' + str( self.options['images'] ).lower( ), 
                                                               '--disk-cache=true',
                                                               '--ignore-ssl-errors=yes' ] )
         except Exception as e:

@@ -14,7 +14,7 @@ class ChildPool:
     #   Takes in number of desired children, number of jobs to queue up, and the function to run 
     #   numJobs times. After storing, it initializes numChildren children which then start themselves. 
     #   Also grabs our main file location to make a log folder in an appropriate location.
-    def __init__( self, numChildren, numJobs, func, file, images ):
+    def __init__( self, numChildren, numJobs, func, file, kwargs ):
         # Our children
         self.children = [ None for x in range(numChildren) ]
         
@@ -51,7 +51,7 @@ class ChildPool:
         self.timestamp = datetime.now( ).strftime( "%Y-%m-%d_%H-%M-%S" )
 
         # Do we get images?
-        self.images = images
+        self.options = kwargs
 
         # General log directory, shared by all children
         self.log = os.path.dirname( os.path.abspath( file ) ) + "\\logs\\" + self.timestamp + "\\"
@@ -79,7 +79,7 @@ class ChildPool:
                 if c == None:
                     break # This gets us our first empty i
         
-        self.children[i] = Child( self.childQueue, self.workQueue, i, self.log, self.images )
+        self.children[i] = Child( self.childQueue, self.workQueue, i, self.log, self.options )
     ################################################################################################
 
 
