@@ -79,8 +79,10 @@ def convert( filename, outputfn, options={} )
         next
       end
 
-      #if l =~ /([\s]+)\#screenshot/
-      #  func << ( $1 + "driver.
+      if l =~ /([\s]+)\#screenshot/
+        func << ( $1 + "driver.child.screenshot( )\n" )
+        next
+      end
       ################################################################################################
 
 

@@ -175,7 +175,6 @@ def waitToDisappear( driver, element, waitForElement=True, stayGone=0, recur=Fal
                     driver.logMsg( "Element came back!" )
                     waitToDisappear( driver, element, waitForElement, stayGone, True )
                 time.sleep( 0.05 )
-
 ####################################################################################################
 
 
@@ -228,6 +227,4 @@ def urlExtractRedirect( driver, variable, value ):
 
     driver.logMsg( "AFTER: " + url )
     driver.get( url )
-    
-    return
 ####################################################################################################

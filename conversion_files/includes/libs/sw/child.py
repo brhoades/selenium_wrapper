@@ -140,21 +140,36 @@ class Child:
     #   Renders a screenshot of what it sees then writes it to our log directory as error_#.png
     #   Also takes the exception we received and exports it as text
     def logError( self, e, noScreenshot=False ):
-        fn = ""
-        if not noScreenshot:
-            i = 0
-            # If we are writing several errors, number them appropriately
-            while True:
-                fn =  self.log + 'error_' + str( i ) + '.png'
-                i += 1
-                if not os.path.isfile( fn ):
-                    break
-            self.driver.save_screenshot( fn ) 
 
         o = pformat( formatError( e, "log" ) )
         self.logMsg( o, CRITICAL )
+
         if not noScreenshot:
-            self.logMsg( "Wrote screenshot to: " + fn, CRITICAL )
+            self.screenshot( CRITICAL )
+    ################################################################################################
+
+
+
+    
+    ################################################################################################
+    # screenshot( level=NOTICE )
+    # Logs a screenshot and prints a message.
+    def screenshot( self, level=NOTICE ):
+        fn = ""
+        i = 0
+        # If we are writing several errors, number them appropriately
+        if not os.path.exists( self.log ):
+            self.logMsg( "Cannot write to a log directory that doesn't exist. " + self.log, CRITICAL )
+            return
+
+        while True:
+            fn =  self.log + 'error_' + str( i ) + '.png'
+            i += 1
+            if not os.path.isfile( fn ):
+                    break
+
+        self.driver.save_screenshot( fn ) 
+        self.logMsg( "Wrote screenshot to: " + fn, level )
     ################################################################################################
 
 
