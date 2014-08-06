@@ -37,7 +37,7 @@ def jQCheck( driver ):
 
         start = time.time( )
         while not bool( driver.execute_script( jqCheck ) ) and time.time( ) - start < timeout:
-            time.sleep( 0.1 )
+            time.sleep( 0.05 )
         if not bool( driver.execute_script( jqCheck ) ):
             driver.child.logMsg( "jQuery failed to load into browser after " + str( timeout ) + "s.", WARNING  )
             return False                              # False, jQuery isn't running
@@ -120,7 +120,7 @@ def sleepwait( driver, element, type, timeout=15 ):
         driver.child.logMsg( "Beginning wait for element \"%s\" of type \"%s\"." % ( element, type ), NOTICE )
 
         while not exists( driver, element, type ) and time.time( ) - start < timeout:
-            time.sleep( .1 )
+            time.sleep( .05 )
         else:
             return element 
     else:
@@ -163,14 +163,14 @@ def waitToDisappear( driver, element, waitForElement=True, stayGone=0, recur=Fal
             driver.child.logMsg( "Waiting for %s on %s" % ( element, driver.current_url ), INFO )
 
         while exists( driver, element, "id" ):
-            time.sleep( 0.1 )
+            time.sleep( 0.05 )
         else:
             w = stayGone + time.time( )
             while w - time.time( ) >= 0:
                 if exists( driver, element, "id" ):
                     driver.logMsg( "Element came back!" )
                     waitToDisappear( driver, element, waitForElement, stayGone, True )
-                time.sleep( 0.1 )
+                time.sleep( 0.05 )
 
             driver.child.logMsg( "Element \"%s\" disappeared!" % ( element ), INFO )
 ####################################################################################################
