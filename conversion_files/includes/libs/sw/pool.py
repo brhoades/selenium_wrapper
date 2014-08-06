@@ -1,7 +1,7 @@
 from multiprocessing import Process, Queue
 from sw.child import Child
 import time, os
-from datetime import datetime
+import datetime
 from sw.const import * # Constants
 from sw.formatting import * 
 
@@ -19,7 +19,7 @@ class ChildPool:
         self.children = [ None for x in range(numChildren) ]
         
         # Statistics and data per child
-        self.data = [ [ 0, 0, [ ] ] for x in range(numChildren) ]
+        self.data = [ [ 0, 0, [ ], 0, [ ] ] for x in range(numChildren) ]
 
         # Our one way queue from our children
         self.childQueue = Queue( )
@@ -48,7 +48,7 @@ class ChildPool:
         self.nextStat = time.clock( ) + int( self.timePerReport*1.1 )
 
         # Our timestamp
-        self.timestamp = datetime.now( ).strftime( "%Y-%m-%d_%H-%M-%S" )
+        self.timestamp = datetime.datetime.now( ).strftime( "%Y-%m-%d_%H-%M-%S" )
 
         # Do we get images?
         self.options = kwargs
@@ -101,8 +101,11 @@ class ChildPool:
             bad  = reduce( lambda x, y: x + y, map( lambda x: x[FAILURES], self.data ) )
             timetaken = map( lambda x: x[TIMES], self.data )
             timetaken = [ item for sublist in timetaken for item in sublist ] # Flatten
+
+            waiting = map( lambda x: x[WAIT_TIMES], self.data )
+            waiting = [ item for sublist in waiting for item in sublist ] # Flatten
             
-            stats( good, bad, timetaken, self.children, self.numJobs, self.started ) 
+            stats( good, bad, timetaken, self.children, self.numJobs, self.started, waiting ) 
     ################################################################################################
 
 
@@ -121,6 +124,8 @@ class ChildPool:
             if r[RESULT] == DONE:
                 self.data[i][SUCCESSES] += 1
                 self.data[i][TIMES].append( r[TIMES] )
+                self.data[i][WAIT_TIMES].append( self.data[i][WAIT_TIME] )
+                self.data[i][WAIT_TIME] = 0 
                 self.children[i].msg( "DONE (" + str( format( r[TIME] ) ) + "s)" )
 
             elif r[RESULT] == FAILED:
@@ -133,9 +138,13 @@ class ChildPool:
             elif r[RESULT] == READY:
                 self.children[i].msg( "STARTING" )
 
+            elif r[RESULT] == WAIT_TIME:
+                self.data[i][WAIT_TIME] += r[TIME]
+
         # Check that children are alive, restart
         for i in range(self.numChildren):
             if not self.children[i].is_alive( ) and not self.workQueue.empty( ):
+                #FIXME: Check if we need more workers or if one is alive / without job to take this
                 self.children[i].restart( )
             elif not self.children[i].is_alive( ) \
                  and not self.children[i].is_done( ) and self.workQueue.empty( ):

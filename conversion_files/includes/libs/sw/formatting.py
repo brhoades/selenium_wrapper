@@ -52,12 +52,13 @@ def childMessage( num, msg ):
 
 
 ####################################################################################################
-# stats( good, bad, timetaken, children, times, starttime )
+# stats( good, bad, timetaken, children, times, starttime, waittime )
 # Prints Statistics
 #   Prints out success / fail counts, total / remaining jobs, failure rate, number of children,
 #   and then averages / extrapolations. It requires good / bad count (#), and then arrays of times taken,
-#   the child processes, number of times (#), and our start time in seconds. 
-def stats( good, bad, timetaken, children, times, starttime ):   
+#   the child processes, number of times (#), and our start time in seconds. Also, we pass the time we've spent 
+#   waiting.
+def stats( good, bad, timetaken, children, times, starttime, waittime ):   
     print( "\n" + ( "=" * 40 ) )
     print( "Successful: " + str( good ) + ( " " * 3 ) + "Failed: " + str( bad ) )
     print( "Total: " + str( good + bad ) + ( " " * 3 ) + "Remaining: " + str( times - good ) )
@@ -67,9 +68,6 @@ def stats( good, bad, timetaken, children, times, starttime ):
         if c.is_alive( ) and not c.is_done( ):
             active += 1
     print( "Children (peak): " + str( len( children ) ) + ( " " * 3 ) + "Children (active): " + str( active ) )
-    avg = 0
-    for t in timetaken:
-        avg += t
 
     if len( timetaken ) > 0:
         print( "Failure Rate: " + format( bad / float( good + bad ) * 100 ) + "%" );
@@ -77,10 +75,11 @@ def stats( good, bad, timetaken, children, times, starttime ):
         # This gives us our jobs per second
         jps = good / ( time.time( ) - starttime )
 
-        avg /= len( timetaken )
         print( "Average / Estimates:" )
-        print( "  Time per job: " + format( avg ) + " seconds" )
-        print( "  Jobs/s: " + format( jps ) + ( " " * 3 ) + "Jobs/m: "  + format( jps * 60 ) + ( " " * 3 )+ "Jobs/hr: " 
+        print( "  Time per job: " + format( avg( timetaken ) ) + "s" )
+        print( "  Time waiting: " + format( avg( waittime ) ) + "s ("   
+               + format( avg( waittime ) / avg( timetaken ) * 100 ) + "%)" )
+        print( "  Jobs/s: " + format( jps ) + ( " " * 3 ) + "Jobs/m: "  + format( jps * 60 ) + ( " " * 3 ) + "Jobs/hr: " 
                + format( jps * 60 * 60 ) + ( " " * 3 ) + "Jobs/day: " + format( jps * 60 * 60 * 24 ) )
     else:
         print "No data to extrapolate or average from"
@@ -108,4 +107,16 @@ def errorLevelToStr( level ):
     if level == NONE:
         return "          "
     return
+####################################################################################################
+
+
+
+####################################################################################################
+# avg( numbers )
+# Averages List
+def avg( numbers ):
+    if len( numbers ) == 0:
+        return 0
+    else:
+        return( sum( numbers ) / len( numbers ) )
 ####################################################################################################

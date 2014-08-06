@@ -159,12 +159,16 @@ def waitToDisappear( driver, element, waitForElement=True, stayGone=0, recur=Fal
 
 
     if exists( driver, element, "id" ):
+        start = time.time( )
         if not recur:
             driver.child.logMsg( "Waiting for %s on %s" % ( element, driver.current_url ), INFO )
 
         while exists( driver, element, "id" ):
             time.sleep( 0.05 )
         else:
+            driver.child.cq.put( [ driver.child.num, WAIT_TIME, time.time( ) - start ] )
+            driver.child.logMsg( "Element \"%s\" disappeared!" % ( element ), INFO )
+
             w = stayGone + time.time( )
             while w - time.time( ) >= 0:
                 if exists( driver, element, "id" ):
@@ -172,7 +176,6 @@ def waitToDisappear( driver, element, waitForElement=True, stayGone=0, recur=Fal
                     waitToDisappear( driver, element, waitForElement, stayGone, True )
                 time.sleep( 0.05 )
 
-            driver.child.logMsg( "Element \"%s\" disappeared!" % ( element ), INFO )
 ####################################################################################################
 
 
