@@ -9,7 +9,10 @@ def convert( filename, outputfn, options={} )
   file = []
   func = []
   base_url = ""
-  start = false
+  start = false     # Indicator for the start of our function
+  startOps = false  # Indicator for the start of our options header
+  i = -1
+  kwargs = []       # Passed to our main function at the end
 
   # Read in our input file  
   File.new( filename, "r:UTF-8" ).each_line { |l| file << l }
@@ -17,61 +20,78 @@ def convert( filename, outputfn, options={} )
   # Now find our "main" test method (should == file name) in a loop
   fn = File.basename filename, ".py"
   file.each do |l|
+    i += 1
     if l =~ /^[\s]{4}def\stest_[^\(]+\(self\):$/ 
       start = true
       func << l
       next
+    elsif i == 0 and l =~ /^#OPTIONS/
+      startOps = true
+      next
     end
 
     ################################################################################################
-    # Custom catches for user commands
-    if l =~ /([\s]+)\#blurWait(.*)/i
-      if $2 == ""
-        func << ( $1 + "waitToDisappear( driver, 'salesforceSource_blurybackground' )\n" )
-      else
-        $2.strip!
-        func << ( $1 + "waitToDisappear( driver, 'salesforceSource_blurybackground', True, 3 )\n" )
+    # Options Parsing Section
+    # If we found #OPTIONS at the top of the file, parse any following comment as options.
+    # Anything starting with gd (ghostdriver) is passed directly as it'll be a ghostdriver arg.
+    #
+    if startOps
+      if l =~ /^#(gd|ghostdriver) (.*)/i
+        kwargs << $2.strip
       end
+
+      startOps = false if l !~ /^#/
       next
     end
-
-    if l =~ /([\s]+)\#log (.+)/
-      func << ( $1 + "driver.child.logMsg( '#{$2}' )\n" )
-      next
-    end
-
-    if l =~ /([\s]+)\#msg (.+)/
-      func << ( $1 + "driver.child.msg( '#{$2}' )\n" )
-      next
-    end
-
-    if l =~ /([\s]+)\#error (.+)/
-      func << ( $1 + "driver.child.errorMsg( '#{$2}' )\n" )
-      next
-    end
-
-    #if l =~ /([\s]+)\#screenshot/
-    #  func << ( $1 + "driver.
-
-
     ################################################################################################
-
 
     # Catch for the base_url
     if l =~ /self\.base_url[\s]*=[\s]*(.*)$/
       base_url = $~.captures.first
     end
-
-    if l =~ /self\.base_url/
-      # Catch for (soon to be invalid) references to self.base_url
-      l.sub! /self\.base_url/, "base_url"
-    end
-
-    # Replace a tab with four spaces
-    l.gsub! /[\t]/, (" "*4)
-
+ 
     # Once we find the function, copy everything until the end of the block
     if start
+      ##############################################################################################
+      # Custom catches for user commands
+      if l =~ /([\s]+)\#blurWait(.*)/i
+        if $2 == ""
+          func << ( $1 + "waitToDisappear( driver, 'salesforceSource_blurybackground' )\n" )
+        else
+          $2.strip!
+          func << ( $1 + "waitToDisappear( driver, 'salesforceSource_blurybackground', True, 3 )\n" )
+        end
+        next
+      end
+
+      if l =~ /([\s]+)\#log (.+)/
+        func << ( $1 + "driver.child.logMsg( '#{$2}' )\n" )
+        next
+      end
+
+      if l =~ /([\s]+)\#msg (.+)/
+        func << ( $1 + "driver.child.msg( '#{$2}' )\n" )
+        next
+      end
+
+      if l =~ /([\s]+)\#error (.+)/
+        func << ( $1 + "driver.child.errorMsg( '#{$2}' )\n" )
+        next
+      end
+
+      #if l =~ /([\s]+)\#screenshot/
+      #  func << ( $1 + "driver.
+      ################################################################################################
+
+
+      if l =~ /self\.base_url/
+        # Catch for references to self.base_url
+        l.sub! /self\.base_url/, "base_url"
+      end
+
+      # Replace a tab with four spaces
+      l.gsub! /[\t]/, (" "*4)
+
       if l !~ /^[\s]{8,}/
         break
       end
@@ -116,12 +136,17 @@ def convert( filename, outputfn, options={} )
   # Right afterwards set the window resolution
   func.insert( 1, ( " "*8 ) + "driver.set_window_size( 1920, 1080 )\n" )
 
-  kwargs = [ ] 
   # Get our args sorted out
   if $images.bool == true
     kwargs << "images=True"
   else
     kwargs << "images=False"
+  end
+
+  kwargs.each do |k|
+    if k =~ /proxy\-type/
+      kwargs[kwargs.index( k )].gsub! /\-/, ""
+    end
   end
   
   ##################
@@ -149,7 +174,7 @@ def convert( filename, outputfn, options={} )
   # and the footer
   func << "\n" << "\n"
   func << "if __name__ == '__main__':\n" 
-  func << " "*4 + "main( test_func, __file__, #{kwargs.join ","} )\n"
+  func << " "*4 + "main( test_func, __file__, #{kwargs.join ", "} )\n"
 
   ################
   # Output to file

@@ -78,12 +78,19 @@ class Child:
         if not os.path.isdir( self.log ):
             os.makedirs( self.log )
 
+        sargs = [ '--load-images=' + str( self.options['images'] ).lower( ),
+                  '--disk-cache=true',
+                  '--ignore-ssl-errors=yes' ]
+
+        if 'proxy' in self.options:
+            sargs.append( '--proxy=' + self.options['proxy'] )
+        if 'proxytype' in self.options:
+            sargs.append( '--proxy-type=' + self.options['proxytype'] )
+
         try: 
             # Initialize our driver with our custom log directories and preferences (capabilities)
             self.driver = webdriver.PhantomJS( desired_capabilities=dcaps, service_log_path=( self.log + "ghostdriver.log" ), \
-                                               service_args=[ '--load-images=' + str( self.options['images'] ).lower( ), 
-                                                              '--disk-cache=true',
-                                                              '--ignore-ssl-errors=yes' ] )
+                                               service_args=sargs )
         except Exception as e:
             self.logError( "Webdriver failed to load: " + str( e ), True )
             self.msg( "WEBDRIVER ERROR" )
