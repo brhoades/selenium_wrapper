@@ -1,4 +1,4 @@
-import os, time
+import os, time, traceback
 from const import *
 
 
@@ -78,8 +78,9 @@ def exists( driver, element, type ):
             elif type == "css_selector":
                 res = driver.execute_script( "return( jQuery( '" + element + "' ).length > 0 )" )
         except Exception as e:
-            driver.child.logMsg( "Error in Javascript ('" + element + "', '" + type + "')" )
-            driver.child.logError( e )
+            driver.child.logMsg( "Error in Javascript ('" + element + "', '" + type + "')", ERROR )
+            driver.child.logMsg( str( e ), ERROR )
+            driver.child.logMsg( traceback.format_exc( ), ERROR )
             res = False
 
     res = bool( res )
@@ -98,7 +99,8 @@ def exists( driver, element, type ):
             elif type == "css_selector":
                 e = driver.find_element_by_css_selector( element )
         except Exception as e:
-            driver.child.logError( e )
+            driver.child.logMsg( str( e ), ERROR )
+            driver.child.logMsg( traceback.format_exc( ), ERROR )
             return False
 
         if isDisplayed( e ) and isEnabled( e ):

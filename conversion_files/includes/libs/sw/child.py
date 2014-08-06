@@ -4,7 +4,7 @@ from selenium.webdriver.phantomjs.service import Service as PhantomJSService
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from sw.const import * # Constants
 from sw.formatting import formatError, errorLevelToStr
-import time, os
+import time, os, traceback
 from pprint import pformat
 from datetime import datetime
 
@@ -37,7 +37,7 @@ class Child:
         self.baselog = log
 
         # Logging level
-        self.level = INFO 
+        self.level = NOTICE 
 
         # Do we load images
         self.options = options
@@ -92,7 +92,7 @@ class Child:
             self.driver = webdriver.PhantomJS( desired_capabilities=dcaps, service_log_path=( self.log + "ghostdriver.log" ), \
                                                service_args=sargs )
         except Exception as e:
-            self.logError( "Webdriver failed to load: " + str( e ), True )
+            self.logMsg( "Webdriver failed to load: " + str( e ) + "\n " + traceback.formatexc( ), CRITICAL )
             self.msg( "WEBDRIVER ERROR" )
             try: 
                 self.driver.quit( )
@@ -121,6 +121,8 @@ class Child:
                 func( self.driver )
             except Exception as e:
                 self.logError( str( e ) ) # Capture the exception and log it
+                self.logMsg( "Stack trace: " + traceback.format_exc( ), CRITICAL )
+
                 cq.put( [ self.num, FAILED, ( time.time( ) - start ), str( e ) ] )
                 break
             else:
