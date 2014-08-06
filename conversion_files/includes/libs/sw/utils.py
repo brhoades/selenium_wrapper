@@ -78,6 +78,7 @@ def exists( driver, element, type ):
             elif type == "css_selector":
                 res = driver.execute_script( "return( jQuery( '" + element + "' ).length > 0 )" )
         except Exception as e:
+            driver.child.logMsg( "Error in Javascript ('" + element + "', '" + type + "')" )
             driver.child.logError( e )
             res = False
 

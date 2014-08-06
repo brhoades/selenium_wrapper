@@ -133,7 +133,7 @@ class ChildPool:
 
                 # When we get a failure we put the job back on the queue
                 self.workQueue.put( self.func )
-                self.children[i].msg( formatError( r[ERROR] ) ) 
+                self.children[i].msg( "ERROR: " + formatError( r[ERROR] ) ) 
 
             elif r[RESULT] == READY:
                 self.children[i].msg( "STARTING" )
