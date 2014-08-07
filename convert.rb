@@ -13,6 +13,7 @@ def convert( filename, outputfn, options={} )
   startOps = false  # Indicator for the start of our options header
   i = -1
   kwargs = []       # Passed to our main function at the end
+  imports = []      # Manually added imports later
 
   # Read in our input file  
   File.new( filename, "r:UTF-8" ).each_line { |l| file << l }
@@ -38,6 +39,10 @@ def convert( filename, outputfn, options={} )
     if startOps
       if l =~ /^#(gd|ghostdriver) (.*)/i
         kwargs << $2.strip
+      end
+      
+      if l =~ /^#(import.*)/
+        imports << $1.strip
       end
 
       startOps = false if l !~ /^#/
@@ -163,12 +168,14 @@ def convert( filename, outputfn, options={} )
 
   # Now prepare the header
   func.unshift "\n"
-  func.unshift "import time\n"
   func.unshift "from selenium.webdriver.support.ui import Select\n"
   func.unshift "from sw.wrapper import main\n"
   func.unshift "from sw.utils import *\n"
   func.unshift "sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '\\\\includes\\\\libs\\\\')\n"
-  func.unshift "import sys, os\n"
+  func.unshift "import sys, os, time\n"
+  imports.each do |i|
+    func.unshift i + "\n"
+  end
 
   # Declare UTF-8
   func.unshift "# -*- coding: utf-8 -*-\n"
