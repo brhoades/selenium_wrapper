@@ -7,6 +7,7 @@ from sw.formatting import formatError, errorLevelToStr
 import time, os, traceback
 from pprint import pformat
 from datetime import datetime
+import cProfile, pstats, StringIO
 
 class Child:
     ################################################################################################
@@ -109,6 +110,8 @@ class Child:
         # Write to our log another message indicating we are starting our runs
         self.logMsg( "Child process started and loaded" )
 
+        pr = cProfile.Profile( )
+        pr.enable( )
         # While our work queue isn't empty...
         while not wq.empty( ):
             func = wq.get( True, 5 )
@@ -129,6 +132,11 @@ class Child:
                 t = time.time( ) - start
                 cq.put( [ self.num, DONE, ( time.time( ) - start ), "" ] )
                 self.logMsg( "Successfully finished job (" + format( t ) + "s)" )
+        pr.disable( )
+        f = open( self.log + 'stats.txt', 'w' )
+        sortby = 'cumulative'
+        ps = pstats.Stats( pr, stream=f ).sort_stats( sortby ).print_stats( )
+        f.close( )
 
         # Quit after we have finished our work queue, this kills the phantomjs process.
         self.driver.quit( )
