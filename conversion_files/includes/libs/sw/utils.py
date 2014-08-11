@@ -37,7 +37,7 @@ def jQCheck( driver ):
 
         start = time.time( )
         while not bool( driver.execute_script( jqCheck ) ) and time.time( ) - start < timeout:
-            time.sleep( 0.05 )
+            time.sleep( driver.child.sleepTime )
         if not bool( driver.execute_script( jqCheck ) ):
             driver.child.logMsg( "jQuery failed to load into browser after " + str( timeout ) + "s.", WARNING  )
             return False                              # False, jQuery isn't running
@@ -51,32 +51,26 @@ def jQCheck( driver ):
 
 
 ####################################################################################################
-# exists( driver, element, type )
+# exists( driver, element, type, noDriver )
 # Check if Element Exists
 #   Takes our webdriver object, an element name, and a type. Flips through a list of element types to 
 #   run quick Javascript to check if the element exists. This is done because find_element_by.* has
 #   a timeout where it waits for an element to appear for about 15 seconds. We try to only use that
 #   if absolutely needed as a double check. An exception is when we don't have jQuery and can't use 
 #   the last two, fancy, javascript checks, this bypasses them and directly goes to the webdriver test. 
-def exists( driver, element, type ):
+def exists( driver, element, type, noDriver=False ):
     res = ""
+    s = ""
 
     if type == "link_text" or type == "css_selector":
         if not jQCheck( driver ):
             res = True
 
     if res == "":
+        s = elementBySelector( element, type )
         try: 
-            if type == "id": 
-                res = driver.execute_script( "return( !!document.getElementById( '" + element + "' ) )" )
-            elif type == "name":
-                res = driver.execute_script( "return( document.getElementsByName( '" + element + "' ).length > 0 )" )
-            elif type == "xpath":
-                res = driver.execute_script( "return( document.evaluate( \"%s\", document, null, XPathResult.ANY_TYPE, null ).iterateNext( ) != null )" % element )
-            elif type == "link_text":
-                res = driver.execute_script( "return( !!jQuery( 'a:contains(\\'" + element + "\\')' ).length > 0 )" )
-            elif type == "css_selector":
-                res = driver.execute_script( "return( jQuery( '" + element + "' ).length > 0 )" )
+            s += " return( e != null && typeof e != 'undefined' && !e.disabled )"
+            res = driver.execute_script( s )
         except Exception as e:
             driver.child.logMsg( "Error in Javascript ('" + element + "', '" + type + "')", ERROR )
             driver.child.logMsg( str( e ), ERROR )
@@ -84,6 +78,9 @@ def exists( driver, element, type ):
             res = False
 
     res = bool( res )
+    
+    if noDriver:
+        return( res )
 
     if res == True:
         e = ""
@@ -116,14 +113,17 @@ def exists( driver, element, type ):
 # Sleeps While Waiting for Element
 #   The original brainchild of my wrapper, this function simply checks if an element exists( ) and 
 #   sleeps until timeout for it. It always returns the element even if it fails.
-def sleepwait( driver, element, type, timeout=15 ):
+#   Lightconfirm means any existance of the element (javascript or wd) counts as existing. This is lighter on the system.
+def sleepwait( driver, element, type, **kwargs ):
     start = time.time( )
+    timeout = kwargs.get( 'timeout', 15 )
+    lightconfirm = kwargs.get( 'lightconfirm', False )
     
-    if not exists( driver, element, type ):
+    if not exists( driver, element, type, lightconfirm ):
         driver.child.logMsg( "Beginning wait for element \"%s\" of type \"%s\"." % ( element, type ), NOTICE )
 
-        while not exists( driver, element, type ) and time.time( ) - start < timeout:
-            time.sleep( .05 )
+        while not exists( driver, element, type, lightconfirm ) and time.time( ) - start < timeout:
+            time.sleep( driver.child.sleepTime )
         else:
             return element 
     else:
@@ -158,7 +158,7 @@ def waitToDisappear( driver, element, waitForElement=True, stayGone=0, recur=Fal
     i = 0
 
     if waitForElement:
-        sleepwait( driver, element, "id", 2 )
+        sleepwait( driver, element, "id", timeout=2, lightconfirm=True )
 
 
     if exists( driver, element, "id" ):
@@ -167,7 +167,7 @@ def waitToDisappear( driver, element, waitForElement=True, stayGone=0, recur=Fal
             driver.child.logMsg( "Waiting for %s on %s" % ( element, driver.current_url ), INFO )
 
         while exists( driver, element, "id" ):
-            time.sleep( 0.05 )
+            time.sleep( driver.child.sleepTime )
         else:
             driver.child.cq.put( [ driver.child.num, WAIT_TIME, time.time( ) - start ] )
             driver.child.logMsg( "Element \"%s\" disappeared!" % ( element ), INFO )
@@ -177,7 +177,7 @@ def waitToDisappear( driver, element, waitForElement=True, stayGone=0, recur=Fal
                 if exists( driver, element, "id" ):
                     driver.logMsg( "Element came back!" )
                     waitToDisappear( driver, element, waitForElement, stayGone, True )
-                time.sleep( 0.05 )
+                time.sleep( driver.child.sleepTime )
 ####################################################################################################
 
 
@@ -231,3 +231,18 @@ def urlExtractRedirect( driver, variable, value ):
     driver.logMsg( "AFTER: " + url )
     driver.get( url )
 ####################################################################################################
+
+def elementBySelector( element, type ):
+    if type == "id": 
+        s = "e = document.getElementById( '" + element + "' );"
+    elif type == "name":
+        s = "e = null; if( document.getElementsByName( '" + element + "' ).length > 0 ) { " \
+            + "e = document.getElementsByName( '" + element + "' )[0] };" 
+    elif type == "xpath":
+        s = "e = document.evaluate( \""+element+"\", document, null, XPathResult.ANY_TYPE, null ).iterateNext( );"
+    elif type == "link_text":
+        s = "e = jQuery( 'a:contains(\\'" + element + "\\')' );" 
+    elif type == "css_selector":
+        s = "e = jQuery( '" + element + "' );"
+
+    return( s )

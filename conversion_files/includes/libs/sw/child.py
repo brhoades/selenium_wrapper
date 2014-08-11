@@ -38,10 +38,13 @@ class Child:
         self.baselog = log
 
         # Logging level
-        self.level = NOTICE 
+        self.level = INFO 
 
         # Do we load images
         self.options = options
+
+        # How long we sleep in loops
+        self.sleepTime = 0.01
 
         self.start( )
     ################################################################################################
