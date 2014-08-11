@@ -47,7 +47,7 @@ class Child:
         self.options = options
 
         # How long we sleep in loops
-        self.sleepTime = 0.01
+        self.sleepTime = 1
 
         self.start( )
     ################################################################################################
