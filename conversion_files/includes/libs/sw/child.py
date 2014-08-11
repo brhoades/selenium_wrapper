@@ -37,6 +37,9 @@ class Child:
         # The base log folder, which never changes.
         self.baselog = log
 
+        # Our log handle
+        self.lh = "" 
+
         # Logging level
         self.level = INFO 
 
@@ -78,9 +81,6 @@ class Child:
 
         # Workaround for internal SSL woes
         dcaps = { 'acceptSslCerts': True }
-
-        if not os.path.isdir( self.log ):
-            os.makedirs( self.log )
 
         sargs = [ '--load-images=' + str( self.options['images'] ).lower( ),
                   '--disk-cache=true',
@@ -135,8 +135,9 @@ class Child:
                 t = time.time( ) - start
                 cq.put( [ self.num, DONE, ( time.time( ) - start ), "" ] )
                 self.logMsg( "Successfully finished job (" + format( t ) + "s)" )
+
         pr.disable( )
-        f = open( self.log + 'stats.txt', 'w' )
+        f = open( os.path.join( self.log, 'stats.txt' ), 'w' )
         sortby = 'cumulative'
         ps = pstats.Stats( pr, stream=f ).sort_stats( sortby ).print_stats( )
         f.close( )
@@ -179,7 +180,7 @@ class Child:
             fn = os.path.join( self.log, 'error_' + str( i ) + '.png' )
             i += 1
             if not os.path.isfile( fn ):
-                    break
+                break
 
         self.driver.save_screenshot( fn ) 
         self.logMsg( "Wrote screenshot to: " + fn, level )
@@ -188,18 +189,26 @@ class Child:
 
 
     ################################################################################################
-    # logMsg( self, e )
+    # logMsg( self, e, level )
     # Logs a Message
-    #   Writes to our message log
+    #   Writes to our message log if level is what we are logging at.
     def logMsg( self, e, level=NOTICE ):
+        # Determine if we're logging this low
+        if level < self.level:
+            return
+
         # Get our timestamp
         timestamp = datetime.now( ).strftime( "%H:%M:%S" )
+        
+        # string
+        w = "[%s] %s\t%s\n" % ( timestamp, errorLevelToStr( level ), e )
 
-        # Determine if we're logging this low
-        if level >= self.level:
-            f = open( os.path.join( self.log, 'log.txt' ), 'a+' )
-            f.write( "[%s] %s\t%s\n" % ( timestamp, errorLevelToStr( level ), e ) ) 
-            f.close( )
+        # This typically errors out the first time through
+        try: 
+            self.lh.write( w ) 
+        except:
+            self.lh = open( os.path.join( self.log, 'log.txt' ), 'a+' )
+            self.lh.write( w ) 
     ################################################################################################
 
 
@@ -238,6 +247,13 @@ class Child:
 
         # Log directory, unique so that each
         self.log = os.path.join( self.baselog, str( self.num + 1 ) + "-" + self.run )
+
+        # Create our path
+        if not os.path.isdir( self.log ):
+            os.makedirs( self.log )
+
+        # Open our handle
+        self.lh = open( os.path.join( self.log, 'log.txt' ), 'a+' )
 
         # Our process        
         self.proc = Process( target=self.think, args=( ) )
@@ -279,6 +295,8 @@ class Child:
         self.proc.terminate( )
         self.proc.join( )
         self.proc = None
+
+        self.lh.close( )
     ################################################################################################
 
 
