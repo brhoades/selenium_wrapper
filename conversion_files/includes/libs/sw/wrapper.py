@@ -11,13 +11,22 @@ def main( func, file, **kwargs ):
     numTimes = 1
     children = 3 
     images = False
+    staggered = False
 
     if len( sys.argv ) > 1:
         numTimes = int( sys.argv[1] )
     if len( sys.argv ) > 2:
         children = int( sys.argv[2] )
+    if len( sys.argv ) > 3:
+        staggered = sys.argv[3]
+        if staggered == "y":
+            staggered = True
+        else:  
+            staggered = False
      
     print( "\n" + ( "=" * 40 ) )
+
+    kwargs['staggered'] = staggered
 
     pool = ChildPool( children, numTimes, func, file, kwargs )
 

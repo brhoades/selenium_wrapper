@@ -42,7 +42,7 @@ class ChildPool:
         self.func = func
 
         # Time between statistics reporting
-        self.timePerReport = 60 
+        self.timePerReport = 100 
 
         # Don't report statistics for another minute
         self.nextStat = time.clock( ) + int( self.timePerReport*1.1 )
@@ -50,19 +50,30 @@ class ChildPool:
         # Our timestamp
         self.timestamp = datetime.datetime.now( ).strftime( "%Y-%m-%d_%H-%M-%S" )
 
-        # Do we get images?
         self.options = kwargs
+
+        staggered = kwargs.get( 'staggered', True )
 
         # General log directory, shared by all children
         self.log = os.path.join( os.path.dirname( os.path.abspath( file ) ), "logs", self.timestamp ) 
 
         print( "Preparing " + str( numChildren ) + " " + ( "child" if numChildren == 1 else "children" ) 
                + " to do " + str( numJobs ) + " job" + ( "s" if numJobs != 1 else "" ) + "." )
-        for i in range( numChildren ):
-            self.newChild( )
 
         # Mark our start time
         self.started = time.time( )
+
+        # Starting for now...
+        self.starting = True
+
+        # Children left
+        self.childrenLeft = self.numChildren
+
+        # Next time we'll spawn a child
+        self.nextSpawn = time.time( )
+
+        # Time between children spawning
+        self.staggeredTime = 5
     ################################################################################################
 
 
@@ -140,15 +151,25 @@ class ChildPool:
 
             elif r[RESULT] == WAIT_TIME:
                 self.data[i][WAIT_TIME] += r[TIME]
-
-        # Check that children are alive, restart
-        for i in range(self.numChildren):
-            if not self.children[i].is_alive( ) and not self.workQueue.empty( ):
-                #FIXME: Check if we need more workers or if one is alive / without job to take this
-                self.children[i].restart( )
-            elif not self.children[i].is_alive( ) \
-                 and not self.children[i].is_done( ) and self.workQueue.empty( ):
-                self.children[i].stop( "DONE" )
+        
+        # Still spawning children, ignore their status until done.
+        if self.starting == True:
+            if self.childrenLeft > 0 and time.time( ) > self.nextSpawn:
+                self.newChild( )
+                if self.options['staggered']:
+                    self.nextSpawn = time.time( ) + self.staggeredTime
+                self.childrenLeft -= 1
+            elif self.childrenLeft == 0:
+                self.starting = False
+        else: 
+            # Check that children are alive, restart
+            for i in range(self.numChildren):
+                if not self.children[i].is_alive( ) and not self.workQueue.empty( ):
+                    #FIXME: Check if we need more workers or if one is alive / without job to take this
+                    self.children[i].restart( )
+                elif not self.children[i].is_alive( ) \
+                     and not self.children[i].is_done( ) and self.workQueue.empty( ):
+                    self.children[i].stop( "DONE" )
 
         # Statistics reporting
         self.reportStatistics( )
