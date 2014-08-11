@@ -89,7 +89,7 @@ class Child:
 
         try: 
             # Initialize our driver with our custom log directories and preferences (capabilities)
-            self.driver = webdriver.PhantomJS( desired_capabilities=dcaps, service_log_path=( self.log + "ghostdriver.log" ), \
+            self.driver = webdriver.PhantomJS( desired_capabilities=dcaps, service_log_path=os.path.join( self.log, "ghostdriver.log" ), \
                                                service_args=sargs )
         except Exception as e:
             self.logMsg( "Webdriver failed to load: " + str( e ) + "\n " + traceback.formatexc( ), CRITICAL )
@@ -165,7 +165,7 @@ class Child:
             return
 
         while True:
-            fn =  self.log + 'error_' + str( i ) + '.png'
+            fn = os.path.join( self.log, 'error_' + str( i ) + '.png' )
             i += 1
             if not os.path.isfile( fn ):
                     break
@@ -186,7 +186,7 @@ class Child:
 
         # Determine if we're logging this low
         if level >= self.level:
-            f = open( self.log + 'log.txt', 'a+' )
+            f = open( os.path.join( self.log, 'log.txt' ), 'a+' )
             f.write( "[%s] %s\t%s\n" % ( timestamp, errorLevelToStr( level ), e ) ) 
             f.close( )
     ################################################################################################
@@ -226,7 +226,7 @@ class Child:
         self.run = str( int( self.run ) + 1 )
 
         # Log directory, unique so that each
-        self.log = self.baselog + str( self.num + 1 ) + "-" + self.run + "\\"
+        self.log = os.path.join( self.baselog, str( self.num + 1 ) + "-" + self.run )
 
         # Our process        
         self.proc = Process( target=self.think, args=( ) )
