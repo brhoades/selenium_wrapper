@@ -107,6 +107,9 @@ class Child:
         # Insert ourself into webdriver
         self.driver.child = self
 
+        # Change our implicit wait time
+        self.driver.implicitly_wait( 0 )
+
         # Push a STARTING message to our pool, if we print it we risk scrambling text in stdout
         cq.put( [ self.num, READY, time.time( ), "" ] )
 
