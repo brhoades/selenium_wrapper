@@ -62,14 +62,17 @@ def exists( driver, element, type, noDriver=False ):
     res = ""
     s = ""
 
-    if type == "link_text" or type == "css_selector":
-        if not jQCheck( driver ):
-            res = True
+    if not jQCheck( driver ):
+        res = True
+        noDriver = False
+        child.logMsg( "Unable to properly load jQuery on page: " + driver.current_url, CRITICAL )
 
+    # First block is for testing with javascript, which is very quick.
     if res == "":
         s = elementBySelector( element, type )
         try: 
-            s += " return( e != null && typeof e != 'undefined' && !e.disabled )"
+            s += " return( e != null && typeof e != 'undefined' && !e.disabled && " \
+                 + " e.is( ':visible' ) && !e.is( ':disabled' ) ); "
             res = driver.execute_script( s )
         except Exception as e:
             driver.child.logMsg( "Error in Javascript ('" + element + "', '" + type + "')", ERROR )
@@ -82,6 +85,7 @@ def exists( driver, element, type, noDriver=False ):
     if noDriver:
         return( res )
 
+    # Second block for a more rigorous test with webdriver. This is time consuming and slow... only done if needed
     if res == True:
         e = ""
         try: 
@@ -96,8 +100,6 @@ def exists( driver, element, type, noDriver=False ):
             elif type == "css_selector":
                 e = driver.find_element_by_css_selector( element )
         except Exception as e:
-            driver.child.logMsg( str( e ), ERROR )
-            driver.child.logMsg( traceback.format_exc( ), ERROR )
             return False
 
         if isDisplayed( e ) and isEnabled( e ):
@@ -122,7 +124,9 @@ def sleepwait( driver, element, type, **kwargs ):
     if not exists( driver, element, type, lightconfirm ):
         driver.child.logMsg( "Beginning wait for element \"%s\" of type \"%s\"." % ( element, type ), NOTICE )
 
-        while not exists( driver, element, type, lightconfirm ) and time.time( ) - start < timeout:
+        while not exists( driver, element, type, lightconfirm ):
+            if time.time( ) - start < timeout: 
+                break
             time.sleep( driver.child.sleepTime )
         else:
             return element 
@@ -149,35 +153,54 @@ def sendKeys( driver, element, type, text ):
 
 
 ####################################################################################################
-# waitToDisappear( driver, element )
+# waitToDisappear( driver, element, waitForElement=True, stayGone=0, recur=False, timeout=20, type="id"
+#                  offset=0, waitTimeout = 1 )
 # Waits for a Element to Disappear
 #   Adapted from a previous, more specialized function to wait for any div with the id element 
 #   to disappear, and wait until then. If stayGone is not 0, we will keep checking for stayGone 
-#   seconds. If recur is selected we don't print out redundant information.
-def waitToDisappear( driver, element, waitForElement=True, stayGone=0, recur=False ):
-    i = 0
+#   seconds. If recur is selected we don't print out redundant information. With a timeout
+#   we won't wait longer than timeout seconds
+def waitToDisappear( driver, element, **kwargs ):
+    waitForElement = kwargs.get( 'waitForElement', True )
+    waitTimeout    = kwargs.get( 'waitTimeout', 1 )
+    stayGone       = kwargs.get( 'stayGone', 0 )
+    recur          = kwargs.get( 'recur', False )
+    timeout        = kwargs.get( 'timeout', 20 )
+    type           = kwargs.get( 'type', 'id' )
+    offset         = kwargs.get( 'offset', 0 )
+    start          = time.time( ) - offset
 
+    # Do an initial wait for our element to appear. Any confirmation is confirmation (light).
     if waitForElement:
-        sleepwait( driver, element, "id", timeout=2, lightconfirm=True )
+        sleepwait( driver, element, type, timeout=waitTimeout, lightconfirm=True )
+        if not exists( driver, element, type, True ):
+            # If we should wait for it and it's not here... leave.
+            return
 
-
-    if exists( driver, element, "id" ):
-        start = time.time( )
+    if exists( driver, element, type, True ):
+        start_inner = time.time( )
         if not recur:
-            driver.child.logMsg( "Waiting for %s on %s" % ( element, driver.current_url ), INFO )
+            driver.child.logMsg( "Waiting for %s" % ( element ), INFO )
 
-        while exists( driver, element, "id" ):
+        while exists( driver, element, type, True ):
+            if time.time( ) - start > timeout:
+                driver.child.logMsg( "Element did not reappear within %ss, timed out." % ( str(timeout) ) )
+                break #this skips the else
             time.sleep( driver.child.sleepTime )
         else:
-            driver.child.cq.put( [ driver.child.num, WAIT_TIME, time.time( ) - start ] )
+            driver.child.cq.put( [ driver.child.num, WAIT_TIME, time.time( ) - start_inner ] )
             driver.child.logMsg( "Element \"%s\" disappeared!" % ( element ), INFO )
 
-            w = stayGone + time.time( )
-            while w - time.time( ) >= 0:
-                if exists( driver, element, "id" ):
-                    driver.logMsg( "Element came back!" )
-                    waitToDisappear( driver, element, waitForElement, stayGone, True )
-                time.sleep( driver.child.sleepTime )
+            if stayGone > 0:
+                w = stayGone + time.time( )
+                while w - time.time( ) >= 0:
+                    if exists( driver, element, type, True ):
+                        driver.logMsg( "Element came back!" )
+                        kwargs['offset'] = time.time( ) - start
+                        kwargs['recur'] = True
+
+                        waitToDisappear( driver, element, kwargs )
+                    time.sleep( driver.child.sleepTime )
 ####################################################################################################
 
 
@@ -193,6 +216,7 @@ def isDisplayed( e ):
             return True
     except:
         return False
+    return False
 ####################################################################################################
 
 
@@ -207,6 +231,7 @@ def isEnabled( e ):
             return True
     except:
         return False
+    return False
 ####################################################################################################
 
 
@@ -234,12 +259,12 @@ def urlExtractRedirect( driver, variable, value ):
 
 def elementBySelector( element, type ):
     if type == "id": 
-        s = "e = document.getElementById( '" + element + "' );"
+        s = "e = jQuery( document.getElementById( '" + element + "' ) );"
     elif type == "name":
         s = "e = null; if( document.getElementsByName( '" + element + "' ).length > 0 ) { " \
-            + "e = document.getElementsByName( '" + element + "' )[0] };" 
+            + "e = jQuery( document.getElementsByName( '" + element + "' )[0] ) };" 
     elif type == "xpath":
-        s = "e = document.evaluate( \""+element+"\", document, null, XPathResult.ANY_TYPE, null ).iterateNext( );"
+        s = "e = jQuery( document.evaluate( \""+element+"\", document, null, XPathResult.ANY_TYPE, null ).iterateNext( ) );"
     elif type == "link_text":
         s = "e = jQuery( 'a:contains(\\'" + element + "\\')' );" 
     elif type == "css_selector":

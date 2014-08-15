@@ -74,7 +74,7 @@ class Child:
 
         # This changes our useragent to something that shouldn't trigger websense
         DesiredCapabilities.PHANTOMJS['phantomjs.page.settings.userAgent'] = \
-            'Mozilla/5.0 (Windows NT 5.1; rv:31.0) Gecko/20100101 Firefox/31.0'
+            'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; Trident/4.0)'
 
         # Monkeypatch our PhantomJS class in, which disables images
         webdriver.phantomjs.webdriver.Service = PhantomJSNoImages
@@ -139,9 +139,8 @@ class Child:
                 cq.put( [ self.num, DONE, ( time.time( ) - start ), "" ] )
                 self.logMsg( "Successfully finished job (" + format( t ) + "s)" )
         pr.disable( )
-        f = open( self.log + 'stats.txt', 'w' )
-        sortby = 'cumulative'
-        ps = pstats.Stats( pr, stream=f ).sort_stats( sortby ).print_stats( )
+        f = open( os.path.join( self.log, 'stats.txt' ), 'w' )
+        ps = pstats.Stats( pr, stream=f ).strip_dirs( ).sort_stats( 'cumtime' ).print_stats( )
         f.close( )
 
         # Quit after we have finished our work queue, this kills the phantomjs process.
@@ -209,7 +208,7 @@ class Child:
         try: 
             self.lh.write( w ) 
         except:
-            self.lh = open( os.path.join( self.log, 'log.txt' ), 'a+' )
+            self.lh = open( os.path.join( self.log, 'log.txt' ), 'a+', 0 )
             self.lh.write( w ) 
     ################################################################################################
 
