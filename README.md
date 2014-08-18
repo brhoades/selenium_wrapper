@@ -67,11 +67,11 @@ Conversion will automatically strip any assertions or clears from the script pro
 
 There are directives which may be inserted into the source script's function which will be parsed by the converter into wrapper functions. Variables can be used in their arguments as the converter turns the directives into functions after conversion.
 
-Directives:
-- #log message
-  * This will write to our child's log the msg provided. 
-- #msg message
-  * Writes Child #: message to the console.
+##### Directives:
+- `#log message`
+  * This will write to our child's log "message". 
+- `#msg message`
+  * Writes "Child #: message" to the console.
 - #wait element (arguments: type=id, timeout=20, stayGone=0, waitTimeout=1, waitForElement=True)
   * Waits for the element with critera type= (default id) to appear.
   * `#wait overlay type=id`
@@ -82,10 +82,37 @@ Directives:
     - Waits for id=blurydiv to disappear. If it doesn't after 5 seconds, returns.
   * `#wait blurydiv waitTimeout=5`
     - Waits for id=blurydiv to disappear. Gives the element 5 seconds to appear first before waiting for it to disappear. Default time to appear is 1 second.
-- #error message
-  * Throws an error, which takes a screenshot, logs the screenshot name, and logs message to the log.
-- #screenshot
+- `#error message`
+  * Throws an error, which takes a screenshot, logs the screenshot name, and logs "message" to the log.
+- `#screenshot`
   * Takes a screenshot which appears as error_#.png within the child's log directory. The log references the file name when this is called.
 
+By including at the top of your script #OPTIONS with a following comment block, the converter will parse options into the output script. 
+```
+#OPTIONS
+#gd option="text"
+#import module
+```
+
+##### Options Directives:
+ - `#gd option="text"`
+  * Passes the string `option="text"` directly to GhostDriver's desired capabilities. Currently only the following are supported:
+   - `#gd proxy="google.com:443"`
+   - `#gd proxy-type="http"`
+ - `#import module`
+   * Includes this import in the output (wrapped) script. This is useful for including, for example, random to randomly choose a user from a table.
+
 ### Wrapper
-The wrapper is automatically applied to the source script when the converter finishes.
+The wrapper is automatically applied to the source script when the converter finishes. It is intended to be as transparent as possible after conversion, requiring minimal user interaction to get it running.
+
+```
+run.bat
+
+You may press enter to use the default values in parenthesis.
+Number of Children (3): 3
+Number of Jobs to Run (3): 3
+Stagger Children Spawning (n): n
+```
+
+Running `run.bat` on Windows will present the user with questions for how the script will operate. The number of children determines the number of concurrent PhantomJS processes the script will run. The recommended number is 3. Users with a more powerful processor will find themselves capable of running over 20. Jobs determines the number of times the recorded script will run. Every child process will pull from the job queue (with the number of specified jobs) when it starts and will do so until there is no more work. The last option, staggared child spawning, is intended to avoid locking out IP's by suddenly hitting a website with 20 concurrent users requesting the same content. Staggering causes children to spawn 5 seconds apart.
+
