@@ -8,7 +8,7 @@ from const import *
 # Loads JavaScript
 #   This function takes our webdriver object in and injects some JavaScript.
 def loadScript( driver, jqs ):
-    driver.execute_script( \
+    driver.execute_script_async( \
         "var script = document.createElement( 'script' ); \
         script.type = 'text/javascript'; \
         script.src = '" + jqs + "'; \
@@ -56,52 +56,24 @@ def jQCheck( driver ):
 #   a timeout where it waits for an element to appear for about 15 seconds. We try to only use that
 #   if absolutely needed as a double check. An exception is when we don't have jQuery and can't use 
 #   the last two, fancy, javascript checks, this bypasses them and directly goes to the webdriver test. 
-def exists( driver, element, type, noDriver=False ):
-    res = ""
-    s = ""
+def exists( driver, element, type, lightConfirm=False ):
+    e = ""
+    try: 
+        if type == "id":
+            e = driver.find_element_by_id( element )
+        elif type == "name":
+            e = driver.find_element_by_name( element )
+        elif type == "xpath":
+            e = driver.find_element_by_xpath( element )
+        elif type == "link_text":
+            e = driver.find_element_by_link_text( element )
+        elif type == "css_selector":
+            e = driver.find_element_by_css_selector( element )
+    except Exception as e:
+        return False
 
-    if not jQCheck( driver ):
-        res = True
-        noDriver = False
-        child.logMsg( "Unable to properly load jQuery on page: " + driver.current_url, CRITICAL )
-
-    # First block is for testing with javascript, which is very quick.
-    if res == "":
-        s = elementBySelector( element, type )
-        try: 
-            s += " return( e != null && typeof e != 'undefined' && !e.disabled && " \
-                 + " e.is( ':visible' ) && !e.is( ':disabled' ) ); "
-            res = driver.execute_script( s )
-        except Exception as e:
-            driver.child.logMsg( "Error in Javascript ('" + element + "', '" + type + "')", ERROR )
-            driver.child.logMsg( str( e ), ERROR )
-            driver.child.logMsg( traceback.format_exc( ), ERROR )
-            res = False
-
-    res = bool( res )
-    
-    if noDriver:
-        return( res )
-
-    # Second block for a more rigorous test with webdriver. This is time consuming and slow... only done if needed
-    if res == True:
-        e = ""
-        try: 
-            if type == "id":
-                e = driver.find_element_by_id( element )
-            elif type == "name":
-                e = driver.find_element_by_name( element )
-            elif type == "xpath":
-                e = driver.find_element_by_xpath( element )
-            elif type == "link_text":
-                e = driver.find_element_by_link_text( element )
-            elif type == "css_selector":
-                e = driver.find_element_by_css_selector( element )
-        except Exception as e:
-            return False
-
-        if isDisplayed( e ) and isEnabled( e ):
-            return True                             # This prevents things such as clear overlays from confusing our exist check
+    if lightConfirm or ( isDisplayed( e ) and isEnabled( e ) ):
+        return True
 
     return False
 ####################################################################################################
@@ -122,8 +94,10 @@ def sleepwait( driver, element, type, **kwargs ):
     if not exists( driver, element, type, lightconfirm ):
         driver.child.logMsg( "Beginning wait for element \"%s\" of type \"%s\"." % ( element, type ), NOTICE )
 
+        time.sleep( driver.child.sleepTime )
+
         while not exists( driver, element, type, lightconfirm ):
-            if time.time( ) - start < timeout: 
+            if time.time( ) - start > timeout: 
                 break
             time.sleep( driver.child.sleepTime )
         else:
@@ -254,18 +228,3 @@ def urlExtractRedirect( driver, variable, value ):
     driver.logMsg( "AFTER: " + url )
     driver.get( url )
 ####################################################################################################
-
-def elementBySelector( element, type ):
-    if type == "id": 
-        s = "e = jQuery( document.getElementById( '" + element + "' ) );"
-    elif type == "name":
-        s = "e = null; if( document.getElementsByName( '" + element + "' ).length > 0 ) { " \
-            + "e = jQuery( document.getElementsByName( '" + element + "' )[0] ) };" 
-    elif type == "xpath":
-        s = "e = jQuery( document.evaluate( \""+element+"\", document, null, XPathResult.ANY_TYPE, null ).iterateNext( ) );"
-    elif type == "link_text":
-        s = "e = jQuery( 'a:contains(\\'" + element + "\\')' );" 
-    elif type == "css_selector":
-        s = "e = jQuery( '" + element + "' );"
-
-    return( s )
