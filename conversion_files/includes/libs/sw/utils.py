@@ -8,7 +8,7 @@ from const import *
 # Loads JavaScript
 #   This function takes our webdriver object in and injects some JavaScript.
 def loadScript( driver, jqs ):
-    driver.execute_script_async( \
+    driver.execute_script( \
         "var script = document.createElement( 'script' ); \
         script.type = 'text/javascript'; \
         script.src = '" + jqs + "'; \
