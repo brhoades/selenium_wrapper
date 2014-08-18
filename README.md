@@ -62,3 +62,30 @@ Conversion will take a while. It will initialize a new directory, copy a slimmed
 and then convert the script into a form which utilizes the included Selenium wrapper. Once finished,
 it will prompt you to tell you so. Progress can be monitored in the black terminal that opened when the exe/script was
 initially ran.
+
+Conversion will automatically strip any assertions or clears from the script provided. Assertions are not currently supported as the wrapper does not currently wrap itself in a unit testing suite. Any driver.find_element_by(...).send_keys( "text" ) is wrapped into a sendKeys function. This eliminates the need for a .clear( ) statement and saves time. Conversion also replaces any find_element_by_ segments with sleepwait which is a controlled (and CPU-optimized) function to wait for an element.
+
+There are directives which may be inserted into the source script's function which will be parsed by the converter into wrapper functions. Variables can be used in their arguments as the converter turns the directives into functions after conversion.
+
+Directives:
+- #log message
+  * This will write to our child's log the msg provided. 
+- #msg message
+  * Writes Child #: message to the console.
+- #wait element (arguments: type=id, timeout=20, stayGone=0, waitTimeout=1, waitForElement=True)
+  * Waits for the element with critera type= (default id) to appear.
+  * `#wait overlay type=id`
+    - Waits for the element with id=overlay to disappear
+  * `#wait overlay type=name, stayGone=3`
+    - Waits for the element with name=overlay to disappear and waits an additional 3 seconds for it to not come back.
+  * `#wait blurydiv timeout=5`
+    - Waits for id=blurydiv to disappear. If it doesn't after 5 seconds, returns.
+  * `#wait blurydiv waitTimeout=5`
+    - Waits for id=blurydiv to disappear. Gives the element 5 seconds to appear first before waiting for it to disappear. Default time to appear is 1 second.
+- #error message
+  * Throws an error, which takes a screenshot, logs the screenshot name, and logs message to the log.
+- #screenshot
+  * Takes a screenshot which appears as error_#.png within the child's log directory. The log references the file name when this is called.
+
+### Wrapper
+The wrapper is automatically applied to the source script when the converter finishes.
