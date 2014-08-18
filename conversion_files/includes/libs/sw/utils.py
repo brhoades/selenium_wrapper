@@ -73,7 +73,7 @@ def exists( driver, element, type, lightConfirm=False ):
         return False
 
     if lightConfirm or ( isDisplayed( e ) and isEnabled( e ) ):
-        return True
+        return e 
 
     return False
 ####################################################################################################
@@ -91,22 +91,23 @@ def sleepwait( driver, element, type, **kwargs ):
     timeout = kwargs.get( 'timeout', 15 )
     lightconfirm = kwargs.get( 'lightconfirm', False )
     
-    if not exists( driver, element, type, lightconfirm ):
+    e = exists( driver, element, type, lightconfirm )
+    if not e:
         driver.child.logMsg( "Beginning wait for element \"%s\" of type \"%s\"." % ( element, type ), NOTICE )
 
-        time.sleep( driver.child.sleepTime )
-
-        while not exists( driver, element, type, lightconfirm ):
+        while not e:
             if time.time( ) - start > timeout: 
                 break
             time.sleep( driver.child.sleepTime )
+
+            e = exists( driver, element, type, lightconfirm )
         else:
-            return element 
+            return e 
     else:
-        return element
+        return e
 
     driver.child.logMsg( "Element \"%s\" of type \"%s\" will not be found on page \"%s\"." % ( element, type, driver.current_url ), ERROR )
-    return element
+    return e
 ####################################################################################################
 
 
@@ -116,6 +117,8 @@ def sleepwait( driver, element, type, **kwargs ):
 # Sends Keys to Element
 #   Drop in replacement for webdriver's sendkeys.
 def sendKeys( driver, element, type, text ):
+    sleepwait( driver, element, type )
+
     if type == "id":
         driver.execute_script( "document.getElementById('" + element + "').value = '" + text + "'" )
     elif type == "name":

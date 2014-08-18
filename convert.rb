@@ -126,12 +126,12 @@ def convert( filename, outputfn, options={} )
   func.map! do |l|
     if l !~ /\.send_keys/
       #                                            The positive lookahead here is to make sure we don't get greedy with the .+ and capture .send_keys or .select_by_text
-      l.sub /find_element_by_([A-Za-z_]+)\(([ur]?".+")\)(?=\.[A-Za-z_]{3,}|\s?\)\.[A-Za-z_]{3,})/ do
-        "find_element_by_#{$1}( sleepwait( driver, #{$2}, \"#{$1}\" ) )" 
+      l.sub /driver\.find_element_by_([A-Za-z_]+)\(([ur]?".+")\)(?=\.[A-Za-z_]{3,}|\s?\)\.[A-Za-z_]{3,})/ do
+        "sleepwait( driver, #{$2}, \"#{$1}\" )" 
       end
     else
       l.sub /driver\.find_element_by_([A-Za-z_]+)\(([ur]?".+")\)\.send_keys\(\"([^"]+)\"\)/ do
-        "sendKeys( driver, sleepwait( driver, #{$2}, \"#{$1}\" ), \"#{$1}\", \"#{$3}\" )"
+        "sendKeys( driver, #{$2}, \"#{$1}\", \"#{$3}\" )"
       end
     end
   end
