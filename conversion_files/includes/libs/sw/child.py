@@ -116,8 +116,6 @@ class Child:
         # Write to our log another message indicating we are starting our runs
         self.logMsg( "Child process started and loaded" )
 
-        pr = cProfile.Profile( )
-        pr.enable( )
         # While our work queue isn't empty...
         while not wq.empty( ):
             func = wq.get( True, 5 )
@@ -138,10 +136,6 @@ class Child:
                 t = time.time( ) - start
                 cq.put( [ self.num, DONE, ( time.time( ) - start ), "" ] )
                 self.logMsg( "Successfully finished job (" + format( t ) + "s)" )
-        pr.disable( )
-        f = open( os.path.join( self.log, 'stats.txt' ), 'w' )
-        ps = pstats.Stats( pr, stream=f ).strip_dirs( ).sort_stats( 'cumtime' ).print_stats( )
-        f.close( )
 
         # Quit after we have finished our work queue, this kills the phantomjs process.
         self.driver.quit( )
