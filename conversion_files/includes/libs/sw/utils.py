@@ -4,14 +4,14 @@ from const import *
 
 
 ####################################################################################################
-# loadScript( driver )
-# jQuery Check
-#   This function takes our webdriver object in and checks if the current loaded page has jQuery on it.
-def loadScript( driver, scriptfn ):
-    driver.execute_script( \
+# loadScript( driver, jqs )
+# Loads JavaScript
+#   This function takes our webdriver object in and injects some JavaScript.
+def loadScript( driver, jqs ):
+    driver.execute_script_async( \
         "var script = document.createElement( 'script' ); \
-        script.src = '" + scriptfn + "'; \
         script.type = 'text/javascript'; \
+        script.src = '" + jqs + "'; \
         document.getElementsByTagName('head')[0].appendChild( script );" )
 ####################################################################################################
 
@@ -25,22 +25,20 @@ def loadScript( driver, scriptfn ):
 #   after that it just returns False so that the exists script will stop holding things up. This
 #   usually only happens on pages where some Javascript has failed.
 def jQCheck( driver ):
-    jq = "http://code.jquery.com/jquery-1.11.1.min.js"       # jQuery Script
-    jq2 = "..\..\includes\jquery-xpath.js"                   # Our xpath script
     jqCheck = "return typeof jQuery != 'undefined'"          # Some StackOverflow post recommended this bit of code
+    loadScript( driver, "http://code.jquery.com/jquery-2.1.1.min.js" )
     timeout = 1                                              # Number of seconds before we give up 
 
     if not bool( driver.execute_script( jqCheck ) ):         #FIXME: Add a check that makes sure we haven't held up
         driver.child.logMsg( "jQuery not loaded into browser, inserting manually.", INFO )
         loadScript( driver, jq )
-        loadScript( driver, jq2 )
 
         start = time.time( )
         while not bool( driver.execute_script( jqCheck ) ) and time.time( ) - start < timeout:
             time.sleep( driver.child.sleepTime )
         if not bool( driver.execute_script( jqCheck ) ):
             driver.child.logMsg( "jQuery failed to load into browser after " + str( timeout ) + "s.", WARNING  )
-            return False                              # False, jQuery isn't running
+            return False                              # False, jQuery isn't loaded
         else:
             driver.child.logMsg( "jQuery loaded into browser successfully after " + format( str( time.time( ) - start ) ) + "s.", INFO )
             return True                               # True, it is
