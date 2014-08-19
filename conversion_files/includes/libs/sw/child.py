@@ -10,11 +10,21 @@ from datetime import datetime
 import cProfile, pstats, StringIO
 
 class Child:
-    ################################################################################################
-    # __init__( self, cq, wq, num, log, options )
-    # Initialize our Child
-    #   Initializes our child and then starts it. It takes our pool's childqueue, our pool's workqueue,
-    #   our child's number to report back statuses, our base log directory, and a collection of options.
+    """Initializes our child and then starts it. It takes our pool's childqueue, our pool's workqueue,
+    our child's number to report back statuses, our base log directory, and a collection of options.
+
+    :param cq: ChildQueue, this is passed from :class:`sw.pool` and is used to transmit the status of the child
+    to our pool.
+    :param wq: WorkQueue, also passed from :class:`sw.pool` and child pops a function off of it to run (a job) 
+        when it finishes a job / starts initially.
+    :param num: Number of the child relevant to :class:`sw.pool`'s self.data array. This index is used to 
+        easily communicate results and relate them to the child in that array. `num` is also used when printing
+        out a status message.
+    :param log: Base log directory which a child will create a `num`-`self.run` folder in to log to.
+    :param options: Dict from kwargs which contains directives to pass to GhostDriver.
+
+    :return: Child (self)
+    """
     def __init__( self, cq, wq, num, log, options ):
         # Our output queue (childqueue)
         self.cq = cq
@@ -50,25 +60,27 @@ class Child:
         self.sleepTime = 1
 
         self.start( )
-    ################################################################################################
 
 
 
-    ################################################################################################
-    # msg( self, message )
-    # Formats a message for this child to be printed out.
     def msg( self, message ):
+        """Formats a message for this child to be printed out.
+
+        :param msg: The message to be printed out to the console.
+        :return: None
+        """
         print( "Child #" + str( self.num + 1 ) + ": " + message )
-    ################################################################################################
 
 
 
-    ################################################################################################
-    # think( self )
-    #   The beef of the script, where the main thinking is done. Takes no arguments, just reads from 
-    #   self variables. PhantomJS is added into the python path automatically, so nothing has to be done
-    #   there.
     def think( self ):
+        """The beef of the wrapper, where the main thinking is done. Takes no arguments, just reads from 
+           self variables set in :class:`sw.Child`. PhantomJS is added into the python path by run.bat, so
+           that is already handled.
+
+           :return: None
+        """
+
         wq = self.wq
         cq = self.cq
 
@@ -139,31 +151,35 @@ class Child:
 
         # Quit after we have finished our work queue, this kills the phantomjs process.
         self.driver.quit( )
-    ################################################################################################
 
 
 
-    ################################################################################################
-    # logError( self, e )
-    # Log Screenshot of Error with Exception
-    #   Renders a screenshot of what it sees then writes it to our log directory as error_#.png
-    #   Also takes the exception we received and exports it as text
     def logError( self, e, noScreenshot=False ):
+        """Log Screenshot of Error with Exception
+           Renders a screenshot of what it sees then writes it to our log directory as error_#.png
+           Also takes the exception we received and exports it as text
+
+           :param e: Unicode json-encoded string from a webdriver-thrown error.
+           :param noScreenshot: Whether or not to take a screenshot of the error.
+           :return: None
+        """
 
         o = pformat( formatError( e, "log" ) )
         self.logMsg( o, CRITICAL )
 
         if not noScreenshot:
             self.screenshot( CRITICAL )
-    ################################################################################################
 
 
 
-    
-    ################################################################################################
-    # screenshot( level=NOTICE )
-    # Logs a screenshot and prints a message.
     def screenshot( self, level=NOTICE ):
+        """Saves a screenshot to `num`-`run`/error_#.png and prints a message into the log specifying the file logged to.
+           
+           :param level: This determines whether or not the error message will be logged according to the
+               level set in self.level. The screenshot will print anyway. If this error is not greater or equal to the level specified in self.level,
+               it is not printed. If it is, the message is printed into log.txt with the level specified by the timestamp.
+           :return: None
+        """
         fn = ""
         i = 0
         # If we are writing several errors, number them appropriately
@@ -179,15 +195,19 @@ class Child:
 
         self.driver.save_screenshot( fn ) 
         self.logMsg( "Wrote screenshot to: " + fn, level )
-    ################################################################################################
 
 
 
-    ################################################################################################
-    # logMsg( self, e, level )
-    # Logs a Message
-    #   Writes to our message log if level is what we are logging at.
     def logMsg( self, e, level=NOTICE ):
+        """Writes to our message log if level is greater than or equal to our level (in self.log).
+        
+           :param e: The message to be written to the log.
+            
+           :param level: This determines whether or not the error message will be logged according to the
+               level set in self.level. If this error is not greater or equal to the level specified in self.level,
+               it is not printed. If it is, the message is printed into log.txt with the level specified by the timestamp.
+           :return: None
+        """
         # Determine if we're logging this low
         if level < self.level:
             return
@@ -204,39 +224,37 @@ class Child:
         except:
             self.lh = open( os.path.join( self.log, 'log.txt' ), 'a+', 0 )
             self.lh.write( w ) 
-    ################################################################################################
 
 
 
-    ################################################################################################
-    # is_alive( self )
-    # Is Child Alive
-    #   Checks if the child's process is still running, if it is then it returns True, otherwise False.
-    #   There's a check for if the process is None, which is set when a child terminates.
     def is_alive( self ):
+        """
+           Checks if the child's process is still running, if it is then it returns True, otherwise False.
+           There's a check for if the process is None, which is set when a child terminates.
+
+           :return: Boolean for if Child process is still active (different from if a child is processing data).
+           """
         if self.proc != None:
             return self.proc.is_alive( )
         else:  
             return False
-    ################################################################################################
 
 
 
-    ################################################################################################
-    # is_done( self )
-    # Is Child Done
-    #   Check if a child is done. When a child process is finished its self.proc is set to None.
     def is_done( self ):
+        """Check if a child is done. When a child process is finished its self.proc is set to None.
+           
+           :return: Boolean for if Child is finished processing data. This is usually signal to kill the subprocess.
+        """
         return self.proc == None
-    ################################################################################################
 
 
 
-    ################################################################################################
-    # start( self )
-    # Start Child
-    #   Starts our child process off properly, used after a restart typically.
     def start( self ):
+        """Starts our child process off properly, used after a restart typically.
+           
+           :return: None
+        """
         # Move our run number up since we are starting
         self.run = str( int( self.run ) + 1 )
 
@@ -255,28 +273,25 @@ class Child:
         self.msg( "LOADING" )
         self.proc.start( )
 
-    ################################################################################################
 
 
-
-    ################################################################################################
-    # restart( self )
-    # Restarts Child
-    #   Restarts the child process and gets webdriver running again.
     def restart( self ):
+        """Restarts the child process and gets webdriver running again.
+
+           :return: None
+        """
         self.stop( "RESTARTING" )
         self.start( )
 
-    ################################################################################################
 
 
-
-    ################################################################################################
-    # stop( self, msg="" )
-    # Stops Child
-    #   Stops a child process properly and sets its self.proc to None. Optionally takes a message
-    #   to print out.
     def stop( self, msg="" ):
+        """Stops a child process properly and sets its self.proc to None. Optionally takes a message
+           to print out.
+        
+           :param msg: A message to show in parenthesis on the console next to ``Child #: STOPPING (msg)``.
+           :return: None
+        """
         if self.proc == None:
             return
 
@@ -292,18 +307,17 @@ class Child:
         self.proc = None
 
         self.lh.close( )
-    ################################################################################################
 
 
 
-####################################################################################################
-# PhantomJSNoImages
-# Monkey Patched Class to Disable Images
-#   This class sits atop our PhantomJSService class included in webdriver to implemention service_args
-#   inclusion, which we pass by default --load-images=no to disable images.
 class PhantomJSNoImages( PhantomJSService ):
+    """This class sits atop our PhantomJSService class included in webdriver to implemention service_args
+       inclusion, which we pass by default --load-images=no to disable images.
+
+       :param PhantomJSService: Pass this function the PhantomJSService class so that it can patch on top of it.
+       :return: PhantomJsNoImages (self)
+    """
     def __init__( self, *args, **kwargs ):
         service_args = kwargs.setdefault( 'service_args', [] )
 
         super( PhantomJSNoImages, self ).__init__( *args, **kwargs )
-####################################################################################################

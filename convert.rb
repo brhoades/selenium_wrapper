@@ -59,12 +59,12 @@ def convert( filename, outputfn, options={} )
     if start
       ##############################################################################################
       # Custom catches for user commands
-      if l =~ /([\s]+)\#blurWait(.*)/i
-        if $2 == ""
-          func << ( $1 + "waitToDisappear( driver, 'salesforceSource_blurybackground', type='id' )\n" )
+      if l =~ /([\s]+)\#wait ([^\s]*) (.*)/i
+        if $3 == ""
+          func << ( $1 + "waitToDisappear( driver, #{$2} )\n" )
         else
-          $2.strip!
-          func << ( $1 + "waitToDisappear( driver, 'salesforceSource_blurybackground', type='id', stayGone=3 )\n" )
+          $3.strip!
+          func << ( $1 + "waitToDisappear( driver, #{$2}, #{$3} )\n" )
         end
         next
       end

@@ -7,13 +7,19 @@ from sw.formatting import *
 
 
 
-class ChildPool:
-    ################################################################################################
-    # __init__( self, numChildren, numJobs, func )
-    # Initializes our Pool
-    #   Takes in number of desired children, number of jobs to queue up, and the function to run 
-    #   numJobs times. After storing, it initializes numChildren children which then start themselves. 
-    #   Also grabs our main file location to make a log folder in an appropriate location.
+class Pool:
+    """Stores parameters across all children, sets out log directory, initializes our data arrays,
+        records start times, and pops `numJobs` functions into a Queue. Abstracts and makes it easier to
+        manage scores of child processes. Also has a :func:`think` process to continuously manage them.
+
+        :param numChildren: Number of children the pool will start with.
+        :param numJobs: Number of jobs to fill our work queue with.
+        :param func: The function reference that will be put into our work queue `numJobs` times.
+        :param file: Filename with directory of our script which contained `func`. This is used to create a relative log directory.
+        :param kwargs: Kwargs dict passed to :func:`main`, eventually passes arguments on to GhostDriver. 
+            'staggered' is pulled from this dict if it exists.
+        :returns: Pool (self)
+    """
     def __init__( self, numChildren, numJobs, func, file, kwargs ):
         # Our children
         self.children = [ None for x in range(numChildren) ]
@@ -45,7 +51,7 @@ class ChildPool:
         self.timePerReport = 100 
 
         # Don't report statistics for another minute
-        self.nextStat = time.clock( ) + int( self.timePerReport*1.1 )
+        self.nextStat = time.time( ) + int( self.timePerReport*1.1 )
 
         # Our timestamp
         self.timestamp = datetime.datetime.now( ).strftime( "%Y-%m-%d_%H-%M-%S" )
@@ -74,37 +80,36 @@ class ChildPool:
 
         # Time between children spawning
         self.staggeredTime = 5
-    ################################################################################################
 
 
 
-    ################################################################################################
-    # newChild( self, i=None )
-    # Makes a New Child
-    #   Creates a new child which starts itself. If i is none, it grabs the next available array
-    #   index, assuming it was initialized for this many children.
     def newChild( self, i=None ):
-        # Create our data's home
+        """Creates a new :class:`child` which will in turn start itself. If i is none, it grabs the next available array
+        index, assuming it was initialized for this many children (will grab an index that doesn't exist if not).
+
+        :param i: Index for child process within pool's data structure. 
+        :returns: None
+        """
         if i == None:
             for i,c in enumerate( self.children ):
                 if c == None:
                     break # This gets us our first empty i
         
         self.children[i] = Child( self.childQueue, self.workQueue, i, self.log, self.options )
-    ################################################################################################
 
 
 
-    ################################################################################################
-    # reportStatistics( self )
-    # Reports Statistics
-    #   Translates statistics into the archaic form used by my old stats function in utils.py.
-    #   Map and reduce are used to get things quickly out of the self.data 2-d array. This function
-    #   is only called every self.timePerReport seconds as set in this class's initialization func.
     def reportStatistics( self, force=False ):
+        """Translates statistics into the archaic form used by the :func:`sw.formatting.stats`.
+        Map and reduce are used to get things quickly out of the self.data 2-d array. This function
+        is only called every self.timePerReport seconds as set in this class's initialization func.
+
+        :param force: Forces a report of statistics. Only called by the script itself when done.
+        :returns: None
+        """
         # Check if it's time yet
-        if force or ( time.clock( ) >= self.nextStat and len( self.data[0] ) > 0 ):
-            self.nextStat = time.clock( ) + self.timePerReport
+        if force or ( time.time( ) >= self.nextStat and len( self.data[0] ) > 0 ):
+            self.nextStat = time.time( ) + self.timePerReport
             
             # Reduces our good/bad results into a single "this many succeeded, this many failed" number.
             # Maps our times into a single list.
@@ -117,16 +122,16 @@ class ChildPool:
             waiting = [ item for sublist in waiting for item in sublist ] # Flatten
             
             stats( good, bad, timetaken, self.children, self.numJobs, self.started, waiting ) 
-    ################################################################################################
 
 
 
-    ################################################################################################
-    # think( self )
-    # Pool's Think Function
-    #   Runs through a single think loop; called as many times as our main loop pleases.
-    #   Check children are alive/restart if there are more jobs. Checks queues and parses any data.
     def think( self ): 
+        """Runs through a single think loop; called by :func:`sw.mainmainLoop` until there is no more work remaining.
+        Check children are alive/restart if there are more jobs. Checks queues and parses any data.
+
+        :returns: None
+        """
+
         # Check our queues
         while not self.childQueue.empty( ):
             r = self.childQueue.get( False )
@@ -173,32 +178,31 @@ class ChildPool:
 
         # Statistics reporting
         self.reportStatistics( )
-    ################################################################################################
 
 
 
-    ################################################################################################
-    # done( self )
-    # Are We Done?
-    #   Returns a True/False if the pool is done processing jobs. Called continuously by our main 
-    #   loop. When False, the program terminates.
     def done( self ):
+        """Returns a True/False if the pool is done processing jobs. Called continuously by our main 
+        loop. When False, the program terminates.
+
+        :return: Boolean for if there are children still running work.
+        """
         if self.childQueue.empty( ) and self.workQueue.empty( ):
             for c in self.children:
                 if c.is_alive( ):
                     return False
         else:
             return False
+
         return True
-    ################################################################################################
 
 
 
-    ################################################################################################
-    # stop( self )
-    # Stop the Pool
-    #   Stops our pool, killing all children.
     def stop( self ):
+        """Stops the pool cleanly and terminates all the children in it.
+        
+        :return: None
+        """
         for c in self.children:
             c.stop( )
-    ################################################################################################
+            og
