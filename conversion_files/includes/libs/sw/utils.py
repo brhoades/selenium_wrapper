@@ -136,7 +136,7 @@ def sendKeys( driver, element, type, text ):
        :param text: The text to type into the element.
        :return: None
     """
-    sleepwait( driver, element, type )
+    sleepwait( driver, element, type, lightConfirm=True )
 
     if type == "id":
         driver.execute_script( "document.getElementById('" + element + "').value = '" + text + "'" )
@@ -176,16 +176,16 @@ def waitToDisappear( driver, element, **kwargs ):
     # Do an initial wait for our element to appear. Any confirmation is confirmation (light).
     if waitForElement:
         sleepwait( driver, element, type, timeout=waitTimeout, lightconfirm=True )
-        if not exists( driver, element, type, True ):
+        if not exists( driver, element, type ):
             # If we should wait for it and it's not here... leave.
             return
 
-    if exists( driver, element, type, True ):
+    if exists( driver, element, type ):
         start_inner = time.time( )
         if not recur:
             driver.child.logMsg( "Waiting for %s" % ( element ), INFO )
 
-        while exists( driver, element, type, True ):
+        while exists( driver, element, type ):
             if time.time( ) - start > timeout:
                 driver.child.logMsg( "Element did not disappear within %ss, timed out." % ( str(timeout) ) )
                 break #this skips the else
