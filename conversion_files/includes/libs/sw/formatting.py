@@ -3,26 +3,32 @@ from const import *
 
 
 
-####################################################################################################
-# format( t )
-# Formats a Float into a displayable form (rounds it and converts to string)
 def format( t ):
+    """Formats a Float into a displayable form, rounding it into converting to a string.
+       
+       :param t: Input float.
+       :return: String that's formatted like so: ``54.32``.
+    """
     return str( round( t, 2 ) )
-####################################################################################################
 
 
 
-####################################################################################################
-# formatError( res )
-# Formats an Error Message
-#   Formats the GhostDriver json-encoded error message for easier printing.
 def formatError( res, type="message" ):
+    """Formats the GhostDriver json-encoded error message for easier printing. In the end, this amounts
+       to replacing escaped quotation marks, parsing the JSON message, and extracting the 'errorMessage' portion.
+       It also trims the message to 81 characters if it is over that.
+
+       :param res: The json-encoded string from a webdriver exception.
+       :param message type: The type of message passed to this function. If it isn't the default,
+           regex ignores it. 
+       :return: String of the formatted `res` initially passed in.
+    """
     a = re.compile( r"Message: [a-z]'({.+})'" )
 
-    res = re.sub( r"\\'", "'", res )                        # unescape single quotes or json freaks out
-    res = re.sub( r"\\\\\"", "\\\"", res )                    # same but with double escaped quotes
-
     if a.match( str( res ) ):
+        res = re.sub( r"\\'", "'", res )                          # unescape single quotes or json freaks out
+        res = re.sub( r"\\\\\"", "\\\"", res )                    # same but with double escaped quotes
+
         res = a.match( str( res ) )
         res = res.groups( )[0]
 
@@ -38,27 +44,42 @@ def formatError( res, type="message" ):
     if len( res ) > 80 and type != "log":
         res = res[0:80]
     return res
-####################################################################################################
 
 
-
-####################################################################################################
-# childMessage( num, msg )
-# Formats a message for child to be printed out.
 def childMessage( num, msg ):
+    """Consistently formats a message to be print out to the console for this child.
+       
+       :param num: The number of the child we are printing a message for.
+       :param msg: The message for the child. Formatted like so: ``Child #num: msg``
+       :return: None
+    """
     print( "Child #" + str( num + 1 ) + ": " + msg )
-####################################################################################################
 
 
 
-####################################################################################################
-# stats( good, bad, timetaken, children, times, starttime, waittime )
-# Prints Statistics
-#   Prints out success / fail counts, total / remaining jobs, failure rate, number of children,
-#   and then averages / extrapolations. It requires good / bad count (#), and then arrays of times taken,
-#   the child processes, number of times (#), and our start time in seconds. Also, we pass the time we've spent 
-#   waiting.
 def stats( good, bad, timetaken, children, times, starttime, waittime ):   
+    """Prints out statistics for the current running pool.
+
+       This includes the following:
+         * Successful/failed jobs
+         * Total jobs done
+         * Remaining jobs
+         * Failure rate
+         * Number of children currently and at peak
+         * Average time per job
+         * Average jobs per minute, seconds, and more
+
+
+       :param good: The number of jobs completed successfully.
+       :param bad: The number of jobs that failed.
+       :param timetaken: An array of job completion times from all children.
+       :param children: An array of our pool's children. Counted and checked if alive for display.
+       :param times: The number of jobs initially given to our pool.
+       :param starttime: A timestamp for when our pool started. 
+       :param waittime: `(deprecated)` An old method for determining how long we were waiting on a site.
+       :return: None
+    """
+    
     print( "\n" + ( "=" * 40 ) )
     print( "Successful: " + str( good ) + ( " " * 3 ) + "Failed: " + str( bad ) )
     print( "Total: " + str( good + bad ) + ( " " * 3 ) + "Remaining: " + str( times - good ) )
@@ -84,16 +105,16 @@ def stats( good, bad, timetaken, children, times, starttime, waittime ):
     else:
         print "No data to extrapolate or average from"
     print( ( "=" * 40 ) + "\n" )
-####################################################################################################
 
 
 
-####################################################################################################
-# errorLevelToStr( level )
-# Translates an Error Level to a String
-#   This function takes a numeric error level and translates it into a string for displaying in a 
-#   log.
 def errorLevelToStr( level ):
+    """Takes a numeric error level and translates it into a string for displaying in a 
+       log.
+       
+       :param level: The level to translate into a loggable string.
+       :return: String of the level in parenthesis.
+    """
     if level == NOTICE:
         return "(NOTICE)  "
     if level == WARNING:
@@ -107,16 +128,16 @@ def errorLevelToStr( level ):
     if level == NONE:
         return "          "
     return
-####################################################################################################
 
 
 
-####################################################################################################
-# avg( numbers )
-# Averages List
 def avg( numbers ):
+    """Averages a list of numbers.
+       
+       :param numbers: A list of numbers.
+       :return: The average
+    """
     if len( numbers ) == 0:
         return 0
     else:
         return( sum( numbers ) / len( numbers ) )
-####################################################################################################

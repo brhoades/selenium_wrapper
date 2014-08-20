@@ -87,7 +87,7 @@ class Pool:
         """Creates a new :class:`child` which will in turn start itself. If i is none, it grabs the next available array
         index, assuming it was initialized for this many children (will grab an index that doesn't exist if not).
 
-        :param i: Index for child process within pool's data structure. 
+        :param None i: Index for child process within pool's data structure. 
         :returns: None
         """
         if i == None:
@@ -104,7 +104,7 @@ class Pool:
         Map and reduce are used to get things quickly out of the self.data 2-d array. This function
         is only called every self.timePerReport seconds as set in this class's initialization func.
 
-        :param force: Forces a report of statistics. Only called by the script itself when done.
+        :param False force: Forces a report of statistics. Only called by the script itself when done.
         :returns: None
         """
         # Check if it's time yet

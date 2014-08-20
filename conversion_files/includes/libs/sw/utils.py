@@ -3,31 +3,38 @@ from const import *
 
 
 
-####################################################################################################
-# loadScript( driver, jqs )
-# Loads JavaScript
-#   This function takes our webdriver object in and injects some JavaScript.
-def loadScript( driver, jqs ):
+
+def loadScript( driver, js ):
+    """Creates a new script object and appends it to the header.
+
+       :param driver: Webdriver instance for this to be executed on.
+       :param js: URL to a JavaScript file that will be inserted and loaded on this page.
+       :return: None
+    """
+
     driver.execute_script_async( \
         "var script = document.createElement( 'script' ); \
         script.type = 'text/javascript'; \
-        script.src = '" + jqs + "'; \
+        script.src = '" + js + "'; \
         document.getElementsByTagName('head')[0].appendChild( script );" )
-####################################################################################################
 
 
 
-####################################################################################################
-# jQCheck( driver )
-# jQuery Check
-#   This function takes our webdriver object in and checks if the current loaded page has jQuery on it.
-#   If it doesn't, it tries to load it. It will pause the script for up to one second after loading,
-#   after that it just returns False so that the exists script will stop holding things up. This
-#   usually only happens on pages where some Javascript has failed.
-def jQCheck( driver ):
+def jQCheck( driver, timeout=1 ):
+    """This function takes our webdriver object in and checks if the current loaded page has jQuery on it.
+       If it doesn't, it tries to load it. It will pause the script for up to `timeout` seconds after loading,
+       after that it just returns False so that the exists script will stop holding things up.
+
+       .. deprecated:: 0.1 
+          JavaScript is no longer used to check for elements before running webdriver checks.
+
+       :param driver: Webdriver instance to check for jQuery on.
+       :param 1 timeout: How long to wait for jQuery to load before continuing on. 
+       :return: Boolean, True if jQuery is loaded False if it did not load.
+    """
+
     jqCheck = "return typeof jQuery != 'undefined'"          # Some StackOverflow post recommended this bit of code
     loadScript( driver, "http://code.jquery.com/jquery-2.1.1.min.js" )
-    timeout = 1                                              # Number of seconds before we give up 
 
     if not bool( driver.execute_script( jqCheck ) ):         #FIXME: Add a check that makes sure we haven't held up
         driver.child.logMsg( "jQuery not loaded into browser, inserting manually.", INFO )
@@ -44,19 +51,22 @@ def jQCheck( driver ):
             return True                               # True, it is
     else:
         return True
-####################################################################################################
 
 
 
-####################################################################################################
-# exists( driver, element, type, noDriver )
-# Check if Element Exists
-#   Takes our webdriver object, an element name, and a type. Flips through a list of element types to 
-#   run quick Javascript to check if the element exists. This is done because find_element_by.* has
-#   a timeout where it waits for an element to appear for about 15 seconds. We try to only use that
-#   if absolutely needed as a double check. An exception is when we don't have jQuery and can't use 
-#   the last two, fancy, javascript checks, this bypasses them and directly goes to the webdriver test. 
 def exists( driver, element, type, lightConfirm=False ):
+    """Checks if an element exists with the WebDriver functions. Catches and handles exceptions if it doesn't.
+       Previously there was an issue where the find_element_by... would wait for 15 seconds to find the element,
+       but that has been resolved. If an element is in the DOM, does a final check to see if it is displayed and
+       available.
+
+       :param driver: WebDriver instance to check for :py:attr:`element`.
+       :param element: Identifying handle for an element.
+       :param type: The type of :py:attr:`element` in the DOM.
+       :param False lightConfirm: Only checks if an element exists, does not verify if it's enabled or visible.
+       :return: Boolean if doesn't exist, `Webelement <http://selenium-python.readthedocs.org/en/latest/api.html#selenium.webdriver.remote.webelement.WebElementwebelement>`_ if it does.
+    """
+
     e = ""
     try: 
         if type == "id":
@@ -76,17 +86,22 @@ def exists( driver, element, type, lightConfirm=False ):
         return e 
 
     return False
-####################################################################################################
 
 
 
-####################################################################################################
-# sleepwait( driver, element, type, timeout=15 )
-# Sleeps While Waiting for Element
-#   The original brainchild of my wrapper, this function simply checks if an element exists( ) and 
-#   sleeps until timeout for it. It always returns the element even if it fails.
-#   Lightconfirm means any existance of the element (javascript or wd) counts as existing. This is lighter on the system.
 def sleepwait( driver, element, type, **kwargs ):
+    """The original brainchild of this wrapper, this function simply checks if an element exists( ) and 
+       sleeps until timeout for it. It always returns something, even if it fails.
+
+       :param driver: WebDriver instance to wait on.
+       :param element: Identifier for the element we will search for.
+       :param type: Type of the element on the page.
+
+       :Kwargs:
+          * **timeout** (*15*) -- The amount of time in seconds before continuing on.
+          * **lightConfirm** (*False*) -- Only checks if an element exists, does not verify if it's enabled or visible.
+       :return: Boolean if doesn't exist, `Webelement <http://selenium-python.readthedocs.org/en/latest/api.html#selenium.webdriver.remote.webelement.WebElementwebelement>`_ if it does.
+    """
     start = time.time( )
     timeout = kwargs.get( 'timeout', 15 )
     lightconfirm = kwargs.get( 'lightconfirm', False )
@@ -108,34 +123,47 @@ def sleepwait( driver, element, type, **kwargs ):
 
     driver.child.logMsg( "Element \"%s\" of type \"%s\" will not be found on page \"%s\"." % ( element, type, driver.current_url ), ERROR )
     return e
-####################################################################################################
 
 
 
-####################################################################################################
-# sendKeys( driver, element, type, text )
-# Sends Keys to Element
-#   Drop in replacement for webdriver's sendkeys.
 def sendKeys( driver, element, type, text ):
+    """Drop in, faster replacement for WebDriver's sendkeys. Currently only supports fields with an "id"
+       or "name" identifier. 
+
+       :param driver: Webdriver instance to find element in.
+       :param element: Identifier for element to type into.
+       :param type: Type of element on the page.
+       :param text: The text to type into the element.
+       :return: None
+    """
     sleepwait( driver, element, type )
 
     if type == "id":
         driver.execute_script( "document.getElementById('" + element + "').value = '" + text + "'" )
     elif type == "name":
         driver.execute_script( "document.getElementsByName( '" + element + "' )[0].value = '" + text + "'" )
-####################################################################################################
 
 
 
-####################################################################################################
-# waitToDisappear( driver, element, waitForElement=True, stayGone=0, recur=False, timeout=20, type="id"
-#                  offset=0, waitTimeout = 1 )
-# Waits for a Element to Disappear
-#   Adapted from a previous, more specialized function to wait for any div with the id element 
-#   to disappear, and wait until then. If stayGone is not 0, we will keep checking for stayGone 
-#   seconds. If recur is selected we don't print out redundant information. With a timeout
-#   we won't wait longer than timeout seconds
 def waitToDisappear( driver, element, **kwargs ):
+    """Waits for an element to disappear from the page. Useful for transparent overlays that appear routinely
+       as those block all input on the page (which angers WebDriver). Optionally can wait for an element to reappear
+       and call itself again to wait longer.
+       
+       :param driver: Our driver instance to search for the element in.
+       :param element: Identifier for the element we are waiting on.
+       :Kwargs:
+        * **type** (*"id"*) -- Type of the element targeted.
+        * **waitForElement** (*True*) -- If the element doesn't initially exist on the page, this controls if waitToDisappear waits for it first.
+        * **waitTimeout** (*1*) -- Number of seconds we wait for the element to appear. If the element doesn't exist after this timeout,
+          the function returns.
+        * **stayGone** (*0*) -- Amount of time in seconds we wait, checking that the element is really gone.
+        * **timeout** (*20*) -- How long the function waits (in seconds) for the element to disappear from the page before returning.
+        * **offset** (*0*) -- Used internally so timeout still applies to recursive calls. This offsets the next timeout by the amount of time
+          waited in the previous call.
+        * **recur** (*False*) -- Internally used to not print to the log if this function called itself again.
+       :return: None
+    """
     waitForElement = kwargs.get( 'waitForElement', True )
     waitTimeout    = kwargs.get( 'waitTimeout', 1 )
     stayGone       = kwargs.get( 'stayGone', 0 )
@@ -159,7 +187,7 @@ def waitToDisappear( driver, element, **kwargs ):
 
         while exists( driver, element, type, True ):
             if time.time( ) - start > timeout:
-                driver.child.logMsg( "Element did not reappear within %ss, timed out." % ( str(timeout) ) )
+                driver.child.logMsg( "Element did not disappear within %ss, timed out." % ( str(timeout) ) )
                 break #this skips the else
             time.sleep( driver.child.sleepTime )
         else:
@@ -176,58 +204,55 @@ def waitToDisappear( driver, element, **kwargs ):
 
                         waitToDisappear( driver, element, kwargs )
                     time.sleep( driver.child.sleepTime )
-####################################################################################################
 
 
 
-####################################################################################################
-# isDisplayed( e )
-# Is e Displayed
-#   Does a check to see if e is displayed... Catches exceptions safely. Often when we want to see
-#   if an element is displayed, it isn't even on the page. This can kill the program.
 def isDisplayed( e ):
+    """Does a check to see if the element is displayed while catching exceptions safely. Often when the script needs
+       to see if an element is displayed, it isn't even on the page. This can kill the program.
+
+       :param e: An active `Webelement`_ that will be checked if it is displayed.
+       :return: Boolean where True if the element is displayed and False if it is not.
+    """
     try:
         if e.is_displayed( ):
             return True
     except:
         return False
+
     return False
-####################################################################################################
 
 
 
-####################################################################################################
-# isEnabled( e )
-# Is e Enabled
-#   Does a check to see if e is enabled... Catches exceptions.
 def isEnabled( e ):
+    """Does a check to see if an element is enabled while capturing exceptions safely. Often when the script needs
+       to see if an element is enabled, it isn't. This normally kills the script and is undesireable.
+
+       :param e: An active `Webelement`_ that will be checked if it is enabled (can type into / click).
+       :return: Boolean where True if the element is enabled and False if it is not.
+    """
     try:
         if e.is_enabled( ):
             return True
     except:
         return False
     return False
-####################################################################################################
 
 
 
-####################################################################################################
-# urlExtractRedirect( driver, variable, value )
-# URL Extract and Redirect
 #   Should extract a variable from driver.current_url, then plop its value on to url and redirect.
-def urlExtractRedirect( driver, variable, value ):
-    url = driver.current_url
-
-    driver.child.logMsg( "urlExtractRedirect\nBEFORE: " + url )
-    
-    r = re.compile( r"(?P<start>[\?\&])%s=(?P<value>[^\&]+)$" % variable )
-
-    if not url.match( r ):
-        driver.logMsg( "WARNING: URL Doesn't appear to contain a variable in this manner: ?" + variable + "= or &" + variable + "=" )
-        return
-    
-    re.sub( r, "\g<start>" + variable + "=" + value, url )
-
-    driver.logMsg( "AFTER: " + url )
-    driver.get( url )
-####################################################################################################
+#def urlExtractRedirect( driver, variable, value ):
+#    url = driver.current_url
+#
+#    driver.child.logMsg( "urlExtractRedirect\nBEFORE: " + url )
+#    
+#    r = re.compile( r"(?P<start>[\?\&])%s=(?P<value>[^\&]+)$" % variable )
+#
+#    if not url.match( r ):
+#        driver.logMsg( "WARNING: URL Doesn't appear to contain a variable in this manner: ?" + variable + "= or &" + variable + "=" )
+#        return
+#    
+#    re.sub( r, "\g<start>" + variable + "=" + value, url )
+#
+#    driver.logMsg( "AFTER: " + url )
+#    driver.get( url )

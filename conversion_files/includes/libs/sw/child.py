@@ -14,7 +14,7 @@ class Child:
     our child's number to report back statuses, our base log directory, and a collection of options.
 
     :param cq: ChildQueue, this is passed from :class:`sw.pool` and is used to transmit the status of the child
-    to our pool.
+        to our pool.
     :param wq: WorkQueue, also passed from :class:`sw.pool` and child pops a function off of it to run (a job) 
         when it finishes a job / starts initially.
     :param num: Number of the child relevant to :class:`sw.pool`'s self.data array. This index is used to 
@@ -160,7 +160,7 @@ class Child:
            Also takes the exception we received and exports it as text
 
            :param e: Unicode json-encoded string from a webdriver-thrown error.
-           :param noScreenshot: Whether or not to take a screenshot of the error.
+           :param False noScreenshot: Whether or not to take a screenshot of the error.
            :return: None
         """
 
@@ -175,7 +175,7 @@ class Child:
     def screenshot( self, level=NOTICE ):
         """Saves a screenshot to `num`-`run`/error_#.png and prints a message into the log specifying the file logged to.
            
-           :param level: This determines whether or not the error message will be logged according to the
+           :param NOTICE level: This determines whether or not the error message will be logged according to the
                level set in self.level. The screenshot will print anyway. If this error is not greater or equal to the level specified in self.level,
                it is not printed. If it is, the message is printed into log.txt with the level specified by the timestamp.
            :return: None
@@ -203,7 +203,7 @@ class Child:
         
            :param e: The message to be written to the log.
             
-           :param level: This determines whether or not the error message will be logged according to the
+           :param NOTICE level: This determines whether or not the error message will be logged according to the
                level set in self.level. If this error is not greater or equal to the level specified in self.level,
                it is not printed. If it is, the message is printed into log.txt with the level specified by the timestamp.
            :return: None
@@ -289,7 +289,7 @@ class Child:
         """Stops a child process properly and sets its self.proc to None. Optionally takes a message
            to print out.
         
-           :param msg: A message to show in parenthesis on the console next to ``Child #: STOPPING (msg)``.
+           :param "" msg: A message to show in parenthesis on the console next to ``Child #: STOPPING (msg)``.
            :return: None
         """
         if self.proc == None:
