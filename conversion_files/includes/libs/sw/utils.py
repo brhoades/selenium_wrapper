@@ -198,11 +198,11 @@ def waitToDisappear( driver, element, **kwargs ):
                 w = stayGone + time.time( )
                 while w - time.time( ) >= 0:
                     if exists( driver, element, type, True ):
-                        driver.logMsg( "Element came back!" )
+                        driver.child.logMsg( "Element came back!" )
                         kwargs['offset'] = time.time( ) - start
                         kwargs['recur'] = True
 
-                        waitToDisappear( driver, element, kwargs )
+                        waitToDisappear( driver, element, **kwargs )
                     time.sleep( driver.child.sleepTime )
 
 
