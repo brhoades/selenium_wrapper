@@ -59,8 +59,8 @@ def convert( filename, outputfn, options={} )
     if start
       ##############################################################################################
       # Custom catches for user commands
-      if l =~ /([\s]+)\#wait ([^\s]*) (.*)/i
-        if $3 == ""
+      if l =~ /([\s]+)\#wait ([^\s]*)( .*)?/i
+        if $3 == nil or $3 == ""
           func << ( $1 + "waitToDisappear( driver, #{$2} )\n" )
         else
           $3.strip!
