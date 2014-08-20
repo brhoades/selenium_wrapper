@@ -205,4 +205,3 @@ class Pool:
         """
         for c in self.children:
             c.stop( )
-            og
