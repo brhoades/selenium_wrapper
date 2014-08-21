@@ -4,6 +4,7 @@ from selenium.webdriver.phantomjs.service import Service as PhantomJSService
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from sw.const import * # Constants
 from sw.formatting import formatError, errorLevelToStr
+from sw.cache import *
 import time, os, traceback
 from pprint import pformat
 from datetime import datetime
@@ -58,6 +59,8 @@ class Child:
 
         # How long we sleep in loops
         self.sleepTime = 1
+
+        self.cache = ElementCache( self )
 
         self.start( )
 
@@ -136,6 +139,7 @@ class Child:
             
             # Try, if an element isn't found an exception is thrown
             try:
+                self.cache.clear( )
                 start = time.time( )
                 func( self.driver )
             except Exception as e:

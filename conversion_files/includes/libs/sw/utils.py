@@ -54,7 +54,7 @@ def jQCheck( driver, timeout=1 ):
 
 
 
-def exists( driver, element, type, lightConfirm=False ):
+def exists( driver, element, type, **kwargs ):
     """Checks if an element exists with the WebDriver functions. Catches and handles exceptions if it doesn't.
        Previously there was an issue where the find_element_by... would wait for 15 seconds to find the element,
        but that has been resolved. If an element is in the DOM, does a final check to see if it is displayed and
@@ -63,31 +63,42 @@ def exists( driver, element, type, lightConfirm=False ):
        :param driver: WebDriver instance to check for :py:attr:`element`.
        :param element: Identifying handle for an element.
        :param type: The type of :py:attr:`element` in the DOM.
+       :Kwargs:
+          * **lightConfirm** (*False*): Doesn't matter if an element is visible or enabled, its existance is enough.
        :param False lightConfirm: Only checks if an element exists, does not verify if it's enabled or visible.
        :return: Boolean if doesn't exist, `Webelement <http://selenium-python.readthedocs.org/en/latest/api.html#selenium.webdriver.remote.webelement.WebElementwebelement>`_ if it does.
     """
 
-    e = ""
-    try: 
-        if type == "id":
-            e = driver.find_element_by_id( element )
-        elif type == "name":
-            e = driver.find_element_by_name( element )
-        elif type == "xpath":
-            e = driver.find_element_by_xpath( element )
-        elif type == "link_text":
-            e = driver.find_element_by_link_text( element )
-        elif type == "css_selector":
-            e = driver.find_element_by_css_selector( element )
-    except Exception as e:
-        return False
+    lightConfirm = kwargs.get( 'lightConfirm', False )
+    cache = kwargs.get( 'cache', True )
+
+    e = None
+
+    if cache:
+        e = driver.child.cache.get( driver.current_url, id=element, type=type )
+
+    if e is None:
+        try:
+            if type == "id":
+                e = driver.find_element_by_id( element )
+            elif type == "name":
+                e = driver.find_element_by_name( element )
+            elif type == "xpath":
+                e = driver.find_element_by_xpath( element )
+            elif type == "link_text":
+                e = driver.find_element_by_link_text( element )
+            elif type == "css_selector":
+                e = driver.find_element_by_css_selector( element )
+        except Exception as e:
+            return False
+
+    if cache:
+        driver.child.cache.add( driver.current_url, e, id=element, type=type )
 
     if lightConfirm or ( isDisplayed( e ) and isEnabled( e ) ):
         return e 
 
     return False
-
-
 
 def sleepwait( driver, element, type, **kwargs ):
     """The original brainchild of this wrapper, this function simply checks if an element exists( ) and 
@@ -104,9 +115,9 @@ def sleepwait( driver, element, type, **kwargs ):
     """
     start = time.time( )
     timeout = kwargs.get( 'timeout', 15 )
-    lightconfirm = kwargs.get( 'lightconfirm', False )
+    lightConfirm = kwargs.get( 'lightConfirm', False )
     
-    e = exists( driver, element, type, lightconfirm )
+    e = exists( driver, element, type, lightConfirm=lightConfirm )
     if not e:
         driver.child.logMsg( "Beginning wait for element \"%s\" of type \"%s\"." % ( element, type ), NOTICE )
 
@@ -115,7 +126,7 @@ def sleepwait( driver, element, type, **kwargs ):
                 break
             time.sleep( driver.child.sleepTime )
 
-            e = exists( driver, element, type, lightconfirm )
+            e = exists( driver, element, type, lightConfirm=lightConfirm )
         else:
             return e 
     else:
@@ -175,7 +186,7 @@ def waitToDisappear( driver, element, **kwargs ):
 
     # Do an initial wait for our element to appear. Any confirmation is confirmation (light).
     if waitForElement:
-        sleepwait( driver, element, type, timeout=waitTimeout, lightconfirm=True )
+        sleepwait( driver, element, type, timeout=waitTimeout, lightConfirm=True )
         if not exists( driver, element, type ):
             # If we should wait for it and it's not here... leave.
             return
@@ -197,7 +208,7 @@ def waitToDisappear( driver, element, **kwargs ):
             if stayGone > 0:
                 w = stayGone + time.time( )
                 while w - time.time( ) >= 0:
-                    if exists( driver, element, type, True ):
+                    if exists( driver, element, type ):
                         driver.child.logMsg( "Element came back!" )
                         kwargs['offset'] = time.time( ) - start
                         kwargs['recur'] = True
