@@ -6,7 +6,7 @@ class ElementCache:
 
     :return: ElementCache (self)
     """
-    def __init__( self, child ):
+    def __init__( self ):
         self.cache = { }
 
     def add( self, url, e, **kwargs ):
