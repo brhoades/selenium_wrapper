@@ -1,6 +1,6 @@
 import os, time, traceback
 from const import *
-
+from selenium.common.exceptions import *
 
 
 
@@ -133,7 +133,7 @@ def sleepwait( driver, element, type, **kwargs ):
         return e
 
     driver.child.logMsg( "Element \"%s\" of type \"%s\" will not be found on page \"%s\"." % ( element, type, driver.current_url ), ERROR )
-    return e
+    driver.child.restart( "Could not find element on page" ) 
 
 
 

@@ -9,6 +9,7 @@ import time, os, traceback
 from pprint import pformat
 from datetime import datetime
 import cProfile, pstats, StringIO
+from selenium.common.exceptions import *
 
 class Child:
     """Initializes our child and then starts it. It takes our pool's childqueue, our pool's workqueue,
@@ -142,6 +143,11 @@ class Child:
                 self.cache.clear( )
                 start = time.time( )
                 func( self.driver )
+            except selenium.common.exceptions.TimeoutException as e:
+                self.logMsg( "Stack trace: " + traceback.format_exc( ), CRITICAL )
+                
+                self.msg( "TIMEOUT" )
+                self.logMsg( "Timeout when finding element." )
             except Exception as e:
                 self.logError( str( e ) ) # Capture the exception and log it
                 self.logMsg( "Stack trace: " + traceback.format_exc( ), CRITICAL )
@@ -279,12 +285,15 @@ class Child:
 
 
 
-    def restart( self ):
+    def restart( self, msg=None ):
         """Restarts the child process and gets webdriver running again.
 
            :return: None
         """
-        self.stop( "RESTARTING" )
+        if msg == None:
+            self.stop( "RESTARTING" )
+        else:
+            self.stop( "RESTARTING: " + msg )
         self.start( )
 
 
