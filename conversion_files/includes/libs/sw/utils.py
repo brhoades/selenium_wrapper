@@ -1,6 +1,5 @@
 import os, time, traceback
 from const import *
-from selenium.common.exceptions import *
 
 
 

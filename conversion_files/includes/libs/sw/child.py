@@ -143,7 +143,7 @@ class Child:
                 self.cache.clear( )
                 start = time.time( )
                 func( self.driver )
-            except selenium.common.exceptions.TimeoutException as e:
+            except TimeoutException as e:
                 self.logMsg( "Stack trace: " + traceback.format_exc( ), CRITICAL )
                 
                 self.msg( "TIMEOUT" )
