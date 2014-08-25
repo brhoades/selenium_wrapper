@@ -61,7 +61,7 @@ class Child:
         # How long we sleep in loops
         self.sleepTime = 1
 
-        self.cache = ElementCache( self )
+        self.cache = ElementCache( )
 
         self.start( )
 
@@ -285,15 +285,14 @@ class Child:
 
 
 
-    def restart( self, msg=None ):
+    def restart( self, msg="RESTARTING" ):
         """Restarts the child process and gets webdriver running again.
 
+           :param "RESTARTING" msg: A message to print out in parenenthesis.
            :return: None
         """
-        if msg == None:
-            self.stop( "RESTARTING" )
-        else:
-            self.stop( "RESTARTING: " + msg )
+        self.stop( "RESTARTING" )
+        self.stop( msg )
         self.start( )
 
 

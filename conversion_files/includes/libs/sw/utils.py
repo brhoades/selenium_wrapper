@@ -166,7 +166,7 @@ def waitToDisappear( driver, element, **kwargs ):
        :Kwargs:
         * **type** (*"id"*) -- Type of the element targeted.
         * **waitForElement** (*True*) -- If the element doesn't initially exist on the page, this controls if waitToDisappear waits for it first.
-        * **waitTimeout** (*1*) -- Number of seconds we wait for the element to appear. If the element doesn't exist after this timeout,
+        * **waitTimeout** (*3*) -- Number of seconds we wait for the element to appear. If the element doesn't exist after this timeout,
           the function returns.
         * **stayGone** (*0*) -- Amount of time in seconds we wait, checking that the element is really gone.
         * **timeout** (*20*) -- How long the function waits (in seconds) for the element to disappear from the page before returning.
@@ -176,7 +176,7 @@ def waitToDisappear( driver, element, **kwargs ):
        :return: None
     """
     waitForElement = kwargs.get( 'waitForElement', True )
-    waitTimeout    = kwargs.get( 'waitTimeout', 1 )
+    waitTimeout    = kwargs.get( 'waitTimeout', 3 )
     stayGone       = kwargs.get( 'stayGone', 0 )
     recur          = kwargs.get( 'recur', False )
     timeout        = kwargs.get( 'timeout', 20 )
@@ -188,6 +188,7 @@ def waitToDisappear( driver, element, **kwargs ):
     if waitForElement:
         sleepwait( driver, element, type, timeout=waitTimeout, lightConfirm=True )
         if not exists( driver, element, type ):
+            driver.child.logMsg( "In waitToDisappear %s was never there to begin with." % ( element ) )
             # If we should wait for it and it's not here... leave.
             return
 
