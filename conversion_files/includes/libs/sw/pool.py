@@ -63,8 +63,8 @@ class Pool:
         # General log directory, shared by all children
         self.log = os.path.join( os.path.dirname( os.path.abspath( file ) ), "logs", self.timestamp ) 
 
-        print( "Preparing " + str( numChildren ) + " " + ( "child" if numChildren == 1 else "children" ) 
-               + " to do " + str( numJobs ) + " job" + ( "s" if numJobs != 1 else "" ) + "." )
+        print( ''.join( [ "Preparing ", str( numChildren ), " ", ( "child" if numChildren == 1 else "children" ), \
+               " to do ", str( numJobs ), " job", ( "s" if numJobs != 1 else "" ), "." ] ) )
 
         # Mark our start time
         self.started = time.time( )
@@ -142,14 +142,14 @@ class Pool:
                 self.data[i][TIMES].append( r[TIMES] )
                 self.data[i][WAIT_TIMES].append( self.data[i][WAIT_TIME] )
                 self.data[i][WAIT_TIME] = 0 
-                self.children[i].msg( "DONE (" + str( format( r[TIME] ) ) + "s)" )
+                self.children[i].msg( ''.join( ["DONE (", str( format( r[TIME] ) ), "s)" ] ) )
 
             elif r[RESULT] == FAILED:
                 self.data[i][FAILURES] += 1
 
                 # When we get a failure we put the job back on the queue
                 self.workQueue.put( self.func )
-                self.children[i].msg( "ERROR: " + formatError( r[ERROR] ) ) 
+                self.children[i].msg( ''.join( [ "ERROR: ", formatError( r[ERROR] ) ] ) ) 
 
             elif r[RESULT] == READY:
                 self.children[i].msg( "STARTING" )

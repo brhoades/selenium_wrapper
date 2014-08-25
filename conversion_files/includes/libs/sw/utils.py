@@ -43,10 +43,10 @@ def jQCheck( driver, timeout=1 ):
         while not bool( driver.execute_script( jqCheck ) ) and time.time( ) - start < timeout:
             time.sleep( driver.child.sleepTime )
         if not bool( driver.execute_script( jqCheck ) ):
-            driver.child.logMsg( "jQuery failed to load into browser after " + str( timeout ) + "s.", WARNING  )
+            driver.child.logMsg( ''.join( [ "jQuery failed to load into browser after ", str( timeout ), "s." ] ), WARNING  )
             return False                              # False, jQuery isn't loaded
         else:
-            driver.child.logMsg( "jQuery loaded into browser successfully after " + format( str( time.time( ) - start ) ) + "s.", INFO )
+            driver.child.logMsg( ''.join( [ "jQuery loaded into browser successfully after ", format( time.time( ) - start ), "s." ] ), INFO )
             return True                               # True, it is
     else:
         return True
@@ -118,7 +118,7 @@ def sleepwait( driver, element, type, **kwargs ):
     
     e = exists( driver, element, type, lightConfirm=lightConfirm )
     if not e:
-        driver.child.logMsg( "Beginning wait for element \"%s\" of type \"%s\"." % ( element, type ), NOTICE )
+        driver.child.logMsg( ''.join( [ "Beginning wait for element\"", element, "\" of type \"", type, "\"." ] ), NOTICE )
 
         while not e:
             if time.time( ) - start > timeout: 
@@ -131,7 +131,8 @@ def sleepwait( driver, element, type, **kwargs ):
     else:
         return e
 
-    driver.child.logMsg( "Element \"%s\" of type \"%s\" will not be found on page \"%s\"." % ( element, type, driver.current_url ), ERROR )
+    driver.child.logMsg( ''.join( [ "Element \"", element, "\" of type \"", type, "\" will not be found on page \"", 
+        driver.current_url, "\"." ] ) )
     driver.child.restart( "Could not find element on page" ) 
 
 
@@ -149,9 +150,9 @@ def sendKeys( driver, element, type, text ):
     sleepwait( driver, element, type, lightConfirm=True )
 
     if type == "id":
-        driver.execute_script( "document.getElementById('" + element + "').value = '" + text + "'" )
+        driver.execute_script( ''.join( [ "document.getElementById( '", element, "' ).value = '", text, "'" ] ) )
     elif type == "name":
-        driver.execute_script( "document.getElementsByName( '" + element + "' )[0].value = '" + text + "'" )
+        driver.execute_script( ''.join( [ "document.getElementsByName( '", element, "' )[0].value = '", text, "'" ] ) )
 
 
 
@@ -187,23 +188,23 @@ def waitToDisappear( driver, element, **kwargs ):
     if waitForElement:
         sleepwait( driver, element, type, timeout=waitTimeout, lightConfirm=True )
         if not exists( driver, element, type ):
-            driver.child.logMsg( "In waitToDisappear %s was never there to begin with." % ( element ) )
+            driver.child.logMsg( ''.join( [ "In waitToDisappear \"", element, "\" was never there to begin with." ] ) )
             # If we should wait for it and it's not here... leave.
             return
 
     if exists( driver, element, type ):
         start_inner = time.time( )
         if not recur:
-            driver.child.logMsg( "Waiting for %s" % ( element ), INFO )
+            driver.child.logMsg( ''.join( [ "Waiting for \"", element, "\"" ] ), INFO )
 
         while exists( driver, element, type ):
             if time.time( ) - start > timeout:
-                driver.child.logMsg( "Element did not disappear within %ss, timed out." % ( str(timeout) ) )
+                driver.child.logMsg( ''.join( [ "Element did not disappear within ", str( timeout ), "s, timed out." ] ) )
                 break #this skips the else
             time.sleep( driver.child.sleepTime )
         else:
             driver.child.cq.put( [ driver.child.num, WAIT_TIME, time.time( ) - start_inner ] )
-            driver.child.logMsg( "Element \"%s\" disappeared!" % ( element ), INFO )
+            driver.child.logMsg( ''.join( [ "Element \"", element, "\" disappeared!" ] ), INFO )
 
             if stayGone > 0:
                 w = stayGone + time.time( )

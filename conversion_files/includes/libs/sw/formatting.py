@@ -53,7 +53,7 @@ def childMessage( num, msg ):
        :param msg: The message for the child. Formatted like so: ``Child #num: msg``
        :return: None
     """
-    print( "Child #" + str( num + 1 ) + ": " + msg )
+    print( ''.join( [ "Child #", str( num + 1 ), ": ", msg ] ) )
 
 
 
@@ -80,31 +80,31 @@ def stats( good, bad, timetaken, children, times, starttime, waittime ):
        :return: None
     """
     
-    print( "\n" + ( "=" * 40 ) )
-    print( "Successful: " + str( good ) + ( " " * 3 ) + "Failed: " + str( bad ) )
-    print( "Total: " + str( good + bad ) + ( " " * 3 ) + "Remaining: " + str( times - good ) )
+    print( ''.join( [ "\n", ( "=" * 40 ) ] ) )
+    print( ''.join( [ "Successful: ", str( good ), ( " " * 3 ), "Failed: ", str( bad ) ] ) )
+    print( ''.join( [ "Total: ", str( good + bad ), ( " " * 3 ), "Remaining: ", str( times - good ) ] ) )
 
     active = 0
     for c in children:
         if c.is_alive( ) and not c.is_done( ):
             active += 1
-    print( "Children (peak): " + str( len( children ) ) + ( " " * 3 ) + "Children (active): " + str( active ) )
+    print( ''.join( [ "Children (peak): ",  str( len( children ) ),  ( " " * 3 ),  "Children (active): ", str( active ) ] ) )
 
     if len( timetaken ) > 0:
-        print( "Failure Rate: " + format( bad / float( good + bad ) * 100 ) + "%" );
+        print( ''.join( [ "Failure Rate: ", format( bad / float( good + bad ) * 100 ), "%" ] ) );
 
         # This gives us our jobs per second
         jps = good / ( time.time( ) - starttime )
 
         print( "Average / Estimates:" )
-        print( "  Time per job: " + format( avg( timetaken ) ) + "s" )
-        print( "  Time waiting: " + format( avg( waittime ) ) + "s ("   
-               + format( avg( waittime ) / avg( timetaken ) * 100 ) + "%)" )
-        print( "  Jobs/s: " + format( jps ) + ( " " * 3 ) + "Jobs/m: "  + format( jps * 60 ) + ( " " * 3 ) + "Jobs/hr: " 
-               + format( jps * 60 * 60 ) + ( " " * 3 ) + "Jobs/day: " + format( jps * 60 * 60 * 24 ) )
+        print( ''.join( [ "  Time per job: ", format( avg( timetaken ) ), "s" ] ) )
+        print( ''.join( [ "  Time waiting: ", format( avg( waittime ) ), "s (",   
+               format( avg( waittime ) / avg( timetaken ) * 100 ), "%)" ] ) )
+        print( ''.join( [ "  Jobs/s: ", format( jps ), ( " " * 3 ), "Jobs/m: ", format( jps * 60 ), ( " " * 3 ), "Jobs/hr: ", 
+               format( jps * 60 * 60 ), ( " " * 3 ), "Jobs/day: ", format( jps * 60 * 60 * 24 ) ] ) )
     else:
         print "No data to extrapolate or average from"
-    print( ( "=" * 40 ) + "\n" )
+    print( ''.join( [ ( "=" * 40 ), "\n" ] ) )
 
 
 
