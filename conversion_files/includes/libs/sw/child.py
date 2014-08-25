@@ -4,10 +4,12 @@ from selenium.webdriver.phantomjs.service import Service as PhantomJSService
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from sw.const import * # Constants
 from sw.formatting import formatError, errorLevelToStr
+from sw.cache import *
 import time, os, traceback
 from pprint import pformat
 from datetime import datetime
 import cProfile, pstats, StringIO
+from selenium.common.exceptions import *
 
 class Child:
     """Initializes our child and then starts it. It takes our pool's childqueue, our pool's workqueue,
@@ -58,6 +60,8 @@ class Child:
 
         # How long we sleep in loops
         self.sleepTime = 1
+
+        self.cache = ElementCache( )
 
         self.start( )
 
@@ -136,8 +140,14 @@ class Child:
             
             # Try, if an element isn't found an exception is thrown
             try:
+                self.cache.clear( )
                 start = time.time( )
                 func( self.driver )
+            except selenium.common.exceptions.TimeoutException as e:
+                self.logMsg( "Stack trace: " + traceback.format_exc( ), CRITICAL )
+                
+                self.msg( "TIMEOUT" )
+                self.logMsg( "Timeout when finding element." )
             except Exception as e:
                 self.logError( str( e ) ) # Capture the exception and log it
                 self.logMsg( "Stack trace: " + traceback.format_exc( ), CRITICAL )
@@ -275,12 +285,13 @@ class Child:
 
 
 
-    def restart( self ):
+    def restart( self, msg="RESTARTING" ):
         """Restarts the child process and gets webdriver running again.
 
+           :param "RESTARTING" msg: A message to print out in parenenthesis.
            :return: None
         """
-        self.stop( "RESTARTING" )
+        self.stop( msg )
         self.start( )
 
 
