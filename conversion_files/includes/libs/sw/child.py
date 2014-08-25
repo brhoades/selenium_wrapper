@@ -98,21 +98,21 @@ class Child:
         # Workaround for internal SSL woes
         dcaps = { 'acceptSslCerts': True }
 
-        sargs = [ '--load-images=' + str( self.options['images'] ).lower( ),
+        sargs = [ ''.join( [ '--load-images=', str( self.options['images'] ).lower( ) ] ),
                   '--disk-cache=true',
                   '--ignore-ssl-errors=yes' ]
 
         if 'proxy' in self.options:
-            sargs.append( '--proxy=' + self.options['proxy'] )
+            sargs.append( ''.join( [ '--proxy=', self.options['proxy'] ] ) )
         if 'proxytype' in self.options:
-            sargs.append( '--proxy-type=' + self.options['proxytype'] )
+            sargs.append( ''.join( [ '--proxy-type=', self.options['proxytype'] ] ) )
 
         try: 
             # Initialize our driver with our custom log directories and preferences (capabilities)
             self.driver = webdriver.PhantomJS( desired_capabilities=dcaps, service_log_path=os.path.join( self.log, "ghostdriver.log" ), \
                                                service_args=sargs )
         except Exception as e:
-            self.logMsg( "Webdriver failed to load: " + str( e ) + "\n " + traceback.formatexc( ), CRITICAL )
+            self.logMsg( ''.join( [ "Webdriver failed to load: ", str( e ), "\n", traceback.formatexc( ) ] ), CRITICAL )
             self.msg( "WEBDRIVER ERROR" )
             try: 
                 self.driver.quit( )
@@ -157,7 +157,7 @@ class Child:
             else:
                 t = time.time( ) - start
                 cq.put( [ self.num, DONE, ( time.time( ) - start ), "" ] )
-                self.logMsg( "Successfully finished job (" + format( t ) + "s)" )
+                self.logMsg( ''.join( [ "Successfully finished job (", format( t ), "s)" ] ) )
 
         # Quit after we have finished our work queue, this kills the phantomjs process.
         self.driver.quit( )
@@ -194,17 +194,17 @@ class Child:
         i = 0
         # If we are writing several errors, number them appropriately
         if not os.path.exists( self.log ):
-            self.logMsg( "Cannot write to a log directory that doesn't exist. " + self.log, CRITICAL )
+            self.logMsg( ''.join( [ "Cannot write to a log directory that doesn't exist. ", self.log ] ), CRITICAL )
             return
 
         while True:
-            fn = os.path.join( self.log, 'error_' + str( i ) + '.png' )
+            fn = os.path.join( self.log, ''.join( [ 'error_', str( i ), '.png' ] ) )
             i += 1
             if not os.path.isfile( fn ):
                 break
 
         self.driver.save_screenshot( fn ) 
-        self.logMsg( "Wrote screenshot to: " + fn, level )
+        self.logMsg( ''.join( [ "Wrote screenshot to: ", fn ] ), level )
 
 
 
@@ -226,7 +226,7 @@ class Child:
         timestamp = datetime.now( ).strftime( "%H:%M:%S" )
         
         # string
-        w = "[%s] %s\t%s\n" % ( timestamp, errorLevelToStr( level ), e )
+        w = ''.join( [ "[", timestamp, "] ", errorLevelToStr( level ), "\t", e, "\n" ] )
 
         # This typically errors out the first time through
         try: 
@@ -269,7 +269,7 @@ class Child:
         self.run = str( int( self.run ) + 1 )
 
         # Log directory, unique so that each
-        self.log = os.path.join( self.baselog, str( self.num + 1 ) + "-" + self.run )
+        self.log = os.path.join( self.baselog, ''.join( [ str( self.num + 1 ), "-", self.run ] ) )
 
         # Create our path
         if not os.path.isdir( self.log ):
@@ -308,8 +308,8 @@ class Child:
             return
 
         if msg != "":
-            self.logMsg( "Stopping child process: \"%s\"" % ( msg ) )
-            self.msg( "STOPPING (%s)"  % ( msg ) )
+            self.logMsg( ''.join( [ "Stopping child process: \"", msg, "\"" ] ) )
+            self.msg( ''.join( [ "STOPPING (", msg, ")" ] ) )
         else:
             self.logMsg( "Stopping child process" )
             self.msg( "STOPPING" )
