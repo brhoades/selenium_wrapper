@@ -71,10 +71,12 @@ def exists( driver, element, type, **kwargs ):
     lightConfirm = kwargs.get( 'lightConfirm', False )
     cache = kwargs.get( 'cache', True )
 
+    current_url = driver.current_url
+
     e = None
 
     if cache:
-        e = driver.child.cache.get( driver.current_url, id=element, type=type )
+        e = driver.child.cache.get( current_url, id=element, type=type )
 
     if e is None:
         try:
@@ -92,7 +94,7 @@ def exists( driver, element, type, **kwargs ):
             return False
 
     if cache:
-        driver.child.cache.add( driver.current_url, e, id=element, type=type )
+        driver.child.cache.add( current_url, e, id=element, type=type )
 
     if lightConfirm or ( isDisplayed( e ) and isEnabled( e ) ):
         return e 
