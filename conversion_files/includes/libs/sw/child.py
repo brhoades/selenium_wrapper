@@ -144,13 +144,13 @@ class Child:
                 start = time.time( )
                 func( self.driver )
             except TimeoutException as e:
-                self.logMsg( "Stack trace: " + traceback.format_exc( ), CRITICAL )
+                self.logMsg( ''.join( [ "Stack trace: ", traceback.format_exc( ) ] ), CRITICAL )
                 
                 self.msg( "TIMEOUT" )
                 self.logMsg( "Timeout when finding element." )
             except Exception as e:
                 self.logError( str( e ) ) # Capture the exception and log it
-                self.logMsg( "Stack trace: " + traceback.format_exc( ), CRITICAL )
+                self.logMsg( ''.join( [ "Stack trace: ", traceback.format_exc( ) ] ), CRITICAL )
 
                 cq.put( [ self.num, FAILED, ( time.time( ) - start ), str( e ) ] )
                 break
