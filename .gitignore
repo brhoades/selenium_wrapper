@@ -1,0 +1,6 @@
+doc/_*
+out/*
+in/*
+_*
+*.pyc
+*.lock
