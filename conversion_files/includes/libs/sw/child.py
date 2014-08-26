@@ -239,7 +239,7 @@ class Child:
         try: 
             self.lh.write( w ) 
         except:
-            self.lh = open( os.path.join( self.log, ''.join( [ 'log-', str( self.num ), '.txt' ] ) ), 'a+', 0 )
+            self.lh = open( os.path.join( self.log, ''.join( [ 'log-', str( self.num + 1 ), '.txt' ] ) ), 'a+', 0 )
             self.lh.write( w ) 
 
 
@@ -283,7 +283,7 @@ class Child:
             os.makedirs( self.log )
 
         # Open our handle
-        self.lh = open( os.path.join( self.log, ''.join( [ 'log-', str( self.num ), '.txt' ] ) ), 'a+' )
+        self.lh = open( os.path.join( self.log, ''.join( [ 'log-', str( self.num + 1 ), '.txt' ] ) ), 'a+' )
 
         # Our process        
         self.proc = Process( target=self.think, args=( ) )
