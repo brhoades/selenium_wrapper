@@ -8,7 +8,7 @@ from sw.cache import *
 import time, os, traceback
 from pprint import pformat
 from datetime import datetime
-import cProfile, pstats, StringIO
+import cProfile
 from selenium.common.exceptions import *
 
 class Child:
@@ -78,12 +78,15 @@ class Child:
 
 
     def think( self ):
-        """The beef of the wrapper, where the main thinking is done. Takes no arguments, just reads from 
+        """The meat of the wrapper, where the main thinking is done. Takes no arguments, just reads from 
            self variables set in :class:`sw.Child`. PhantomJS is added into the python path by run.bat, so
            that is already handled.
 
            :return: None
         """
+
+        pr = cProfile.Profile( )
+        pr.enable( )
 
         wq = self.wq
         cq = self.cq
@@ -161,6 +164,9 @@ class Child:
 
         # Quit after we have finished our work queue, this kills the phantomjs process.
         self.driver.quit( )
+
+        pr.disable( )
+        pr.dump_stats( os.path.join( self.log, "stats.dump" ) )
 
 
 
