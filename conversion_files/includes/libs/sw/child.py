@@ -207,7 +207,7 @@ class Child:
 
 
 
-    def logMsg( self, e, level=NOTICE ):
+    def logMsg( self, e, level=NOTICE, **kwargs ):
         """Writes to our message log if level is greater than or equal to our level (in self.log).
         
            :param e: The message to be written to the log.
@@ -215,8 +215,12 @@ class Child:
            :param NOTICE level: This determines whether or not the error message will be logged according to the
                level set in self.level. If this error is not greater or equal to the level specified in self.level,
                it is not printed. If it is, the message is printed into log.txt with the level specified by the timestamp.
+
+           :Kwargs:
+              * **locals** (*None*): Optional locals dict to print out cleanly.
            :return: None
         """
+        locals = kwargs.get( 'locals', None )
         # Determine if we're logging this low
         if level < self.level:
             return
@@ -224,8 +228,12 @@ class Child:
         # Get our timestamp
         timestamp = datetime.now( ).strftime( "%H:%M:%S" )
         
-        # string
+        # String
         w = ''.join( [ "[", timestamp, "] ", errorLevelToStr( level ), "\t", e, "\n" ] )
+
+        # Locals if specified
+        if locals != None:
+            self.logMsg( ''.join( [ "Locals variables: ", pformat( locals ) ] ), level )
 
         # This typically errors out the first time through
         try: 

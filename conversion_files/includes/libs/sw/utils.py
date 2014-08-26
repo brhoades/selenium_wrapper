@@ -115,6 +115,7 @@ def sleepwait( driver, element, type, **kwargs ):
           * **cache** (*True*) -- Determines if elements will be cached internally.
           * **url** (*driver.current_url*) -- Current URL of this page. Defaults to checking.
           * **thinkTime** (*1*) -- The time we wait between polling if an element exists. Defaults to child's think time.
+          * **die** (*True*) -- Whether or not the function kills the child if this isn't found.
        :return: Boolean if doesn't exist, `Webelement <http://selenium-python.readthedocs.org/en/latest/api.html#selenium.webdriver.remote.webelement.WebElementwebelement>`_ if it does.
     """
     start = time.time( )
@@ -122,6 +123,7 @@ def sleepwait( driver, element, type, **kwargs ):
     lightConfirm = kwargs.get( 'lightConfirm', False )
     cache        = kwargs.get( 'cache', True )
     url          = kwargs.get( 'url', driver.current_url )
+    die          = kwargs.get( 'die', True )
     thinkTime = kwargs.get( 'thinkTime', driver.child.sleepTime )
     
     e = exists( driver, element, type, url=url, cache=cache, lightConfirm=lightConfirm )
@@ -139,8 +141,10 @@ def sleepwait( driver, element, type, **kwargs ):
     else:
         return e
 
-    driver.child.logMsg( ''.join( [ "Element \"", element, "\" of type \"", type, "\" will not be found on page \"", 
-        driver.current_url, "\"." ] ) )
+    if die:
+        driver.child.logMsg( ''.join( [ "Element will not be found on page \"", 
+            driver.current_url, "\"." ] ), ERROR, locals=locals( ) )
+        driver.restart( "ELEMENT MISSING" )
 
 
 
@@ -170,18 +174,21 @@ def waitToDisappear( driver, element, **kwargs ):
        
        :param driver: Our driver instance to search for the element in.
        :param element: Identifier for the element we are waiting on.
-       :Kwargs:
+       :Kwargs (main):
         * **type** (*"id"*) -- Type of the element targeted.
         * **waitForElement** (*True*) -- If the element doesn't initially exist on the page, this controls if waitToDisappear waits for it first.
         * **waitTimeout** (*3*) -- Number of seconds we wait for the element to appear. If the element doesn't exist after this timeout,
           the function returns.
         * **stayGone** (*0*) -- Amount of time in seconds we wait, checking that the element is really gone.
         * **timeout** (*20*) -- How long the function waits (in seconds) for the element to disappear from the page before returning.
+
+        :Kwargs (internal):
         * **thinkTime** (*2*) -- Time between polling for element's existance. Defaults to twice the child's think time.
         * **offset** (*0*) -- Used internally so timeout still applies to recursive calls. This offsets the next timeout by the amount of time
           waited in the previous call.
         * **recur** (*False*) -- Internally used to not print to the log if this function called itself again.
         * **cache** (*True*) -- Determines in exists will cache elements internally.
+        * **die** (*True*) -- Restarts the child when a fatal error occurs.
        :return: None
     """
     waitForElement = kwargs.get( 'waitForElement', True )
@@ -189,29 +196,41 @@ def waitToDisappear( driver, element, **kwargs ):
     stayGone       = kwargs.get( 'stayGone', 0 )
     thinkTime      = kwargs.get( 'thinkTime', driver.child.sleepTime*2 )
     recur          = kwargs.get( 'recur', False )
-    timeout        = kwargs.get( 'timeout', 20 )
+    timeout        = kwargs.get( 'timeout', 60 )
     type           = kwargs.get( 'type', 'id' )
     offset         = kwargs.get( 'offset', 0 )
     cache          = kwargs.get( 'cache', True )
+    die            = kwargs.get( 'die', True ) 
 
     start          = time.time( ) - offset
     url            = driver.current_url
 
     # Do an initial wait for our element to appear. Any confirmation is confirmation (light).
     if waitForElement:
-        sleepwait( driver, element, type, cache=cache, url=url, timeout=waitTimeout, lightConfirm=True, thinkTime=thinkTime )
-        if not exists( driver, element, type, cache=cache, url=url, lightConfirm=True ):
+        kwargs['die'] = False # Override die just in case element doesn't exist
+        kwargs['timeout'] = waitTimeout
+        sleepwait( driver, element, type, **kwargs )
+        if not exists( driver, element, type, **kwargs ):
             driver.child.logMsg( ''.join( [ "In waitToDisappear \"", element, "\" was never there to begin with." ] ) )
             # If we should wait for it and it's not here... leave.
             return
         else:
             if not recur:
                 driver.child.logMsg( ''.join( [ "Waiting for \"", element, "\"" ] ), INFO )
-            time.sleep( driver.child.sleepTime )
+            time.sleep( thinkTime )
 
-        while exists( driver, element, type, cache=cache, url=url, lightconfirm=True ):
+        kwargs['die'] = die
+        kwargs['timeout'] = timeout
+
+        while exists( driver, element, type, **kwargs ):
             if time.time( ) - start > timeout:
-                driver.child.logMsg( ''.join( [ "Element did not disappear within ", str( timeout ), "s, timed out." ] ) )
+                driver.child.logMsg( ''.join( [ "Element did not disappear within ", str( timeout ), "s, timed out." ] ), 
+                        CRITICAL, locals=locals( ) )
+                if die:
+                    driver.child.restart( "TIMED OUT" )
+                    # Wait to be killed
+                    time.sleep( 10 )
+
                 break #this skips the else
             time.sleep( thinkTime )
         else:
@@ -220,7 +239,7 @@ def waitToDisappear( driver, element, **kwargs ):
             if stayGone > 0:
                 w = stayGone + time.time( )
                 while w - time.time( ) >= 0:
-                    if exists( driver, element, type, url=url, cache=cache ):
+                    if exists( driver, element, type, **kwargs ):
                         driver.child.logMsg( "Element came back!" )
                         kwargs['offset'] = time.time( ) - start
                         kwargs['recur'] = True
