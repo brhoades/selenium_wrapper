@@ -141,7 +141,6 @@ def sleepwait( driver, element, type, **kwargs ):
 
     driver.child.logMsg( ''.join( [ "Element \"", element, "\" of type \"", type, "\" will not be found on page \"", 
         driver.current_url, "\"." ] ) )
-    driver.child.restart( "Could not find element on page" ) 
 
 
 
