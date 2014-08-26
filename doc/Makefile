@@ -2,10 +2,11 @@
 #
 
 # You can set these variables from the command line.
-SPHINXOPTS    = ../conversion_files/includes/libs
-SPHINXBUILD   = sphinx-build
-PAPER         =
-BUILDDIR      = build
+SPHINXOPTS       = ../conversion_files/includes/libs
+GH_PAGES_SOURCES = $(SPHINXOPTS)
+SPHINXBUILD      = sphinx-build
+PAPER            =
+BUILDDIR         = build
 
 # User-friendly check for sphinx-build
 ifeq ($(shell which $(SPHINXBUILD) >/dev/null 2>&1; echo $$?), 1)
@@ -175,3 +176,14 @@ pseudoxml:
 	$(SPHINXBUILD) -b pseudoxml $(ALLSPHINXOPTS) $(BUILDDIR)/pseudoxml
 	@echo
 	@echo "Build finished. The pseudo-XML files are in $(BUILDDIR)/pseudoxml."
+
+gh-pages:
+	git checkout gh-pages
+	rm -rf build _sources _static
+	git checkout master $(GH_PAGES_SOURCES)
+	git reset HEAD
+	make html
+	mv -fv build/html/* ./
+	rm -rf $(GH_PAGES_SOURCES) build
+	git add -A
+	git ci -m "Generated gh-pages for `git log master -1 --pretty=short --abbrev-commit`" && git push origin gh-pages ; git checkout master
