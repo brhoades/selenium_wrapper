@@ -30,6 +30,11 @@ selenium_wrapper
    :undoc-members:
    :show-inheritance:
 
+.. automodule:: sw.cache
+   :emembers:
+   :undoc-members:
+   :show-inheritance:
+
 :mod:`sw.formatting` Module
 ---------------------------
 
