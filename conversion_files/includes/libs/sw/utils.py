@@ -144,7 +144,7 @@ def sleepwait( driver, element, type, **kwargs ):
     if die:
         driver.child.logMsg( ''.join( [ "Element will not be found on page \"", 
             driver.current_url, "\"." ] ), ERROR, locals=locals( ) )
-        driver.restart( "ELEMENT MISSING" )
+        driver.child.restart( "ELEMENT MISSING" )
 
 
 
