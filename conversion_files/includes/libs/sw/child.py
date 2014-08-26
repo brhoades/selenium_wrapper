@@ -233,13 +233,13 @@ class Child:
 
         # Locals if specified
         if locals != None:
-            self.logMsg( ''.join( [ "Locals variables: ", pformat( locals ) ] ), level )
+            self.logMsg( ''.join( [ "Local variables: ", pformat( locals ) ] ), level )
 
         # This typically errors out the first time through
         try: 
             self.lh.write( w ) 
         except:
-            self.lh = open( os.path.join( self.log, 'log.txt' ), 'a+', 0 )
+            self.lh = open( os.path.join( self.log, ''.join( [ 'log-', str( self.num ), '.txt' ] ) ), 'a+', 0 )
             self.lh.write( w ) 
 
 
@@ -275,15 +275,15 @@ class Child:
         # Move our run number up since we are starting
         self.run = str( int( self.run ) + 1 )
 
-        # Log directory, unique so that each
-        self.log = os.path.join( self.baselog, ''.join( [ str( self.num + 1 ), "-", self.run ] ) )
+        # Log directory, now just our top level folder.
+        self.log = self.baselog
 
         # Create our path
         if not os.path.isdir( self.log ):
             os.makedirs( self.log )
 
         # Open our handle
-        self.lh = open( os.path.join( self.log, 'log.txt' ), 'a+' )
+        self.lh = open( os.path.join( self.log, ''.join( [ 'log-', str( self.num ), '.txt' ] ) ), 'a+' )
 
         # Our process        
         self.proc = Process( target=self.think, args=( ) )
@@ -292,13 +292,12 @@ class Child:
 
 
 
-    def restart( self, msg="RESTARTING" ):
+    def restart( self, msg="restarting" ):
         """Restarts the child process and gets webdriver running again.
 
            :param "RESTARTING" msg: A message to print out in parenenthesis.
            :return: None
         """
-        self.stop( "RESTARTING" )
         self.stop( msg )
         self.start( )
 

@@ -23,7 +23,7 @@ FileUtils.mv( logs, out ) if File.exists? logs
 # Remove pyc files
 Dir['**/*'].each { |f| FileUtils.rm f if f =~ /\.pyc$/ }
 
-p "Compressing"
+print "Compressing\n"
 sz = "C:\\Program Files\\7-Zip\\7z.exe"
 `"#{sz}" a -mx9 "#{target + ".zip"}" "#{target}"`
 

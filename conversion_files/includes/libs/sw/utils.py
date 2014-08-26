@@ -144,7 +144,9 @@ def sleepwait( driver, element, type, **kwargs ):
     if die:
         driver.child.logMsg( ''.join( [ "Element will not be found on page \"", 
             driver.current_url, "\"." ] ), ERROR, locals=locals( ) )
-        driver.child.restart( "ELEMENT MISSING" )
+        driver.child.restart( "element missing" )
+        # Wait to be killed
+        time.sleep( 10 )
 
 
 
@@ -227,7 +229,7 @@ def waitToDisappear( driver, element, **kwargs ):
                 driver.child.logMsg( ''.join( [ "Element did not disappear within ", str( timeout ), "s, timed out." ] ), 
                         CRITICAL, locals=locals( ) )
                 if die:
-                    driver.child.restart( "TIMED OUT" )
+                    driver.child.restart( "timed out" )
                     # Wait to be killed
                     time.sleep( 10 )
 
