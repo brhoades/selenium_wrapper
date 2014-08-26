@@ -118,10 +118,7 @@ class Pool:
             timetaken = map( lambda x: x[TIMES], self.data )
             timetaken = [ item for sublist in timetaken for item in sublist ] # Flatten
 
-            waiting = map( lambda x: x[WAIT_TIMES], self.data )
-            waiting = [ item for sublist in waiting for item in sublist ] # Flatten
-            
-            stats( good, bad, timetaken, self.children, self.numJobs, self.started, waiting ) 
+            stats( good, bad, timetaken, self.children, self.numJobs, self.started ) 
 
 
 
@@ -140,8 +137,6 @@ class Pool:
             if r[RESULT] == DONE:
                 self.data[i][SUCCESSES] += 1
                 self.data[i][TIMES].append( r[TIMES] )
-                self.data[i][WAIT_TIMES].append( self.data[i][WAIT_TIME] )
-                self.data[i][WAIT_TIME] = 0 
                 self.children[i].msg( ''.join( ["DONE (", str( format( r[TIME] ) ), "s)" ] ) )
 
             elif r[RESULT] == FAILED:

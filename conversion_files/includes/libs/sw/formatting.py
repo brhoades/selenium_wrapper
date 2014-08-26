@@ -57,7 +57,7 @@ def childMessage( num, msg ):
 
 
 
-def stats( good, bad, timetaken, children, times, starttime, waittime ):   
+def stats( good, bad, timetaken, children, times, starttime ):
     """Prints out statistics for the current running pool.
 
        This includes the following:
@@ -76,7 +76,6 @@ def stats( good, bad, timetaken, children, times, starttime, waittime ):
        :param children: An array of our pool's children. Counted and checked if alive for display.
        :param times: The number of jobs initially given to our pool.
        :param starttime: A timestamp for when our pool started. 
-       :param waittime: `(deprecated)` An old method for determining how long we were waiting on a site.
        :return: None
     """
     
@@ -98,8 +97,6 @@ def stats( good, bad, timetaken, children, times, starttime, waittime ):
 
         print( "Average / Estimates:" )
         print( ''.join( [ "  Time per job: ", format( avg( timetaken ) ), "s" ] ) )
-        print( ''.join( [ "  Time waiting: ", format( avg( waittime ) ), "s (",   
-               format( avg( waittime ) / avg( timetaken ) * 100 ), "%)" ] ) )
         print( ''.join( [ "  Jobs/s: ", format( jps ), ( " " * 3 ), "Jobs/m: ", format( jps * 60 ), ( " " * 3 ), "Jobs/hr: ", 
                format( jps * 60 * 60 ), ( " " * 3 ), "Jobs/day: ", format( jps * 60 * 60 * 24 ) ] ) )
     else:
