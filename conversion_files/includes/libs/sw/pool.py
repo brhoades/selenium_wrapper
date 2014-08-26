@@ -66,8 +66,8 @@ class Pool:
         print( ''.join( [ "Preparing ", str( numChildren ), " ", ( "child" if numChildren == 1 else "children" ), \
                " to do ", str( numJobs ), " job", ( "s" if numJobs != 1 else "" ), "." ] ) )
 
-        # Mark our start time
-        self.started = time.time( )
+        # Marks our start time, set when first child sends starting
+        self.started = None
 
         # Starting for now...
         self.starting = True
@@ -152,11 +152,10 @@ class Pool:
                 self.children[i].msg( ''.join( [ "ERROR: ", formatError( r[ERROR] ) ] ) ) 
 
             elif r[RESULT] == READY:
+                if self.started == None:
+                    self.started = time.time( )
                 self.children[i].msg( "STARTING" )
 
-            elif r[RESULT] == WAIT_TIME:
-                self.data[i][WAIT_TIME] += r[TIME]
-        
         # Still spawning children, ignore their status until done.
         if self.starting == True:
             if self.childrenLeft > 0 and time.time( ) > self.nextSpawn:

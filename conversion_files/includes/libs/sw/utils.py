@@ -64,14 +64,14 @@ def exists( driver, element, type, **kwargs ):
        :param type: The type of :py:attr:`element` in the DOM.
        :Kwargs:
           * **lightConfirm** (*False*): Doesn't matter if an element is visible or enabled, its existance is enough.
-       :param False lightConfirm: Only checks if an element exists, does not verify if it's enabled or visible.
+          * **cache** (*True*): Enables or disables caching of elements internally.
+          * **url** (*driver.current_url*): The url to assume this page is. Defaults to the current url, which is takes time to find.
        :return: Boolean if doesn't exist, `Webelement <http://selenium-python.readthedocs.org/en/latest/api.html#selenium.webdriver.remote.webelement.WebElementwebelement>`_ if it does.
     """
 
     lightConfirm = kwargs.get( 'lightConfirm', False )
-    cache = kwargs.get( 'cache', True )
-
-    current_url = driver.current_url
+    cache        = kwargs.get( 'cache', True )
+    current_url  = kwargs.get( 'url', driver.current_url )
 
     e = None
 
@@ -112,13 +112,17 @@ def sleepwait( driver, element, type, **kwargs ):
        :Kwargs:
           * **timeout** (*15*) -- The amount of time in seconds before continuing on.
           * **lightConfirm** (*False*) -- Only checks if an element exists, does not verify if it's enabled or visible.
+          * **cache** (*True*) -- Determines if elements will be cached internally.
+          * **url** (*driver.current_url*) -- Current URL of this page. Defaults to checking.
        :return: Boolean if doesn't exist, `Webelement <http://selenium-python.readthedocs.org/en/latest/api.html#selenium.webdriver.remote.webelement.WebElementwebelement>`_ if it does.
     """
     start = time.time( )
-    timeout = kwargs.get( 'timeout', 15 )
+    timeout      = kwargs.get( 'timeout', 15 )
     lightConfirm = kwargs.get( 'lightConfirm', False )
+    cache        = kwargs.get( 'cache', True )
+    url          = kwargs.get( 'url', driver.current_url )
     
-    e = exists( driver, element, type, lightConfirm=lightConfirm )
+    e = exists( driver, element, type, url=url, cache=cache, lightConfirm=lightConfirm )
     if not e:
         driver.child.logMsg( ''.join( [ "Beginning wait for element\"", element, "\" of type \"", type, "\"." ] ), NOTICE )
 
@@ -127,7 +131,7 @@ def sleepwait( driver, element, type, **kwargs ):
                 break
             time.sleep( driver.child.sleepTime )
 
-            e = exists( driver, element, type, lightConfirm=lightConfirm )
+            e = exists( driver, element, type, url=url, cache=cache, lightConfirm=lightConfirm )
         else:
             return e 
     else:
@@ -175,6 +179,7 @@ def waitToDisappear( driver, element, **kwargs ):
         * **offset** (*0*) -- Used internally so timeout still applies to recursive calls. This offsets the next timeout by the amount of time
           waited in the previous call.
         * **recur** (*False*) -- Internally used to not print to the log if this function called itself again.
+        * **cache** (*True*) -- Determines in exists will cache elements internally.
        :return: None
     """
     waitForElement = kwargs.get( 'waitForElement', True )
@@ -184,34 +189,35 @@ def waitToDisappear( driver, element, **kwargs ):
     timeout        = kwargs.get( 'timeout', 20 )
     type           = kwargs.get( 'type', 'id' )
     offset         = kwargs.get( 'offset', 0 )
+    cache          = kwargs.get( 'cache', True )
+
     start          = time.time( ) - offset
+    url            = driver.current_url
 
     # Do an initial wait for our element to appear. Any confirmation is confirmation (light).
     if waitForElement:
-        sleepwait( driver, element, type, timeout=waitTimeout, lightConfirm=True )
-        if not exists( driver, element, type ):
+        sleepwait( driver, element, type, cache=cache, url=url, timeout=waitTimeout, lightConfirm=True )
+        if not exists( driver, element, type, cache=cache, url=url, lightConfirm=True ):
             driver.child.logMsg( ''.join( [ "In waitToDisappear \"", element, "\" was never there to begin with." ] ) )
             # If we should wait for it and it's not here... leave.
             return
+        else:
+            if not recur:
+                driver.child.logMsg( ''.join( [ "Waiting for \"", element, "\"" ] ), INFO )
+            time.sleep( driver.child.sleepTime )
 
-    if exists( driver, element, type ):
-        start_inner = time.time( )
-        if not recur:
-            driver.child.logMsg( ''.join( [ "Waiting for \"", element, "\"" ] ), INFO )
-
-        while exists( driver, element, type ):
+        while exists( driver, element, type, cache=cache, url=url, lightconfirm=True ):
             if time.time( ) - start > timeout:
                 driver.child.logMsg( ''.join( [ "Element did not disappear within ", str( timeout ), "s, timed out." ] ) )
                 break #this skips the else
             time.sleep( driver.child.sleepTime )
         else:
-            driver.child.cq.put( [ driver.child.num, WAIT_TIME, time.time( ) - start_inner ] )
             driver.child.logMsg( ''.join( [ "Element \"", element, "\" disappeared!" ] ), INFO )
 
             if stayGone > 0:
                 w = stayGone + time.time( )
                 while w - time.time( ) >= 0:
-                    if exists( driver, element, type ):
+                    if exists( driver, element, type, url=url, cache=cache ):
                         driver.child.logMsg( "Element came back!" )
                         kwargs['offset'] = time.time( ) - start
                         kwargs['recur'] = True
