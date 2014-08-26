@@ -1,0 +1,426 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sw.child &mdash; selenium_wrapper 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="selenium_wrapper 0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">selenium_wrapper 0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sw.child</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">Process</span><span class="p">,</span> <span class="n">Queue</span>
+<span class="kn">from</span> <span class="nn">selenium</span> <span class="kn">import</span> <span class="n">webdriver</span>
+<span class="kn">from</span> <span class="nn">selenium.webdriver.phantomjs.service</span> <span class="kn">import</span> <span class="n">Service</span> <span class="k">as</span> <span class="n">PhantomJSService</span>
+<span class="kn">from</span> <span class="nn">selenium.webdriver.common.desired_capabilities</span> <span class="kn">import</span> <span class="n">DesiredCapabilities</span>
+<span class="kn">from</span> <span class="nn">sw.const</span> <span class="kn">import</span> <span class="o">*</span> <span class="c"># Constants</span>
+<span class="kn">from</span> <span class="nn">sw.formatting</span> <span class="kn">import</span> <span class="n">formatError</span><span class="p">,</span> <span class="n">errorLevelToStr</span>
+<span class="kn">from</span> <span class="nn">sw.cache</span> <span class="kn">import</span> <span class="n">ElementCache</span> 
+<span class="kn">import</span> <span class="nn">time</span><span class="o">,</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">traceback</span>
+<span class="kn">from</span> <span class="nn">pprint</span> <span class="kn">import</span> <span class="n">pformat</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">selenium.common.exceptions</span> <span class="kn">import</span> <span class="o">*</span>
+
+<div class="viewcode-block" id="Child"><a class="viewcode-back" href="../../index.html#sw.child.Child">[docs]</a><span class="k">class</span> <span class="nc">Child</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Initializes our child and then starts it. It takes our pool&#39;s childqueue, our pool&#39;s workqueue,</span>
+<span class="sd">    our child&#39;s number to report back statuses, our base log directory, and a collection of options.</span>
+
+<span class="sd">    :param cq: ChildQueue, this is passed from :class:`sw.pool` and is used to transmit the status of the child</span>
+<span class="sd">        to our pool.</span>
+<span class="sd">    :param wq: WorkQueue, also passed from :class:`sw.pool` and child pops a function off of it to run (a job) </span>
+<span class="sd">        when it finishes a job / starts initially.</span>
+<span class="sd">    :param num: Number of the child relevant to :class:`sw.pool`&#39;s self.data array. This index is used to </span>
+<span class="sd">        easily communicate results and relate them to the child in that array. `num` is also used when printing</span>
+<span class="sd">        out a status message.</span>
+<span class="sd">    :param log: Base log directory which a child will create a `num`-`self.run` folder in to log to.</span>
+<span class="sd">    :param options: Dict from kwargs which contains directives to pass to GhostDriver.</span>
+
+<span class="sd">    :return: Child (self)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">cq</span><span class="p">,</span> <span class="n">wq</span><span class="p">,</span> <span class="n">num</span><span class="p">,</span> <span class="n">log</span><span class="p">,</span> <span class="n">options</span> <span class="p">):</span>
+        <span class="c"># Our output queue (childqueue)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cq</span> <span class="o">=</span> <span class="n">cq</span>
+
+        <span class="c"># Our input queue (workqueue)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wq</span> <span class="o">=</span> <span class="n">wq</span>
+
+        <span class="c"># Our child number</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num</span> <span class="o">=</span> <span class="n">num</span>
+
+        <span class="c"># Run number, used to have different logs and error screenshots after restarting</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">run</span> <span class="o">=</span> <span class="mi">0</span> 
+        
+        <span class="c"># Our driver instance</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">driver</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="c"># Our log folder, which is changed each time start is called (so see start)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+
+        <span class="c"># The base log folder, which never changes.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">baselog</span> <span class="o">=</span> <span class="n">log</span>
+
+        <span class="c"># Our log handle</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lh</span> <span class="o">=</span> <span class="s">&quot;&quot;</span> 
+
+        <span class="c"># Logging level</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">=</span> <span class="n">INFO</span> 
+
+        <span class="c"># Do we load images</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">options</span> <span class="o">=</span> <span class="n">options</span>
+
+        <span class="c"># How long we sleep in loops</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sleepTime</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cache</span> <span class="o">=</span> <span class="n">ElementCache</span><span class="p">(</span> <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">(</span> <span class="p">)</span>
+
+
+
+<div class="viewcode-block" id="Child.msg"><a class="viewcode-back" href="../../index.html#sw.child.Child.msg">[docs]</a>    <span class="k">def</span> <span class="nf">msg</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">message</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Formats a message for this child to be printed out.</span>
+
+<span class="sd">        :param msg: The message to be printed out to the console.</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">print</span><span class="p">(</span> <span class="s">&quot;Child #&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">num</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">)</span> <span class="o">+</span> <span class="s">&quot;: &quot;</span> <span class="o">+</span> <span class="n">message</span> <span class="p">)</span>
+
+
+</div>
+<div class="viewcode-block" id="Child.think"><a class="viewcode-back" href="../../index.html#sw.child.Child.think">[docs]</a>    <span class="k">def</span> <span class="nf">think</span><span class="p">(</span> <span class="bp">self</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The meat of the wrapper, where the main thinking is done. Takes no arguments, just reads from </span>
+<span class="sd">           self variables set in :class:`sw.Child`. PhantomJS is added into the python path by run.bat, so</span>
+<span class="sd">           that is already handled.</span>
+
+<span class="sd">           :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">wq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wq</span>
+        <span class="n">cq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cq</span>
+
+        <span class="c"># This changes our useragent to something that shouldn&#39;t trigger websense</span>
+        <span class="n">DesiredCapabilities</span><span class="o">.</span><span class="n">PHANTOMJS</span><span class="p">[</span><span class="s">&#39;phantomjs.page.settings.userAgent&#39;</span><span class="p">]</span> <span class="o">=</span> \
+            <span class="s">&#39;Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; Trident/4.0)&#39;</span>
+
+        <span class="c"># Monkeypatch our PhantomJS class in, which disables images</span>
+        <span class="n">webdriver</span><span class="o">.</span><span class="n">phantomjs</span><span class="o">.</span><span class="n">webdriver</span><span class="o">.</span><span class="n">Service</span> <span class="o">=</span> <span class="n">PhantomJSNoImages</span>
+
+        <span class="c"># Workaround for internal SSL woes</span>
+        <span class="n">dcaps</span> <span class="o">=</span> <span class="p">{</span> <span class="s">&#39;acceptSslCerts&#39;</span><span class="p">:</span> <span class="bp">True</span> <span class="p">}</span>
+
+        <span class="n">sargs</span> <span class="o">=</span> <span class="p">[</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&#39;--load-images=&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s">&#39;images&#39;</span><span class="p">]</span> <span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(</span> <span class="p">)</span> <span class="p">]</span> <span class="p">),</span>
+                  <span class="s">&#39;--disk-cache=true&#39;</span><span class="p">,</span>
+                  <span class="s">&#39;--ignore-ssl-errors=yes&#39;</span> <span class="p">]</span>
+
+        <span class="k">if</span> <span class="s">&#39;proxy&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">:</span>
+            <span class="n">sargs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&#39;--proxy=&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s">&#39;proxy&#39;</span><span class="p">]</span> <span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+        <span class="k">if</span> <span class="s">&#39;proxytype&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">:</span>
+            <span class="n">sargs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&#39;--proxy-type=&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s">&#39;proxytype&#39;</span><span class="p">]</span> <span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span> 
+            <span class="c"># Initialize our driver with our custom log directories and preferences (capabilities)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">driver</span> <span class="o">=</span> <span class="n">webdriver</span><span class="o">.</span><span class="n">PhantomJS</span><span class="p">(</span> <span class="n">desired_capabilities</span><span class="o">=</span><span class="n">dcaps</span><span class="p">,</span> <span class="n">service_log_path</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">,</span> <span class="s">&quot;ghostdriver.log&quot;</span> <span class="p">),</span> \
+                                               <span class="n">service_args</span><span class="o">=</span><span class="n">sargs</span> <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Webdriver failed to load: &quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span> <span class="n">e</span> <span class="p">),</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">traceback</span><span class="o">.</span><span class="n">formatexc</span><span class="p">(</span> <span class="p">)</span> <span class="p">]</span> <span class="p">),</span> <span class="n">CRITICAL</span> <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="p">(</span> <span class="s">&quot;WEBDRIVER ERROR&quot;</span> <span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span> 
+                <span class="bp">self</span><span class="o">.</span><span class="n">driver</span><span class="o">.</span><span class="n">quit</span><span class="p">(</span> <span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">return</span>
+            <span class="k">return</span>
+
+        <span class="c"># Insert ourself into webdriver</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">driver</span><span class="o">.</span><span class="n">child</span> <span class="o">=</span> <span class="bp">self</span>
+
+        <span class="c"># Change our implicit wait time</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">driver</span><span class="o">.</span><span class="n">implicitly_wait</span><span class="p">(</span> <span class="mi">0</span> <span class="p">)</span>
+
+        <span class="c"># Push a STARTING message to our pool, if we print it we risk scrambling text in stdout</span>
+        <span class="n">cq</span><span class="o">.</span><span class="n">put</span><span class="p">(</span> <span class="p">[</span> <span class="bp">self</span><span class="o">.</span><span class="n">num</span><span class="p">,</span> <span class="n">READY</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">),</span> <span class="s">&quot;&quot;</span> <span class="p">]</span> <span class="p">)</span>
+
+        <span class="c"># Write to our log another message indicating we are starting our runs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&quot;Child process started and loaded&quot;</span> <span class="p">)</span>
+
+        <span class="c"># While our work queue isn&#39;t empty...</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="n">wq</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span> <span class="p">):</span>
+            <span class="n">func</span> <span class="o">=</span> <span class="n">wq</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="bp">True</span><span class="p">,</span> <span class="mi">5</span> <span class="p">)</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="mi">0</span>
+            
+            <span class="c"># Try, if an element isn&#39;t found an exception is thrown</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">clear</span><span class="p">(</span> <span class="p">)</span>
+                <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">)</span>
+                <span class="n">func</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">driver</span> <span class="p">)</span>
+            <span class="k">except</span> <span class="n">TimeoutException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Stack trace: &quot;</span><span class="p">,</span> <span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">(</span> <span class="p">)</span> <span class="p">]</span> <span class="p">),</span> <span class="n">CRITICAL</span> <span class="p">)</span>
+                
+                <span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="p">(</span> <span class="s">&quot;TIMEOUT&quot;</span> <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&quot;Timeout when finding element.&quot;</span> <span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logError</span><span class="p">(</span> <span class="nb">str</span><span class="p">(</span> <span class="n">e</span> <span class="p">)</span> <span class="p">)</span> <span class="c"># Capture the exception and log it</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Stack trace: &quot;</span><span class="p">,</span> <span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">(</span> <span class="p">)</span> <span class="p">]</span> <span class="p">),</span> <span class="n">CRITICAL</span> <span class="p">)</span>
+
+                <span class="n">cq</span><span class="o">.</span><span class="n">put</span><span class="p">(</span> <span class="p">[</span> <span class="bp">self</span><span class="o">.</span><span class="n">num</span><span class="p">,</span> <span class="n">FAILED</span><span class="p">,</span> <span class="p">(</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">)</span> <span class="o">-</span> <span class="n">start</span> <span class="p">),</span> <span class="nb">str</span><span class="p">(</span> <span class="n">e</span> <span class="p">)</span> <span class="p">]</span> <span class="p">)</span>
+                <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">t</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">)</span> <span class="o">-</span> <span class="n">start</span>
+                <span class="n">cq</span><span class="o">.</span><span class="n">put</span><span class="p">(</span> <span class="p">[</span> <span class="bp">self</span><span class="o">.</span><span class="n">num</span><span class="p">,</span> <span class="n">DONE</span><span class="p">,</span> <span class="p">(</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">)</span> <span class="o">-</span> <span class="n">start</span> <span class="p">),</span> <span class="s">&quot;&quot;</span> <span class="p">]</span> <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Successfully finished job (&quot;</span><span class="p">,</span> <span class="n">format</span><span class="p">(</span> <span class="n">t</span> <span class="p">),</span> <span class="s">&quot;s)&quot;</span> <span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+
+        <span class="c"># Quit after we have finished our work queue, this kills the phantomjs process.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">driver</span><span class="o">.</span><span class="n">quit</span><span class="p">(</span> <span class="p">)</span>
+
+
+</div>
+<div class="viewcode-block" id="Child.logError"><a class="viewcode-back" href="../../index.html#sw.child.Child.logError">[docs]</a>    <span class="k">def</span> <span class="nf">logError</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">noScreenshot</span><span class="o">=</span><span class="bp">False</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Log Screenshot of Error with Exception</span>
+<span class="sd">           Renders a screenshot of what it sees then writes it to our log directory as error_#.png</span>
+<span class="sd">           Also takes the exception we received and exports it as text</span>
+
+<span class="sd">           :param e: Unicode json-encoded string from a webdriver-thrown error.</span>
+<span class="sd">           :param False noScreenshot: Whether or not to take a screenshot of the error.</span>
+<span class="sd">           :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">o</span> <span class="o">=</span> <span class="n">pformat</span><span class="p">(</span> <span class="n">formatError</span><span class="p">(</span> <span class="n">e</span><span class="p">,</span> <span class="s">&quot;log&quot;</span> <span class="p">)</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="n">o</span><span class="p">,</span> <span class="n">CRITICAL</span> <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">noScreenshot</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">screenshot</span><span class="p">(</span> <span class="n">CRITICAL</span> <span class="p">)</span>
+
+
+</div>
+<div class="viewcode-block" id="Child.screenshot"><a class="viewcode-back" href="../../index.html#sw.child.Child.screenshot">[docs]</a>    <span class="k">def</span> <span class="nf">screenshot</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">NOTICE</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Saves a screenshot to `num`-`run`/error_#.png and prints a message into the log specifying the file logged to.</span>
+<span class="sd">           </span>
+<span class="sd">           :param NOTICE level: This determines whether or not the error message will be logged according to the</span>
+<span class="sd">               level set in self.level. The screenshot will print anyway. If this error is not greater or equal to the level specified in self.level,</span>
+<span class="sd">               it is not printed. If it is, the message is printed into log.txt with the level specified by the timestamp.</span>
+<span class="sd">           :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c"># If we are writing several errors, number them appropriately</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Cannot write to a log directory that doesn&#39;t exist. &quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="p">]</span> <span class="p">),</span> <span class="n">CRITICAL</span> <span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&#39;error_&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span> <span class="n">i</span> <span class="p">),</span> <span class="s">&#39;.png&#39;</span> <span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span> <span class="n">fn</span> <span class="p">):</span>
+                <span class="k">break</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">driver</span><span class="o">.</span><span class="n">save_screenshot</span><span class="p">(</span> <span class="n">fn</span> <span class="p">)</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Wrote screenshot to: &quot;</span><span class="p">,</span> <span class="n">fn</span> <span class="p">]</span> <span class="p">),</span> <span class="n">level</span> <span class="p">)</span>
+
+
+</div>
+<div class="viewcode-block" id="Child.logMsg"><a class="viewcode-back" href="../../index.html#sw.child.Child.logMsg">[docs]</a>    <span class="k">def</span> <span class="nf">logMsg</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">NOTICE</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Writes to our message log if level is greater than or equal to our level (in self.log).</span>
+<span class="sd">        </span>
+<span class="sd">           :param e: The message to be written to the log.</span>
+<span class="sd">            </span>
+<span class="sd">           :param NOTICE level: This determines whether or not the error message will be logged according to the</span>
+<span class="sd">               level set in self.level. If this error is not greater or equal to the level specified in self.level,</span>
+<span class="sd">               it is not printed. If it is, the message is printed into log.txt with the level specified by the timestamp.</span>
+<span class="sd">           :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># Determine if we&#39;re logging this low</span>
+        <span class="k">if</span> <span class="n">level</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">level</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="c"># Get our timestamp</span>
+        <span class="n">timestamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span> <span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span> <span class="s">&quot;%H:%M:%S&quot;</span> <span class="p">)</span>
+        
+        <span class="c"># string</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;[&quot;</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="s">&quot;] &quot;</span><span class="p">,</span> <span class="n">errorLevelToStr</span><span class="p">(</span> <span class="n">level</span> <span class="p">),</span> <span class="s">&quot;</span><span class="se">\t</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span> <span class="p">]</span> <span class="p">)</span>
+
+        <span class="c"># This typically errors out the first time through</span>
+        <span class="k">try</span><span class="p">:</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">lh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span> <span class="n">w</span> <span class="p">)</span> 
+        <span class="k">except</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lh</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">,</span> <span class="s">&#39;log.txt&#39;</span> <span class="p">),</span> <span class="s">&#39;a+&#39;</span><span class="p">,</span> <span class="mi">0</span> <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span> <span class="n">w</span> <span class="p">)</span> 
+
+
+</div>
+<div class="viewcode-block" id="Child.is_alive"><a class="viewcode-back" href="../../index.html#sw.child.Child.is_alive">[docs]</a>    <span class="k">def</span> <span class="nf">is_alive</span><span class="p">(</span> <span class="bp">self</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">           Checks if the child&#39;s process is still running, if it is then it returns True, otherwise False.</span>
+<span class="sd">           There&#39;s a check for if the process is None, which is set when a child terminates.</span>
+
+<span class="sd">           :return: Boolean for if Child process is still active (different from if a child is processing data).</span>
+<span class="sd">           &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">proc</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">proc</span><span class="o">.</span><span class="n">is_alive</span><span class="p">(</span> <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>  
+            <span class="k">return</span> <span class="bp">False</span>
+
+
+</div>
+<div class="viewcode-block" id="Child.is_done"><a class="viewcode-back" href="../../index.html#sw.child.Child.is_done">[docs]</a>    <span class="k">def</span> <span class="nf">is_done</span><span class="p">(</span> <span class="bp">self</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check if a child is done. When a child process is finished its self.proc is set to None.</span>
+<span class="sd">           </span>
+<span class="sd">           :return: Boolean for if Child is finished processing data. This is usually signal to kill the subprocess.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">proc</span> <span class="o">==</span> <span class="bp">None</span>
+
+
+</div>
+<div class="viewcode-block" id="Child.start"><a class="viewcode-back" href="../../index.html#sw.child.Child.start">[docs]</a>    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span> <span class="bp">self</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Starts our child process off properly, used after a restart typically.</span>
+<span class="sd">           </span>
+<span class="sd">           :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># Move our run number up since we are starting</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">run</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span> <span class="nb">int</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">run</span> <span class="p">)</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">)</span>
+
+        <span class="c"># Log directory, unique so that each</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">baselog</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="nb">str</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">num</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">),</span> <span class="s">&quot;-&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">run</span> <span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+
+        <span class="c"># Create our path</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="p">)</span>
+
+        <span class="c"># Open our handle</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lh</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">,</span> <span class="s">&#39;log.txt&#39;</span> <span class="p">),</span> <span class="s">&#39;a+&#39;</span> <span class="p">)</span>
+
+        <span class="c"># Our process        </span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">proc</span> <span class="o">=</span> <span class="n">Process</span><span class="p">(</span> <span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">think</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span> <span class="p">)</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="p">(</span> <span class="s">&quot;LOADING&quot;</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">proc</span><span class="o">.</span><span class="n">start</span><span class="p">(</span> <span class="p">)</span>
+
+
+</div>
+<div class="viewcode-block" id="Child.restart"><a class="viewcode-back" href="../../index.html#sw.child.Child.restart">[docs]</a>    <span class="k">def</span> <span class="nf">restart</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="o">=</span><span class="s">&quot;RESTARTING&quot;</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Restarts the child process and gets webdriver running again.</span>
+
+<span class="sd">           :param &quot;RESTARTING&quot; msg: A message to print out in parenenthesis.</span>
+<span class="sd">           :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stop</span><span class="p">(</span> <span class="s">&quot;RESTARTING&quot;</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stop</span><span class="p">(</span> <span class="n">msg</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">(</span> <span class="p">)</span>
+
+
+</div>
+<div class="viewcode-block" id="Child.stop"><a class="viewcode-back" href="../../index.html#sw.child.Child.stop">[docs]</a>    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="o">=</span><span class="s">&quot;&quot;</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Stops a child process properly and sets its self.proc to None. Optionally takes a message</span>
+<span class="sd">           to print out.</span>
+<span class="sd">        </span>
+<span class="sd">           :param &quot;&quot; msg: A message to show in parenthesis on the console next to ``Child #: STOPPING (msg)``.</span>
+<span class="sd">           :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">proc</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="n">msg</span> <span class="o">!=</span> <span class="s">&quot;&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Stopping child process: </span><span class="se">\&quot;</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="s">&quot;</span><span class="se">\&quot;</span><span class="s">&quot;</span> <span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;STOPPING (&quot;</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="s">&quot;)&quot;</span> <span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&quot;Stopping child process&quot;</span> <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="p">(</span> <span class="s">&quot;STOPPING&quot;</span> <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">proc</span><span class="o">.</span><span class="n">terminate</span><span class="p">(</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">proc</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">proc</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">lh</span><span class="o">.</span><span class="n">close</span><span class="p">(</span> <span class="p">)</span>
+
+
+</div></div>
+<div class="viewcode-block" id="PhantomJSNoImages"><a class="viewcode-back" href="../../index.html#sw.child.PhantomJSNoImages">[docs]</a><span class="k">class</span> <span class="nc">PhantomJSNoImages</span><span class="p">(</span> <span class="n">PhantomJSService</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This class sits atop our PhantomJSService class included in webdriver to implemention service_args</span>
+<span class="sd">       inclusion, which we pass by default --load-images=no to disable images.</span>
+
+<span class="sd">       :param PhantomJSService: Pass this function the PhantomJSService class so that it can patch on top of it.</span>
+<span class="sd">       :return: PhantomJsNoImages (self)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span> <span class="p">):</span>
+        <span class="n">service_args</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span> <span class="s">&#39;service_args&#39;</span><span class="p">,</span> <span class="p">[]</span> <span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span> <span class="n">PhantomJSNoImages</span><span class="p">,</span> <span class="bp">self</span> <span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span> <span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">selenium_wrapper 0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Billy Rhoades.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

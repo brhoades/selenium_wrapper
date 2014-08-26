@@ -1,0 +1,293 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sw.pool &mdash; selenium_wrapper 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="selenium_wrapper 0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">selenium_wrapper 0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sw.pool</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">Process</span><span class="p">,</span> <span class="n">Queue</span>
+<span class="kn">from</span> <span class="nn">sw.child</span> <span class="kn">import</span> <span class="n">Child</span>
+<span class="kn">import</span> <span class="nn">time</span><span class="o">,</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">from</span> <span class="nn">sw.const</span> <span class="kn">import</span> <span class="o">*</span> <span class="c"># Constants</span>
+<span class="kn">from</span> <span class="nn">sw.formatting</span> <span class="kn">import</span> <span class="o">*</span> 
+
+
+
+<div class="viewcode-block" id="Pool"><a class="viewcode-back" href="../../index.html#sw.pool.Pool">[docs]</a><span class="k">class</span> <span class="nc">Pool</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Stores parameters across all children, sets out log directory, initializes our data arrays,</span>
+<span class="sd">        records start times, and pops `numJobs` functions into a Queue. Abstracts and makes it easier to</span>
+<span class="sd">        manage scores of child processes. Also has a :func:`think` process to continuously manage them.</span>
+
+<span class="sd">        :param numChildren: Number of children the pool will start with.</span>
+<span class="sd">        :param numJobs: Number of jobs to fill our work queue with.</span>
+<span class="sd">        :param func: The function reference that will be put into our work queue `numJobs` times.</span>
+<span class="sd">        :param file: Filename with directory of our script which contained `func`. This is used to create a relative log directory.</span>
+<span class="sd">        :param kwargs: Kwargs dict passed to :func:`main`, eventually passes arguments on to GhostDriver. </span>
+<span class="sd">            &#39;staggered&#39; is pulled from this dict if it exists.</span>
+<span class="sd">        :returns: Pool (self)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">numChildren</span><span class="p">,</span> <span class="n">numJobs</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="nb">file</span><span class="p">,</span> <span class="n">kwargs</span> <span class="p">):</span>
+        <span class="c"># Our children</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="p">[</span> <span class="bp">None</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">numChildren</span><span class="p">)</span> <span class="p">]</span>
+        
+        <span class="c"># Statistics and data per child</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">[</span> <span class="p">[</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">[</span> <span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="p">[</span> <span class="p">]</span> <span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">numChildren</span><span class="p">)</span> <span class="p">]</span>
+
+        <span class="c"># Our one way queue from our children</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">childQueue</span> <span class="o">=</span> <span class="n">Queue</span><span class="p">(</span> <span class="p">)</span>
+
+        <span class="c"># Our work for children</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">workQueue</span> <span class="o">=</span> <span class="n">Queue</span><span class="p">(</span> <span class="p">)</span>
+
+        <span class="c"># Populate our work queue</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">numJobs</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">workQueue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span> <span class="n">func</span> <span class="p">)</span>
+
+        <span class="c"># Number of times each child runs, stored on the child statistics list</span>
+        <span class="c">#   as a countdown later</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">numJobs</span> <span class="o">=</span> <span class="n">numJobs</span>
+
+        <span class="c"># Number of children to start</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">numChildren</span> <span class="o">=</span> <span class="n">numChildren</span>
+
+        <span class="c"># Our function</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">func</span> <span class="o">=</span> <span class="n">func</span>
+
+        <span class="c"># Time between statistics reporting</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timePerReport</span> <span class="o">=</span> <span class="mi">100</span> 
+
+        <span class="c"># Don&#39;t report statistics for another minute</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nextStat</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">)</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">timePerReport</span><span class="o">*</span><span class="mf">1.1</span> <span class="p">)</span>
+
+        <span class="c"># Our timestamp</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timestamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span> <span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span> <span class="s">&quot;%Y-%m-</span><span class="si">%d</span><span class="s">_%H-%M-%S&quot;</span> <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">options</span> <span class="o">=</span> <span class="n">kwargs</span>
+
+        <span class="n">staggered</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&#39;staggered&#39;</span><span class="p">,</span> <span class="bp">True</span> <span class="p">)</span>
+
+        <span class="c"># General log directory, shared by all children</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span> <span class="nb">file</span> <span class="p">)</span> <span class="p">),</span> <span class="s">&quot;logs&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">timestamp</span> <span class="p">)</span> 
+
+        <span class="k">print</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Preparing &quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span> <span class="n">numChildren</span> <span class="p">),</span> <span class="s">&quot; &quot;</span><span class="p">,</span> <span class="p">(</span> <span class="s">&quot;child&quot;</span> <span class="k">if</span> <span class="n">numChildren</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="s">&quot;children&quot;</span> <span class="p">),</span> \
+               <span class="s">&quot; to do &quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span> <span class="n">numJobs</span> <span class="p">),</span> <span class="s">&quot; job&quot;</span><span class="p">,</span> <span class="p">(</span> <span class="s">&quot;s&quot;</span> <span class="k">if</span> <span class="n">numJobs</span> <span class="o">!=</span> <span class="mi">1</span> <span class="k">else</span> <span class="s">&quot;&quot;</span> <span class="p">),</span> <span class="s">&quot;.&quot;</span> <span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+
+        <span class="c"># Marks our start time, set when first child sends starting</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">started</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="c"># Starting for now...</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">starting</span> <span class="o">=</span> <span class="bp">True</span>
+
+        <span class="c"># Children left</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">childrenLeft</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">numChildren</span>
+
+        <span class="c"># Next time we&#39;ll spawn a child</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nextSpawn</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">)</span>
+
+        <span class="c"># Time between children spawning</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">staggeredTime</span> <span class="o">=</span> <span class="mi">5</span>
+
+
+
+<div class="viewcode-block" id="Pool.newChild"><a class="viewcode-back" href="../../index.html#sw.pool.Pool.newChild">[docs]</a>    <span class="k">def</span> <span class="nf">newChild</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="bp">None</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates a new :class:`child` which will in turn start itself. If i is none, it grabs the next available array</span>
+<span class="sd">        index, assuming it was initialized for this many children (will grab an index that doesn&#39;t exist if not).</span>
+
+<span class="sd">        :param None i: Index for child process within pool&#39;s data structure. </span>
+<span class="sd">        :returns: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="p">):</span>
+                <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="k">break</span> <span class="c"># This gets us our first empty i</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">Child</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">childQueue</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">workQueue</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span> <span class="p">)</span>
+
+
+</div>
+<div class="viewcode-block" id="Pool.reportStatistics"><a class="viewcode-back" href="../../index.html#sw.pool.Pool.reportStatistics">[docs]</a>    <span class="k">def</span> <span class="nf">reportStatistics</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="bp">False</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Translates statistics into the archaic form used by the :func:`sw.formatting.stats`.</span>
+<span class="sd">        Map and reduce are used to get things quickly out of the self.data 2-d array. This function</span>
+<span class="sd">        is only called every self.timePerReport seconds as set in this class&#39;s initialization func.</span>
+
+<span class="sd">        :param False force: Forces a report of statistics. Only called by the script itself when done.</span>
+<span class="sd">        :returns: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># Check if it&#39;s time yet</span>
+        <span class="k">if</span> <span class="n">force</span> <span class="ow">or</span> <span class="p">(</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">)</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nextStat</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nextStat</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">timePerReport</span>
+            
+            <span class="c"># Reduces our good/bad results into a single &quot;this many succeeded, this many failed&quot; number.</span>
+            <span class="c"># Maps our times into a single list.</span>
+            <span class="n">good</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">,</span> <span class="nb">map</span><span class="p">(</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="n">SUCCESSES</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="p">)</span> <span class="p">)</span>
+            <span class="n">bad</span>  <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">,</span> <span class="nb">map</span><span class="p">(</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="n">FAILURES</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="p">)</span> <span class="p">)</span>
+            <span class="n">timetaken</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="n">TIMES</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="p">)</span>
+            <span class="n">timetaken</span> <span class="o">=</span> <span class="p">[</span> <span class="n">item</span> <span class="k">for</span> <span class="n">sublist</span> <span class="ow">in</span> <span class="n">timetaken</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">sublist</span> <span class="p">]</span> <span class="c"># Flatten</span>
+
+            <span class="n">stats</span><span class="p">(</span> <span class="n">good</span><span class="p">,</span> <span class="n">bad</span><span class="p">,</span> <span class="n">timetaken</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">numJobs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">started</span> <span class="p">)</span> 
+
+
+</div>
+<div class="viewcode-block" id="Pool.think"><a class="viewcode-back" href="../../index.html#sw.pool.Pool.think">[docs]</a>    <span class="k">def</span> <span class="nf">think</span><span class="p">(</span> <span class="bp">self</span> <span class="p">):</span> 
+        <span class="sd">&quot;&quot;&quot;Runs through a single think loop; called by :func:`sw.mainmainLoop` until there is no more work remaining.</span>
+<span class="sd">        Check children are alive/restart if there are more jobs. Checks queues and parses any data.</span>
+
+<span class="sd">        :returns: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c"># Check our queues</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">childQueue</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span> <span class="p">):</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">childQueue</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="bp">False</span> <span class="p">)</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="n">NUMBER</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">r</span><span class="p">[</span><span class="n">RESULT</span><span class="p">]</span> <span class="o">==</span> <span class="n">DONE</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">SUCCESSES</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">TIMES</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">r</span><span class="p">[</span><span class="n">TIMES</span><span class="p">]</span> <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">msg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span><span class="s">&quot;DONE (&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span> <span class="n">format</span><span class="p">(</span> <span class="n">r</span><span class="p">[</span><span class="n">TIME</span><span class="p">]</span> <span class="p">)</span> <span class="p">),</span> <span class="s">&quot;s)&quot;</span> <span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+
+            <span class="k">elif</span> <span class="n">r</span><span class="p">[</span><span class="n">RESULT</span><span class="p">]</span> <span class="o">==</span> <span class="n">FAILED</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">FAILURES</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+                <span class="c"># When we get a failure we put the job back on the queue</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">workQueue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span> <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">msg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;ERROR: &quot;</span><span class="p">,</span> <span class="n">formatError</span><span class="p">(</span> <span class="n">r</span><span class="p">[</span><span class="n">ERROR</span><span class="p">]</span> <span class="p">)</span> <span class="p">]</span> <span class="p">)</span> <span class="p">)</span> 
+
+            <span class="k">elif</span> <span class="n">r</span><span class="p">[</span><span class="n">RESULT</span><span class="p">]</span> <span class="o">==</span> <span class="n">READY</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">started</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">started</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">msg</span><span class="p">(</span> <span class="s">&quot;STARTING&quot;</span> <span class="p">)</span>
+
+        <span class="c"># Still spawning children, ignore their status until done.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">starting</span> <span class="o">==</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">childrenLeft</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">nextSpawn</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">newChild</span><span class="p">(</span> <span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s">&#39;staggered&#39;</span><span class="p">]:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">nextSpawn</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">staggeredTime</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">childrenLeft</span> <span class="o">-=</span> <span class="mi">1</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">childrenLeft</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">starting</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">else</span><span class="p">:</span> 
+            <span class="c"># Check that children are alive, restart</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">numChildren</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">is_alive</span><span class="p">(</span> <span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">workQueue</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span> <span class="p">):</span>
+                    <span class="c">#FIXME: Check if we need more workers or if one is alive / without job to take this</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">restart</span><span class="p">(</span> <span class="p">)</span>
+                <span class="k">elif</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">is_alive</span><span class="p">(</span> <span class="p">)</span> \
+                     <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">is_done</span><span class="p">(</span> <span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">workQueue</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span> <span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">stop</span><span class="p">(</span> <span class="s">&quot;DONE&quot;</span> <span class="p">)</span>
+
+        <span class="c"># Statistics reporting</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reportStatistics</span><span class="p">(</span> <span class="p">)</span>
+
+
+</div>
+<div class="viewcode-block" id="Pool.done"><a class="viewcode-back" href="../../index.html#sw.pool.Pool.done">[docs]</a>    <span class="k">def</span> <span class="nf">done</span><span class="p">(</span> <span class="bp">self</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a True/False if the pool is done processing jobs. Called continuously by our main </span>
+<span class="sd">        loop. When False, the program terminates.</span>
+
+<span class="sd">        :return: Boolean for if there are children still running work.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">childQueue</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span> <span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">workQueue</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span> <span class="p">):</span>
+            <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">is_alive</span><span class="p">(</span> <span class="p">):</span>
+                    <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="k">return</span> <span class="bp">True</span>
+
+
+</div>
+<div class="viewcode-block" id="Pool.stop"><a class="viewcode-back" href="../../index.html#sw.pool.Pool.stop">[docs]</a>    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span> <span class="bp">self</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Stops the pool cleanly and terminates all the children in it.</span>
+<span class="sd">        </span>
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+            <span class="n">c</span><span class="o">.</span><span class="n">stop</span><span class="p">(</span> <span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">selenium_wrapper 0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Billy Rhoades.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

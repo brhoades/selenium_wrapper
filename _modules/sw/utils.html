@@ -1,0 +1,373 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sw.utils &mdash; selenium_wrapper 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="selenium_wrapper 0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">selenium_wrapper 0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sw.utils</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">time</span><span class="o">,</span> <span class="nn">traceback</span>
+<span class="kn">from</span> <span class="nn">const</span> <span class="kn">import</span> <span class="o">*</span>
+
+
+
+<div class="viewcode-block" id="loadScript"><a class="viewcode-back" href="../../index.html#sw.utils.loadScript">[docs]</a><span class="k">def</span> <span class="nf">loadScript</span><span class="p">(</span> <span class="n">driver</span><span class="p">,</span> <span class="n">js</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creates a new script object and appends it to the header.</span>
+
+<span class="sd">       :param driver: Webdriver instance for this to be executed on.</span>
+<span class="sd">       :param js: URL to a JavaScript file that will be inserted and loaded on this page.</span>
+<span class="sd">       :return: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">driver</span><span class="o">.</span><span class="n">execute_script_async</span><span class="p">(</span> \
+        <span class="s">&quot;var script = document.createElement( &#39;script&#39; ); </span><span class="se">\</span>
+<span class="s">        script.type = &#39;text/javascript&#39;; </span><span class="se">\</span>
+<span class="s">        script.src = &#39;&quot;</span> <span class="o">+</span> <span class="n">js</span> <span class="o">+</span> <span class="s">&quot;&#39;; </span><span class="se">\</span>
+<span class="s">        document.getElementsByTagName(&#39;head&#39;)[0].appendChild( script );&quot;</span> <span class="p">)</span>
+
+
+</div>
+<div class="viewcode-block" id="jQCheck"><a class="viewcode-back" href="../../index.html#sw.utils.jQCheck">[docs]</a><span class="k">def</span> <span class="nf">jQCheck</span><span class="p">(</span> <span class="n">driver</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">1</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This function takes our webdriver object in and checks if the current loaded page has jQuery on it.</span>
+<span class="sd">       If it doesn&#39;t, it tries to load it. It will pause the script for up to `timeout` seconds after loading,</span>
+<span class="sd">       after that it just returns False so that the exists script will stop holding things up.</span>
+
+<span class="sd">       .. deprecated:: 0.1 </span>
+<span class="sd">          JavaScript is no longer used to check for elements before running webdriver checks.</span>
+
+<span class="sd">       :param driver: Webdriver instance to check for jQuery on.</span>
+<span class="sd">       :param 1 timeout: How long to wait for jQuery to load before continuing on. </span>
+<span class="sd">       :return: Boolean, True if jQuery is loaded False if it did not load.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">jqCheck</span> <span class="o">=</span> <span class="s">&quot;return typeof jQuery != &#39;undefined&#39;&quot;</span>          <span class="c"># Some StackOverflow post recommended this bit of code</span>
+    <span class="n">loadScript</span><span class="p">(</span> <span class="n">driver</span><span class="p">,</span> <span class="s">&quot;http://code.jquery.com/jquery-2.1.1.min.js&quot;</span> <span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">bool</span><span class="p">(</span> <span class="n">driver</span><span class="o">.</span><span class="n">execute_script</span><span class="p">(</span> <span class="n">jqCheck</span> <span class="p">)</span> <span class="p">):</span>         <span class="c">#FIXME: Add a check that makes sure we haven&#39;t held up</span>
+        <span class="n">driver</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&quot;jQuery not loaded into browser, inserting manually.&quot;</span><span class="p">,</span> <span class="n">INFO</span> <span class="p">)</span>
+        <span class="n">loadScript</span><span class="p">(</span> <span class="n">driver</span><span class="p">,</span> <span class="n">jq</span> <span class="p">)</span>
+
+        <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">)</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="nb">bool</span><span class="p">(</span> <span class="n">driver</span><span class="o">.</span><span class="n">execute_script</span><span class="p">(</span> <span class="n">jqCheck</span> <span class="p">)</span> <span class="p">)</span> <span class="ow">and</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">)</span> <span class="o">-</span> <span class="n">start</span> <span class="o">&lt;</span> <span class="n">timeout</span><span class="p">:</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span> <span class="n">driver</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">sleepTime</span> <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">bool</span><span class="p">(</span> <span class="n">driver</span><span class="o">.</span><span class="n">execute_script</span><span class="p">(</span> <span class="n">jqCheck</span> <span class="p">)</span> <span class="p">):</span>
+            <span class="n">driver</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;jQuery failed to load into browser after &quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span> <span class="n">timeout</span> <span class="p">),</span> <span class="s">&quot;s.&quot;</span> <span class="p">]</span> <span class="p">),</span> <span class="n">WARNING</span>  <span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>                              <span class="c"># False, jQuery isn&#39;t loaded</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">driver</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;jQuery loaded into browser successfully after &quot;</span><span class="p">,</span> <span class="n">format</span><span class="p">(</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">)</span> <span class="o">-</span> <span class="n">start</span> <span class="p">),</span> <span class="s">&quot;s.&quot;</span> <span class="p">]</span> <span class="p">),</span> <span class="n">INFO</span> <span class="p">)</span>
+            <span class="k">return</span> <span class="bp">True</span>                               <span class="c"># True, it is</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">True</span>
+
+
+</div>
+<div class="viewcode-block" id="exists"><a class="viewcode-back" href="../../index.html#sw.utils.exists">[docs]</a><span class="k">def</span> <span class="nf">exists</span><span class="p">(</span> <span class="n">driver</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Checks if an element exists with the WebDriver functions. Catches and handles exceptions if it doesn&#39;t.</span>
+<span class="sd">       Previously there was an issue where the find_element_by... would wait for 15 seconds to find the element,</span>
+<span class="sd">       but that has been resolved. If an element is in the DOM, does a final check to see if it is displayed and</span>
+<span class="sd">       available.</span>
+
+<span class="sd">       :param driver: WebDriver instance to check for :py:attr:`element`.</span>
+<span class="sd">       :param element: Identifying handle for an element.</span>
+<span class="sd">       :param type: The type of :py:attr:`element` in the DOM.</span>
+<span class="sd">       :Kwargs:</span>
+<span class="sd">          * **lightConfirm** (*False*): Doesn&#39;t matter if an element is visible or enabled, its existance is enough.</span>
+<span class="sd">          * **cache** (*True*): Enables or disables caching of elements internally.</span>
+<span class="sd">          * **url** (*driver.current_url*): The url to assume this page is. Defaults to the current url, which is takes time to find.</span>
+<span class="sd">       :return: Boolean if doesn&#39;t exist, `Webelement &lt;http://selenium-python.readthedocs.org/en/latest/api.html#selenium.webdriver.remote.webelement.WebElementwebelement&gt;`_ if it does.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">lightConfirm</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&#39;lightConfirm&#39;</span><span class="p">,</span> <span class="bp">False</span> <span class="p">)</span>
+    <span class="n">cache</span>        <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&#39;cache&#39;</span><span class="p">,</span> <span class="bp">True</span> <span class="p">)</span>
+    <span class="n">current_url</span>  <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&#39;url&#39;</span><span class="p">,</span> <span class="n">driver</span><span class="o">.</span><span class="n">current_url</span> <span class="p">)</span>
+
+    <span class="n">e</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">if</span> <span class="n">cache</span><span class="p">:</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">driver</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="n">current_url</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="n">element</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">type</span> <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">e</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s">&quot;id&quot;</span><span class="p">:</span>
+                <span class="n">e</span> <span class="o">=</span> <span class="n">driver</span><span class="o">.</span><span class="n">find_element_by_id</span><span class="p">(</span> <span class="n">element</span> <span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s">&quot;name&quot;</span><span class="p">:</span>
+                <span class="n">e</span> <span class="o">=</span> <span class="n">driver</span><span class="o">.</span><span class="n">find_element_by_name</span><span class="p">(</span> <span class="n">element</span> <span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s">&quot;xpath&quot;</span><span class="p">:</span>
+                <span class="n">e</span> <span class="o">=</span> <span class="n">driver</span><span class="o">.</span><span class="n">find_element_by_xpath</span><span class="p">(</span> <span class="n">element</span> <span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s">&quot;link_text&quot;</span><span class="p">:</span>
+                <span class="n">e</span> <span class="o">=</span> <span class="n">driver</span><span class="o">.</span><span class="n">find_element_by_link_text</span><span class="p">(</span> <span class="n">element</span> <span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s">&quot;css_selector&quot;</span><span class="p">:</span>
+                <span class="n">e</span> <span class="o">=</span> <span class="n">driver</span><span class="o">.</span><span class="n">find_element_by_css_selector</span><span class="p">(</span> <span class="n">element</span> <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">if</span> <span class="n">cache</span><span class="p">:</span>
+        <span class="n">driver</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">add</span><span class="p">(</span> <span class="n">current_url</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="n">element</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">type</span> <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">lightConfirm</span> <span class="ow">or</span> <span class="p">(</span> <span class="n">isDisplayed</span><span class="p">(</span> <span class="n">e</span> <span class="p">)</span> <span class="ow">and</span> <span class="n">isEnabled</span><span class="p">(</span> <span class="n">e</span> <span class="p">)</span> <span class="p">):</span>
+        <span class="k">return</span> <span class="n">e</span> 
+
+    <span class="k">return</span> <span class="bp">False</span>
+</div>
+<div class="viewcode-block" id="sleepwait"><a class="viewcode-back" href="../../index.html#sw.utils.sleepwait">[docs]</a><span class="k">def</span> <span class="nf">sleepwait</span><span class="p">(</span> <span class="n">driver</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The original brainchild of this wrapper, this function simply checks if an element exists( ) and </span>
+<span class="sd">       sleeps until timeout for it. It always returns something, even if it fails.</span>
+
+<span class="sd">       :param driver: WebDriver instance to wait on.</span>
+<span class="sd">       :param element: Identifier for the element we will search for.</span>
+<span class="sd">       :param type: Type of the element on the page.</span>
+
+<span class="sd">       :Kwargs:</span>
+<span class="sd">          * **timeout** (*15*) -- The amount of time in seconds before continuing on.</span>
+<span class="sd">          * **lightConfirm** (*False*) -- Only checks if an element exists, does not verify if it&#39;s enabled or visible.</span>
+<span class="sd">          * **cache** (*True*) -- Determines if elements will be cached internally.</span>
+<span class="sd">          * **url** (*driver.current_url*) -- Current URL of this page. Defaults to checking.</span>
+<span class="sd">          * **thinkTime** (*1*) -- The time we wait between polling if an element exists. Defaults to child&#39;s think time.</span>
+<span class="sd">       :return: Boolean if doesn&#39;t exist, `Webelement &lt;http://selenium-python.readthedocs.org/en/latest/api.html#selenium.webdriver.remote.webelement.WebElementwebelement&gt;`_ if it does.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">)</span>
+    <span class="n">timeout</span>      <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&#39;timeout&#39;</span><span class="p">,</span> <span class="mi">15</span> <span class="p">)</span>
+    <span class="n">lightConfirm</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&#39;lightConfirm&#39;</span><span class="p">,</span> <span class="bp">False</span> <span class="p">)</span>
+    <span class="n">cache</span>        <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&#39;cache&#39;</span><span class="p">,</span> <span class="bp">True</span> <span class="p">)</span>
+    <span class="n">url</span>          <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&#39;url&#39;</span><span class="p">,</span> <span class="n">driver</span><span class="o">.</span><span class="n">current_url</span> <span class="p">)</span>
+    <span class="n">thinkTime</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&#39;thinkTime&#39;</span><span class="p">,</span> <span class="n">driver</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">sleepTime</span> <span class="p">)</span>
+    
+    <span class="n">e</span> <span class="o">=</span> <span class="n">exists</span><span class="p">(</span> <span class="n">driver</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="n">cache</span><span class="p">,</span> <span class="n">lightConfirm</span><span class="o">=</span><span class="n">lightConfirm</span> <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">driver</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Beginning wait for element</span><span class="se">\&quot;</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="s">&quot;</span><span class="se">\&quot;</span><span class="s"> of type </span><span class="se">\&quot;</span><span class="s">&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="s">&quot;</span><span class="se">\&quot;</span><span class="s">.&quot;</span> <span class="p">]</span> <span class="p">),</span> <span class="n">NOTICE</span> <span class="p">)</span>
+
+        <span class="k">while</span> <span class="ow">not</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">)</span> <span class="o">-</span> <span class="n">start</span> <span class="o">&gt;</span> <span class="n">timeout</span><span class="p">:</span> 
+                <span class="k">break</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span> <span class="n">thinkTime</span> <span class="p">)</span>
+
+            <span class="n">e</span> <span class="o">=</span> <span class="n">exists</span><span class="p">(</span> <span class="n">driver</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="n">cache</span><span class="p">,</span> <span class="n">lightConfirm</span><span class="o">=</span><span class="n">lightConfirm</span> <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">e</span> 
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">e</span>
+
+    <span class="n">driver</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Element </span><span class="se">\&quot;</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="s">&quot;</span><span class="se">\&quot;</span><span class="s"> of type </span><span class="se">\&quot;</span><span class="s">&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="s">&quot;</span><span class="se">\&quot;</span><span class="s"> will not be found on page </span><span class="se">\&quot;</span><span class="s">&quot;</span><span class="p">,</span> 
+        <span class="n">driver</span><span class="o">.</span><span class="n">current_url</span><span class="p">,</span> <span class="s">&quot;</span><span class="se">\&quot;</span><span class="s">.&quot;</span> <span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+
+
+</div>
+<div class="viewcode-block" id="sendKeys"><a class="viewcode-back" href="../../index.html#sw.utils.sendKeys">[docs]</a><span class="k">def</span> <span class="nf">sendKeys</span><span class="p">(</span> <span class="n">driver</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">text</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Drop in, faster replacement for WebDriver&#39;s sendkeys. Currently only supports fields with an &quot;id&quot;</span>
+<span class="sd">       or &quot;name&quot; identifier. </span>
+
+<span class="sd">       :param driver: Webdriver instance to find element in.</span>
+<span class="sd">       :param element: Identifier for element to type into.</span>
+<span class="sd">       :param type: Type of element on the page.</span>
+<span class="sd">       :param text: The text to type into the element.</span>
+<span class="sd">       :return: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">sleepwait</span><span class="p">(</span> <span class="n">driver</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">lightConfirm</span><span class="o">=</span><span class="bp">True</span> <span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s">&quot;id&quot;</span><span class="p">:</span>
+        <span class="n">driver</span><span class="o">.</span><span class="n">execute_script</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;document.getElementById( &#39;&quot;</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="s">&quot;&#39; ).value = &#39;&quot;</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="s">&quot;&#39;&quot;</span> <span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s">&quot;name&quot;</span><span class="p">:</span>
+        <span class="n">driver</span><span class="o">.</span><span class="n">execute_script</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;document.getElementsByName( &#39;&quot;</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="s">&quot;&#39; )[0].value = &#39;&quot;</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="s">&quot;&#39;&quot;</span> <span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+
+
+</div>
+<div class="viewcode-block" id="waitToDisappear"><a class="viewcode-back" href="../../index.html#sw.utils.waitToDisappear">[docs]</a><span class="k">def</span> <span class="nf">waitToDisappear</span><span class="p">(</span> <span class="n">driver</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Waits for an element to disappear from the page. Useful for transparent overlays that appear routinely</span>
+<span class="sd">       as those block all input on the page (which angers WebDriver). Optionally can wait for an element to reappear</span>
+<span class="sd">       and call itself again to wait longer.</span>
+<span class="sd">       </span>
+<span class="sd">       :param driver: Our driver instance to search for the element in.</span>
+<span class="sd">       :param element: Identifier for the element we are waiting on.</span>
+<span class="sd">       :Kwargs:</span>
+<span class="sd">        * **type** (*&quot;id&quot;*) -- Type of the element targeted.</span>
+<span class="sd">        * **waitForElement** (*True*) -- If the element doesn&#39;t initially exist on the page, this controls if waitToDisappear waits for it first.</span>
+<span class="sd">        * **waitTimeout** (*3*) -- Number of seconds we wait for the element to appear. If the element doesn&#39;t exist after this timeout,</span>
+<span class="sd">          the function returns.</span>
+<span class="sd">        * **stayGone** (*0*) -- Amount of time in seconds we wait, checking that the element is really gone.</span>
+<span class="sd">        * **timeout** (*20*) -- How long the function waits (in seconds) for the element to disappear from the page before returning.</span>
+<span class="sd">        * **thinkTime** (*2*) -- Time between polling for element&#39;s existance. Defaults to twice the child&#39;s think time.</span>
+<span class="sd">        * **offset** (*0*) -- Used internally so timeout still applies to recursive calls. This offsets the next timeout by the amount of time</span>
+<span class="sd">          waited in the previous call.</span>
+<span class="sd">        * **recur** (*False*) -- Internally used to not print to the log if this function called itself again.</span>
+<span class="sd">        * **cache** (*True*) -- Determines in exists will cache elements internally.</span>
+<span class="sd">       :return: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">waitForElement</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&#39;waitForElement&#39;</span><span class="p">,</span> <span class="bp">True</span> <span class="p">)</span>
+    <span class="n">waitTimeout</span>    <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&#39;waitTimeout&#39;</span><span class="p">,</span> <span class="mi">3</span> <span class="p">)</span>
+    <span class="n">stayGone</span>       <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&#39;stayGone&#39;</span><span class="p">,</span> <span class="mi">0</span> <span class="p">)</span>
+    <span class="n">thinkTime</span>      <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&#39;thinkTime&#39;</span><span class="p">,</span> <span class="n">driver</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">sleepTime</span><span class="o">*</span><span class="mi">2</span> <span class="p">)</span>
+    <span class="n">recur</span>          <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&#39;recur&#39;</span><span class="p">,</span> <span class="bp">False</span> <span class="p">)</span>
+    <span class="n">timeout</span>        <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&#39;timeout&#39;</span><span class="p">,</span> <span class="mi">20</span> <span class="p">)</span>
+    <span class="nb">type</span>           <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&#39;type&#39;</span><span class="p">,</span> <span class="s">&#39;id&#39;</span> <span class="p">)</span>
+    <span class="n">offset</span>         <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&#39;offset&#39;</span><span class="p">,</span> <span class="mi">0</span> <span class="p">)</span>
+    <span class="n">cache</span>          <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&#39;cache&#39;</span><span class="p">,</span> <span class="bp">True</span> <span class="p">)</span>
+
+    <span class="n">start</span>          <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">)</span> <span class="o">-</span> <span class="n">offset</span>
+    <span class="n">url</span>            <span class="o">=</span> <span class="n">driver</span><span class="o">.</span><span class="n">current_url</span>
+
+    <span class="c"># Do an initial wait for our element to appear. Any confirmation is confirmation (light).</span>
+    <span class="k">if</span> <span class="n">waitForElement</span><span class="p">:</span>
+        <span class="n">sleepwait</span><span class="p">(</span> <span class="n">driver</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="n">cache</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">waitTimeout</span><span class="p">,</span> <span class="n">lightConfirm</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">thinkTime</span><span class="o">=</span><span class="n">thinkTime</span> <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">exists</span><span class="p">(</span> <span class="n">driver</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="n">cache</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span> <span class="n">lightConfirm</span><span class="o">=</span><span class="bp">True</span> <span class="p">):</span>
+            <span class="n">driver</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;In waitToDisappear </span><span class="se">\&quot;</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="s">&quot;</span><span class="se">\&quot;</span><span class="s"> was never there to begin with.&quot;</span> <span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+            <span class="c"># If we should wait for it and it&#39;s not here... leave.</span>
+            <span class="k">return</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">recur</span><span class="p">:</span>
+                <span class="n">driver</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Waiting for </span><span class="se">\&quot;</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="s">&quot;</span><span class="se">\&quot;</span><span class="s">&quot;</span> <span class="p">]</span> <span class="p">),</span> <span class="n">INFO</span> <span class="p">)</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span> <span class="n">driver</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">sleepTime</span> <span class="p">)</span>
+
+        <span class="k">while</span> <span class="n">exists</span><span class="p">(</span> <span class="n">driver</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="n">cache</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span> <span class="n">lightconfirm</span><span class="o">=</span><span class="bp">True</span> <span class="p">):</span>
+            <span class="k">if</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">)</span> <span class="o">-</span> <span class="n">start</span> <span class="o">&gt;</span> <span class="n">timeout</span><span class="p">:</span>
+                <span class="n">driver</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Element did not disappear within &quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span> <span class="n">timeout</span> <span class="p">),</span> <span class="s">&quot;s, timed out.&quot;</span> <span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+                <span class="k">break</span> <span class="c">#this skips the else</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span> <span class="n">thinkTime</span> <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">driver</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Element </span><span class="se">\&quot;</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="s">&quot;</span><span class="se">\&quot;</span><span class="s"> disappeared!&quot;</span> <span class="p">]</span> <span class="p">),</span> <span class="n">INFO</span> <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">stayGone</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">w</span> <span class="o">=</span> <span class="n">stayGone</span> <span class="o">+</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">)</span>
+                <span class="k">while</span> <span class="n">w</span> <span class="o">-</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">exists</span><span class="p">(</span> <span class="n">driver</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="n">cache</span> <span class="p">):</span>
+                        <span class="n">driver</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&quot;Element came back!&quot;</span> <span class="p">)</span>
+                        <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;offset&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">)</span> <span class="o">-</span> <span class="n">start</span>
+                        <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;recur&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">True</span>
+
+                        <span class="n">waitToDisappear</span><span class="p">(</span> <span class="n">driver</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span> <span class="p">)</span>
+                    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span> <span class="n">thinkTime</span> <span class="p">)</span>
+
+
+</div>
+<div class="viewcode-block" id="isDisplayed"><a class="viewcode-back" href="../../index.html#sw.utils.isDisplayed">[docs]</a><span class="k">def</span> <span class="nf">isDisplayed</span><span class="p">(</span> <span class="n">e</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Does a check to see if the element is displayed while catching exceptions safely. Often when the script needs</span>
+<span class="sd">       to see if an element is displayed, it isn&#39;t even on the page. This can kill the program.</span>
+
+<span class="sd">       :param e: An active `Webelement`_ that will be checked if it is displayed.</span>
+<span class="sd">       :return: Boolean where True if the element is displayed and False if it is not.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">is_displayed</span><span class="p">(</span> <span class="p">):</span>
+            <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">return</span> <span class="bp">False</span>
+
+
+</div>
+<div class="viewcode-block" id="isEnabled"><a class="viewcode-back" href="../../index.html#sw.utils.isEnabled">[docs]</a><span class="k">def</span> <span class="nf">isEnabled</span><span class="p">(</span> <span class="n">e</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Does a check to see if an element is enabled while capturing exceptions safely. Often when the script needs</span>
+<span class="sd">       to see if an element is enabled, it isn&#39;t. This normally kills the script and is undesireable.</span>
+
+<span class="sd">       :param e: An active `Webelement`_ that will be checked if it is enabled (can type into / click).</span>
+<span class="sd">       :return: Boolean where True if the element is enabled and False if it is not.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">is_enabled</span><span class="p">(</span> <span class="p">):</span>
+            <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">return</span> <span class="bp">False</span>
+
+
+
+<span class="c">#   Should extract a variable from driver.current_url, then plop its value on to url and redirect.</span>
+<span class="c">#def urlExtractRedirect( driver, variable, value ):</span>
+<span class="c">#    url = driver.current_url</span>
+<span class="c">#</span>
+<span class="c">#    driver.child.logMsg( &quot;urlExtractRedirect\nBEFORE: &quot; + url )</span>
+<span class="c">#    </span>
+<span class="c">#    r = re.compile( r&quot;(?P&lt;start&gt;[\?\&amp;])%s=(?P&lt;value&gt;[^\&amp;]+)$&quot; % variable )</span>
+<span class="c">#</span>
+<span class="c">#    if not url.match( r ):</span>
+<span class="c">#        driver.logMsg( &quot;WARNING: URL Doesn&#39;t appear to contain a variable in this manner: ?&quot; + variable + &quot;= or &amp;&quot; + variable + &quot;=&quot; )</span>
+<span class="c">#        return</span>
+<span class="c">#    </span>
+<span class="c">#    re.sub( r, &quot;\g&lt;start&gt;&quot; + variable + &quot;=&quot; + value, url )</span>
+<span class="c">#</span>
+<span class="c">#    driver.logMsg( &quot;AFTER: &quot; + url )</span>
+<span class="c">#    driver.get( url )</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">selenium_wrapper 0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Billy Rhoades.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

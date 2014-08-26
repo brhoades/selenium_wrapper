@@ -1,0 +1,232 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sw.formatting &mdash; selenium_wrapper 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="selenium_wrapper 0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">selenium_wrapper 0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sw.formatting</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">re</span><span class="o">,</span> <span class="nn">json</span><span class="o">,</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">const</span> <span class="kn">import</span> <span class="o">*</span>
+
+
+
+<div class="viewcode-block" id="format"><a class="viewcode-back" href="../../index.html#sw.formatting.format">[docs]</a><span class="k">def</span> <span class="nf">format</span><span class="p">(</span> <span class="n">t</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Formats a Float into a displayable form, rounding it into converting to a string.</span>
+<span class="sd">       </span>
+<span class="sd">       :param t: Input float.</span>
+<span class="sd">       :return: String that&#39;s formatted like so: ``54.32``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span> <span class="nb">round</span><span class="p">(</span> <span class="n">t</span><span class="p">,</span> <span class="mi">2</span> <span class="p">)</span> <span class="p">)</span>
+
+
+</div>
+<div class="viewcode-block" id="formatError"><a class="viewcode-back" href="../../index.html#sw.formatting.formatError">[docs]</a><span class="k">def</span> <span class="nf">formatError</span><span class="p">(</span> <span class="n">res</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s">&quot;message&quot;</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Formats the GhostDriver json-encoded error message for easier printing. In the end, this amounts</span>
+<span class="sd">       to replacing escaped quotation marks, parsing the JSON message, and extracting the &#39;errorMessage&#39; portion.</span>
+<span class="sd">       It also trims the message to 81 characters if it is over that.</span>
+
+<span class="sd">       :param res: The json-encoded string from a webdriver exception.</span>
+<span class="sd">       :param message type: The type of message passed to this function. If it isn&#39;t the default,</span>
+<span class="sd">           regex ignores it. </span>
+<span class="sd">       :return: String of the formatted `res` initially passed in.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span> <span class="s">r&quot;Message: [a-z]&#39;({.+})&#39;&quot;</span> <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">match</span><span class="p">(</span> <span class="nb">str</span><span class="p">(</span> <span class="n">res</span> <span class="p">)</span> <span class="p">):</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span> <span class="s">r&quot;</span><span class="se">\\</span><span class="s">&#39;&quot;</span><span class="p">,</span> <span class="s">&quot;&#39;&quot;</span><span class="p">,</span> <span class="n">res</span> <span class="p">)</span>                          <span class="c"># unescape single quotes or json freaks out</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span> <span class="s">r&quot;</span><span class="se">\\\\\&quot;</span><span class="s">&quot;</span><span class="p">,</span> <span class="s">&quot;</span><span class="se">\\\&quot;</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">res</span> <span class="p">)</span>                    <span class="c"># same but with double escaped quotes</span>
+
+        <span class="n">res</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">match</span><span class="p">(</span> <span class="nb">str</span><span class="p">(</span> <span class="n">res</span> <span class="p">)</span> <span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">groups</span><span class="p">(</span> <span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">try</span><span class="p">:</span> 
+            <span class="n">t</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span> <span class="n">res</span> <span class="p">)</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">t</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="nb">type</span> <span class="o">=</span> <span class="bp">None</span>
+        
+        <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s">&quot;message&quot;</span><span class="p">:</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s">&#39;errorMessage&#39;</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span> <span class="n">res</span> <span class="p">)</span> <span class="o">&gt;</span> <span class="mi">80</span> <span class="ow">and</span> <span class="nb">type</span> <span class="o">!=</span> <span class="s">&quot;log&quot;</span><span class="p">:</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">80</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">res</span>
+
+</div>
+<div class="viewcode-block" id="childMessage"><a class="viewcode-back" href="../../index.html#sw.formatting.childMessage">[docs]</a><span class="k">def</span> <span class="nf">childMessage</span><span class="p">(</span> <span class="n">num</span><span class="p">,</span> <span class="n">msg</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Consistently formats a message to be print out to the console for this child.</span>
+<span class="sd">       </span>
+<span class="sd">       :param num: The number of the child we are printing a message for.</span>
+<span class="sd">       :param msg: The message for the child. Formatted like so: ``Child #num: msg``</span>
+<span class="sd">       :return: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">print</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Child #&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span> <span class="n">num</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">),</span> <span class="s">&quot;: &quot;</span><span class="p">,</span> <span class="n">msg</span> <span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+
+
+</div>
+<div class="viewcode-block" id="stats"><a class="viewcode-back" href="../../index.html#sw.formatting.stats">[docs]</a><span class="k">def</span> <span class="nf">stats</span><span class="p">(</span> <span class="n">good</span><span class="p">,</span> <span class="n">bad</span><span class="p">,</span> <span class="n">timetaken</span><span class="p">,</span> <span class="n">children</span><span class="p">,</span> <span class="n">times</span><span class="p">,</span> <span class="n">starttime</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Prints out statistics for the current running pool.</span>
+
+<span class="sd">       This includes the following:</span>
+<span class="sd">         * Successful/failed jobs</span>
+<span class="sd">         * Total jobs done</span>
+<span class="sd">         * Remaining jobs</span>
+<span class="sd">         * Failure rate</span>
+<span class="sd">         * Number of children currently and at peak</span>
+<span class="sd">         * Average time per job</span>
+<span class="sd">         * Average jobs per minute, seconds, and more</span>
+
+
+<span class="sd">       :param good: The number of jobs completed successfully.</span>
+<span class="sd">       :param bad: The number of jobs that failed.</span>
+<span class="sd">       :param timetaken: An array of job completion times from all children.</span>
+<span class="sd">       :param children: An array of our pool&#39;s children. Counted and checked if alive for display.</span>
+<span class="sd">       :param times: The number of jobs initially given to our pool.</span>
+<span class="sd">       :param starttime: A timestamp for when our pool started. </span>
+<span class="sd">       :return: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">print</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="p">(</span> <span class="s">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">40</span> <span class="p">)</span> <span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Successful: &quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span> <span class="n">good</span> <span class="p">),</span> <span class="p">(</span> <span class="s">&quot; &quot;</span> <span class="o">*</span> <span class="mi">3</span> <span class="p">),</span> <span class="s">&quot;Failed: &quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span> <span class="n">bad</span> <span class="p">)</span> <span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Total: &quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span> <span class="n">good</span> <span class="o">+</span> <span class="n">bad</span> <span class="p">),</span> <span class="p">(</span> <span class="s">&quot; &quot;</span> <span class="o">*</span> <span class="mi">3</span> <span class="p">),</span> <span class="s">&quot;Remaining: &quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span> <span class="n">times</span> <span class="o">-</span> <span class="n">good</span> <span class="p">)</span> <span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+
+    <span class="n">active</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">children</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">is_alive</span><span class="p">(</span> <span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">c</span><span class="o">.</span><span class="n">is_done</span><span class="p">(</span> <span class="p">):</span>
+            <span class="n">active</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">print</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Children (peak): &quot;</span><span class="p">,</span>  <span class="nb">str</span><span class="p">(</span> <span class="nb">len</span><span class="p">(</span> <span class="n">children</span> <span class="p">)</span> <span class="p">),</span>  <span class="p">(</span> <span class="s">&quot; &quot;</span> <span class="o">*</span> <span class="mi">3</span> <span class="p">),</span>  <span class="s">&quot;Children (active): &quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span> <span class="n">active</span> <span class="p">)</span> <span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span> <span class="n">timetaken</span> <span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Failure Rate: &quot;</span><span class="p">,</span> <span class="n">format</span><span class="p">(</span> <span class="n">bad</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span> <span class="n">good</span> <span class="o">+</span> <span class="n">bad</span> <span class="p">)</span> <span class="o">*</span> <span class="mi">100</span> <span class="p">),</span> <span class="s">&quot;%&quot;</span> <span class="p">]</span> <span class="p">)</span> <span class="p">);</span>
+
+        <span class="c"># This gives us our jobs per second</span>
+        <span class="n">jps</span> <span class="o">=</span> <span class="n">good</span> <span class="o">/</span> <span class="p">(</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">)</span> <span class="o">-</span> <span class="n">starttime</span> <span class="p">)</span>
+
+        <span class="k">print</span><span class="p">(</span> <span class="s">&quot;Average / Estimates:&quot;</span> <span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;  Time per job: &quot;</span><span class="p">,</span> <span class="n">format</span><span class="p">(</span> <span class="n">avg</span><span class="p">(</span> <span class="n">timetaken</span> <span class="p">)</span> <span class="p">),</span> <span class="s">&quot;s&quot;</span> <span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;  Jobs/s: &quot;</span><span class="p">,</span> <span class="n">format</span><span class="p">(</span> <span class="n">jps</span> <span class="p">),</span> <span class="p">(</span> <span class="s">&quot; &quot;</span> <span class="o">*</span> <span class="mi">3</span> <span class="p">),</span> <span class="s">&quot;Jobs/m: &quot;</span><span class="p">,</span> <span class="n">format</span><span class="p">(</span> <span class="n">jps</span> <span class="o">*</span> <span class="mi">60</span> <span class="p">),</span> <span class="p">(</span> <span class="s">&quot; &quot;</span> <span class="o">*</span> <span class="mi">3</span> <span class="p">),</span> <span class="s">&quot;Jobs/hr: &quot;</span><span class="p">,</span> 
+               <span class="n">format</span><span class="p">(</span> <span class="n">jps</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">60</span> <span class="p">),</span> <span class="p">(</span> <span class="s">&quot; &quot;</span> <span class="o">*</span> <span class="mi">3</span> <span class="p">),</span> <span class="s">&quot;Jobs/day: &quot;</span><span class="p">,</span> <span class="n">format</span><span class="p">(</span> <span class="n">jps</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">24</span> <span class="p">)</span> <span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s">&quot;No data to extrapolate or average from&quot;</span>
+    <span class="k">print</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="p">(</span> <span class="s">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">40</span> <span class="p">),</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span> <span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+
+
+</div>
+<div class="viewcode-block" id="errorLevelToStr"><a class="viewcode-back" href="../../index.html#sw.formatting.errorLevelToStr">[docs]</a><span class="k">def</span> <span class="nf">errorLevelToStr</span><span class="p">(</span> <span class="n">level</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Takes a numeric error level and translates it into a string for displaying in a </span>
+<span class="sd">       log.</span>
+<span class="sd">       </span>
+<span class="sd">       :param level: The level to translate into a loggable string.</span>
+<span class="sd">       :return: String of the level in parenthesis.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">level</span> <span class="o">==</span> <span class="n">NOTICE</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">&quot;(NOTICE)  &quot;</span>
+    <span class="k">if</span> <span class="n">level</span> <span class="o">==</span> <span class="n">WARNING</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">&quot;(WARNING) &quot;</span>
+    <span class="k">if</span> <span class="n">level</span> <span class="o">==</span> <span class="n">ERROR</span><span class="p">:</span> 
+        <span class="k">return</span> <span class="s">&quot;(ERROR)   &quot;</span>
+    <span class="k">if</span> <span class="n">level</span> <span class="o">==</span> <span class="n">CRITICAL</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">&quot;(CRITICAL)&quot;</span>
+    <span class="k">if</span> <span class="n">level</span> <span class="o">==</span> <span class="n">INFO</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">&quot;(INFO)    &quot;</span>
+    <span class="k">if</span> <span class="n">level</span> <span class="o">==</span> <span class="n">NONE</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">&quot;          &quot;</span>
+    <span class="k">return</span>
+
+
+</div>
+<div class="viewcode-block" id="avg"><a class="viewcode-back" href="../../index.html#sw.formatting.avg">[docs]</a><span class="k">def</span> <span class="nf">avg</span><span class="p">(</span> <span class="n">numbers</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Averages a list of numbers.</span>
+<span class="sd">       </span>
+<span class="sd">       :param numbers: A list of numbers.</span>
+<span class="sd">       :return: The average</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span> <span class="n">numbers</span> <span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span><span class="p">(</span> <span class="nb">sum</span><span class="p">(</span> <span class="n">numbers</span> <span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span> <span class="n">numbers</span> <span class="p">)</span> <span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">selenium_wrapper 0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Billy Rhoades.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
