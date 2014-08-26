@@ -4,11 +4,10 @@ from selenium.webdriver.phantomjs.service import Service as PhantomJSService
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from sw.const import * # Constants
 from sw.formatting import formatError, errorLevelToStr
-from sw.cache import *
+from sw.cache import ElementCache 
 import time, os, traceback
 from pprint import pformat
 from datetime import datetime
-import cProfile
 from selenium.common.exceptions import *
 
 class Child:
@@ -84,9 +83,6 @@ class Child:
 
            :return: None
         """
-
-        pr = cProfile.Profile( )
-        pr.enable( )
 
         wq = self.wq
         cq = self.cq
@@ -164,9 +160,6 @@ class Child:
 
         # Quit after we have finished our work queue, this kills the phantomjs process.
         self.driver.quit( )
-
-        pr.disable( )
-        pr.dump_stats( os.path.join( self.log, "stats.dump" ) )
 
 
 
