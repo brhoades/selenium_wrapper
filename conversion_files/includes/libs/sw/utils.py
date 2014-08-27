@@ -1,3 +1,43 @@
+"""This module primarily serves as a holder for all directly webdriver-facing functions. These functions
+   usually serve only the purpose of interfacing with elements on the page and possibly logging when an 
+   error occurs. A lot of the code of these functions revolves around waiting.
+
+   .. _common-params:
+
+   -----------------
+   Common Parameters
+   -----------------
+   These parameters apply for functions in this module which link back to this documentation. In particular:
+   :func:`sleepwait`, :func:`waitToDisappear`, and :func:`exists`.
+
+   :Common Params:
+     * **driver** -- The webdriver instance that is being acted on by this script.
+     * **element** -- An identifier for the element to search for.
+     * **type** -- The type of `element`'s identifier. 
+     
+   :Common Kwargs: 
+     * **timeout** (*15*) -- The amount of time, in seconds, before continuing on if the element is not found. Note that in
+       some functions, such as :func:`sleepwait`, this can be fatal to the script. A timeout in sleepwait will cause the 
+       script to either kill the child process (if `die` is enabled) or return `None` which webdriver cannot interface with.
+     * **lightConfirm** (*False*) -- Only checks if an element exists, does not verify if it is enabled or visible. This saves
+       some CPU usage but can be dangerous in the case of a disabled web prompt.
+     * **cache** (*True*) -- Determines if elements will be cached internally within our :mod:`sw.child` process. This uses
+       RAM over the a single run of the script, but has been shown to have speed savings in situations with a great deal
+       of waiting. See :mod:`sw.cache` for more information.
+     * **url** (*driver.current_url*) -- Current URL of the page webdriver is on. If this is not specified it is pulled from our
+       webdriver every time, which can get expensive over the lifetime of a script with a lot of waiting. This is only used if
+       `cache` is enabled and is otherwise ignored.
+     * **thinkTime** (*child.sleepTime*) -- The time the script waits between polling for an element's existance. This is usually 
+       the child's sleep time, but for :func:`waitToDisappear` it is twice that.
+     * **die** (*True*) -- Whether or not the function kills the child if this is not found. Even if False, in the case of :func:`sleepwait`
+       at least, there will usually be a fatal error anyway, especially if a :py:class:`~selenium.webdriver.remote.webelement.WebElement` 
+       is expected to be returned. :func:`sleepwait` typically returns a :py:class:`~selenium.webdriver.remote.webelement.WebElement`
+       but if the element is not found (and `die` is False) returns None. 
+ 
+   ---------
+   Functions
+   ---------
+"""
 import os, time, traceback
 from const import *
 
@@ -6,8 +46,9 @@ from const import *
 def loadScript( driver, js ):
     """Creates a new script object and appends it to the header.
 
-       :param driver: Webdriver instance for this to be executed on.
-       :param js: URL to a JavaScript file that will be inserted and loaded on this page.
+       :Parameters:
+         * :ref:`driver <common-params>`
+         * **js** -- URL to a JavaScript file that will be inserted and loaded on this page.
        :return: None
     """
 
@@ -27,8 +68,9 @@ def jQCheck( driver, timeout=1 ):
        .. deprecated:: 0.1 
           JavaScript is no longer used to check for elements before running webdriver checks.
 
-       :param driver: Webdriver instance to check for jQuery on.
-       :param 1 timeout: How long to wait for jQuery to load before continuing on. 
+       :Parameters:
+         * :ref:`driver <common-params>`
+         * **timeout** (*1*) -- How long to wait for jQuery to load before continuing on. 
        :return: Boolean, True if jQuery is loaded False if it did not load.
     """
 
@@ -59,14 +101,15 @@ def exists( driver, element, type, **kwargs ):
        but that has been resolved. If an element is in the DOM, does a final check to see if it is displayed and
        available.
 
-       :param driver: WebDriver instance to check for :py:attr:`element`.
-       :param element: Identifying handle for an element.
-       :param type: The type of :py:attr:`element` in the DOM.
+       :Parameters:
+         * :ref:`driver <common-params>`
+         * :ref:`element <common-params>`
+         * :ref:`type <common-params>`
        :Kwargs:
-          * **lightConfirm** (*False*): Doesn't matter if an element is visible or enabled, its existance is enough.
-          * **cache** (*True*): Enables or disables caching of elements internally.
-          * **url** (*driver.current_url*): The url to assume this page is. Defaults to the current url, which is takes time to find.
-       :return: Boolean if doesn't exist, `Webelement <http://selenium-python.readthedocs.org/en/latest/api.html#selenium.webdriver.remote.webelement.WebElementwebelement>`_ if it does.
+         * :ref:`lightConfirm <common-params>` 
+         * :ref:`cache <common-params>`
+         * :ref:`url <common-params>`
+       :return: Boolean if doesn't exist, :py:class:`~selenium.webdriver.remote.webelement.WebElement` if it does.
     """
 
     lightConfirm = kwargs.get( 'lightConfirm', False )
@@ -105,18 +148,20 @@ def sleepwait( driver, element, type, **kwargs ):
     """The original brainchild of this wrapper, this function simply checks if an element exists( ) and 
        sleeps until timeout for it. It always returns something, even if it fails.
 
-       :param driver: WebDriver instance to wait on.
-       :param element: Identifier for the element we will search for.
-       :param type: Type of the element on the page.
+       :Parameters:
+         * :ref:`driver <common-params>`
+         * :ref:`element <common-params>`
+         * :ref:`type <common-params>`
 
        :Kwargs:
-          * **timeout** (*15*) -- The amount of time in seconds before continuing on.
-          * **lightConfirm** (*False*) -- Only checks if an element exists, does not verify if it's enabled or visible.
-          * **cache** (*True*) -- Determines if elements will be cached internally.
-          * **url** (*driver.current_url*) -- Current URL of this page. Defaults to checking.
-          * **thinkTime** (*1*) -- The time we wait between polling if an element exists. Defaults to child's think time.
-          * **die** (*True*) -- Whether or not the function kills the child if this isn't found.
-       :return: Boolean if doesn't exist, `Webelement <http://selenium-python.readthedocs.org/en/latest/api.html#selenium.webdriver.remote.webelement.WebElementwebelement>`_ if it does.
+         * :ref:`die <common-params>` -- This is only passed to subfunctions. :py:func:`waitToDisappear` never ends the script if something does not
+            disappear.
+         * :ref:`timeout <common-params>`
+         * :ref:`thinkTime <common-params>`
+         * :ref:`cache <common-params>`
+         * :ref:`url <common-params>`
+         * :ref:`lightConfirm <common-params>`
+       :return: Boolean if doesn't exist, :py:class:`~selenium.webdriver.remote.webelement.WebElement` if it does.
     """
     start = time.time( )
     timeout      = kwargs.get( 'timeout', 15 )
@@ -147,17 +192,19 @@ def sleepwait( driver, element, type, **kwargs ):
         driver.child.restart( "element missing" )
         # Wait to be killed
         time.sleep( 10 )
+    return False
 
 
 
 def sendKeys( driver, element, type, text ):
-    """Drop in, faster replacement for WebDriver's sendkeys. Currently only supports fields with an "id"
-       or "name" identifier. 
+    """Drop in, faster replacement for :py:meth:`~selenium.webdriver.remote.webelement.WebElement.send_keys`. Currently 
+       only supports fields with an `id` or `name` identifier. 
 
-       :param driver: Webdriver instance to find element in.
-       :param element: Identifier for element to type into.
-       :param type: Type of element on the page.
-       :param text: The text to type into the element.
+       :Parameters:
+          * :ref:`driver <common-params>`
+          * :ref:`element <common-params>`
+          * :ref:`type <common-params>`
+          * **text** -- The text to type into the element.
        :return: None
     """
     sleepwait( driver, element, type, lightConfirm=True )
@@ -174,23 +221,25 @@ def waitToDisappear( driver, element, **kwargs ):
        as those block all input on the page (which angers WebDriver). Optionally can wait for an element to reappear
        and call itself again to wait longer.
        
-       :param driver: Our driver instance to search for the element in.
-       :param element: Identifier for the element we are waiting on.
-       :Kwargs (main):
-        * **type** (*"id"*) -- Type of the element targeted.
-        * **waitForElement** (*True*) -- If the element doesn't initially exist on the page, this controls if waitToDisappear waits for it first.
-        * **waitTimeout** (*3*) -- Number of seconds we wait for the element to appear. If the element doesn't exist after this timeout,
-          the function returns.
-        * **stayGone** (*0*) -- Amount of time in seconds we wait, checking that the element is really gone.
-        * **timeout** (*20*) -- How long the function waits (in seconds) for the element to disappear from the page before returning.
-
-        :Kwargs (internal):
-        * **thinkTime** (*2*) -- Time between polling for element's existance. Defaults to twice the child's think time.
-        * **offset** (*0*) -- Used internally so timeout still applies to recursive calls. This offsets the next timeout by the amount of time
-          waited in the previous call.
-        * **recur** (*False*) -- Internally used to not print to the log if this function called itself again.
-        * **cache** (*True*) -- Determines in exists will cache elements internally.
-        * **die** (*True*) -- Restarts the child when a fatal error occurs.
+       :Parameters:
+          * :ref:`driver <common-params>`
+          * :ref:`element <common-params>`
+       :Kwargs:
+         * :ref:`type <common-params>` (*"id"*)
+         * :ref:`die <common-params>` -- This is only passed to subfunctions. :py:func:`waitToDisappear` never ends the script if something does not
+           disappear.
+       :(wait-related):
+         * :ref:`timeout <common-params>` (*60*)
+         * :ref:`thinkTime <common-params>` (*2*)
+         * **stayGone** (*0*) -- Amount of time in seconds we wait, checking that the element is really gone.
+         * **waitForElement** (*True*) -- If the element doesn't initially exist on the page, this controls if waitToDisappear waits for it first.
+         * **waitTimeout** (*3*) -- Number of seconds we wait for the element to appear. If the element doesn't exist after this timeout,
+           the function returns.
+       :(internal):
+         * :ref:`cache <common-params>`
+         * **offset** (*0*) -- Used internally so timeout still applies to recursive calls. This offsets the next timeout by the amount of time
+           waited in the previous call.
+         * **recur** (*False*) -- Internally used to not print to the log if this function calls itself again.
        :return: None
     """
     waitForElement = kwargs.get( 'waitForElement', True )
@@ -255,7 +304,7 @@ def isDisplayed( e ):
     """Does a check to see if the element is displayed while catching exceptions safely. Often when the script needs
        to see if an element is displayed, it isn't even on the page. This can kill the program.
 
-       :param e: An active `Webelement`_ that will be checked if it is displayed.
+       :param e: An active :py:class:`~selenium.webdriver.remote.webelement.WebElement` that will be checked if it is displayed.
        :return: Boolean where True if the element is displayed and False if it is not.
     """
     try:
@@ -272,7 +321,8 @@ def isEnabled( e ):
     """Does a check to see if an element is enabled while capturing exceptions safely. Often when the script needs
        to see if an element is enabled, it isn't. This normally kills the script and is undesireable.
 
-       :param e: An active `Webelement`_ that will be checked if it is enabled (can type into / click).
+       :param e: An active :py:class:`~selenium.webdriver.remote.webelement.WebElement` that will be checked if 
+         it is enabled (can type into / click).
        :return: Boolean where True if the element is enabled and False if it is not.
     """
     try:
