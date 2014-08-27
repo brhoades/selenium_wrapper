@@ -1,5 +1,10 @@
+======================================
 Formatting Module :mod:`sw.formatting` 
 ======================================
+
+*********
+Functions
+*********
 
 .. automodule:: sw.formatting
    :members:
