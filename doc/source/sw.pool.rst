@@ -1,7 +1,7 @@
-Child Module :mod:`sw.child` 
+Child Pool Module :mod:`sw.pool` 
 ================================
 
-.. automodule:: sw.child
+.. automodule:: sw.pool
    :members:
    :undoc-members:
    :show-inheritance:
