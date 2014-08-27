@@ -1,0 +1,202 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>ElementCache Module sw.cache &mdash; selenium_wrapper 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="selenium_wrapper 0.1 documentation" href="index.html" />
+    <link rel="next" title="Utilities Module sw.utils" href="sw.utils.html" />
+    <link rel="prev" title="Child Pool Module sw.pool" href="sw.child.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="sw.utils.html" title="Utilities Module sw.utils"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="sw.child.html" title="Child Pool Module sw.pool"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">selenium_wrapper 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sw.cache">
+<span id="elementcache-module-sw-cache"></span><h1>ElementCache Module <a class="reference internal" href="#module-sw.cache" title="sw.cache"><tt class="xref py py-mod docutils literal"><span class="pre">sw.cache</span></tt></a><a class="headerlink" href="#module-sw.cache" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="sw.cache.ElementCache">
+<em class="property">class </em><tt class="descclassname">sw.cache.</tt><tt class="descname">ElementCache</tt><a class="reference internal" href="_modules/sw/cache.html#ElementCache"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.cache.ElementCache" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates an object to store WebDriver elements on specific pages so subsequent lookups don&#8217;t require scanning the DOM.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">ElementCache (self)</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="sw.cache.ElementCache.add">
+<tt class="descname">add</tt><big>(</big><em>url</em>, <em>e</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/sw/cache.html#ElementCache.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.cache.ElementCache.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add an element to the cache. It is stored by a handle and deleted automatically after a full run.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>url</strong> &#8211; The URL of element e.</li>
+<li><strong>e</strong> &#8211; The <cite>Webelement</cite> to be stored.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Kwargs:</th><td class="field-body"><ul class="first simple">
+<li><strong>id</strong> (<em>None</em>): Identifier for e on the passed url.</li>
+<li><strong>type</strong> (<em>None</em>): Type of the identifier for e on the passed url.</li>
+<li><strong>handle</strong> (<em>None</em>): (separate from id/type) A handle to identify this element by internally (unique).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sw.cache.ElementCache.clear">
+<tt class="descname">clear</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sw/cache.html#ElementCache.clear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.cache.ElementCache.clear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears the internal cache, deleting all cached elements. Typically called after every run of our test function.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sw.cache.ElementCache.get">
+<tt class="descname">get</tt><big>(</big><em>url</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/sw/cache.html#ElementCache.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.cache.ElementCache.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets an element from the internal cache stored on the given url. If it doesn&#8217;t exist, returns None.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>url</strong> &#8211; The current url to search the cache for.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Kwargs:</th><td class="field-body"><ul class="first simple">
+<li><strong>id</strong> (<em>None</em>): Identifier for the element in the cache, on the passed url.</li>
+<li><strong>type</strong> (<em>None</em>): Type of the identifier for the element in the cache, on the passed url.</li>
+<li><strong>handle</strong> (<em>None</em>): (separate from id/type) A handle to identify this element by internally (unique).</li>
+</ul>
+<table class="last docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">return:</th><td class="field-body"><cite>Webelement</cite> for the cached item if a matching element exists. None if not.</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="sw.child.html"
+                        title="previous chapter">Child Pool Module <tt class="docutils literal"><span class="pre">sw.pool</span></tt></a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="sw.utils.html"
+                        title="next chapter">Utilities Module <tt class="docutils literal"><span class="pre">sw.utils</span></tt></a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/sw.cache.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="sw.utils.html" title="Utilities Module sw.utils"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="sw.child.html" title="Child Pool Module sw.pool"
+             >previous</a> |</li>
+        <li><a href="index.html">selenium_wrapper 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Billy Rhoades.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

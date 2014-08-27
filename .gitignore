@@ -4,5 +4,5 @@ in/*
 _*
 *.pyc
 *.lock
-conversion_files/*
-doc/source/*
+conversion_files
+doc/source

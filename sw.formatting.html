@@ -1,0 +1,238 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Formatting Module sw.formatting &mdash; selenium_wrapper 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="selenium_wrapper 0.1 documentation" href="index.html" />
+    <link rel="prev" title="Utilities Module sw.utils" href="sw.utils.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="sw.utils.html" title="Utilities Module sw.utils"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">selenium_wrapper 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sw.formatting">
+<span id="formatting-module-sw-formatting"></span><h1>Formatting Module <a class="reference internal" href="#module-sw.formatting" title="sw.formatting"><tt class="xref py py-mod docutils literal"><span class="pre">sw.formatting</span></tt></a><a class="headerlink" href="#module-sw.formatting" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="sw.formatting.avg">
+<tt class="descclassname">sw.formatting.</tt><tt class="descname">avg</tt><big>(</big><em>numbers</em><big>)</big><a class="reference internal" href="_modules/sw/formatting.html#avg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.formatting.avg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Averages a list of numbers.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>numbers</strong> &#8211; A list of numbers.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The average</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="sw.formatting.childMessage">
+<tt class="descclassname">sw.formatting.</tt><tt class="descname">childMessage</tt><big>(</big><em>num</em>, <em>msg</em><big>)</big><a class="reference internal" href="_modules/sw/formatting.html#childMessage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.formatting.childMessage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Consistently formats a message to be print out to the console for this child.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>num</strong> &#8211; The number of the child we are printing a message for.</li>
+<li><strong>msg</strong> &#8211; The message for the child. Formatted like so: <tt class="docutils literal"><span class="pre">Child</span> <span class="pre">#num:</span> <span class="pre">msg</span></tt></li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="sw.formatting.errorLevelToStr">
+<tt class="descclassname">sw.formatting.</tt><tt class="descname">errorLevelToStr</tt><big>(</big><em>level</em><big>)</big><a class="reference internal" href="_modules/sw/formatting.html#errorLevelToStr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.formatting.errorLevelToStr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes a numeric error level and translates it into a string for displaying in a 
+log.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>level</strong> &#8211; The level to translate into a loggable string.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">String of the level in parenthesis.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="sw.formatting.format">
+<tt class="descclassname">sw.formatting.</tt><tt class="descname">format</tt><big>(</big><em>t</em><big>)</big><a class="reference internal" href="_modules/sw/formatting.html#format"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.formatting.format" title="Permalink to this definition">¶</a></dt>
+<dd><p>Formats a Float into a displayable form, rounding it into converting to a string.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>t</strong> &#8211; Input float.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">String that&#8217;s formatted like so: <tt class="docutils literal"><span class="pre">54.32</span></tt>.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="sw.formatting.formatError">
+<tt class="descclassname">sw.formatting.</tt><tt class="descname">formatError</tt><big>(</big><em>res</em>, <em>type='message'</em><big>)</big><a class="reference internal" href="_modules/sw/formatting.html#formatError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.formatting.formatError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Formats the GhostDriver json-encoded error message for easier printing. In the end, this amounts
+to replacing escaped quotation marks, parsing the JSON message, and extracting the &#8216;errorMessage&#8217; portion.
+It also trims the message to 81 characters if it is over that.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>res</strong> &#8211; The json-encoded string from a webdriver exception.</li>
+<li><strong>type</strong> (<em>message</em>) &#8211; The type of message passed to this function. If it isn&#8217;t the default,
+regex ignores it.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">String of the formatted <cite>res</cite> initially passed in.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="sw.formatting.stats">
+<tt class="descclassname">sw.formatting.</tt><tt class="descname">stats</tt><big>(</big><em>good</em>, <em>bad</em>, <em>timetaken</em>, <em>children</em>, <em>times</em>, <em>starttime</em><big>)</big><a class="reference internal" href="_modules/sw/formatting.html#stats"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.formatting.stats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prints out statistics for the current running pool.</p>
+<dl class="docutils">
+<dt>This includes the following:</dt>
+<dd><ul class="first last simple">
+<li>Successful/failed jobs</li>
+<li>Total jobs done</li>
+<li>Remaining jobs</li>
+<li>Failure rate</li>
+<li>Number of children currently and at peak</li>
+<li>Average time per job</li>
+<li>Average jobs per minute, seconds, and more</li>
+</ul>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>good</strong> &#8211; The number of jobs completed successfully.</li>
+<li><strong>bad</strong> &#8211; The number of jobs that failed.</li>
+<li><strong>timetaken</strong> &#8211; An array of job completion times from all children.</li>
+<li><strong>children</strong> &#8211; An array of our pool&#8217;s children. Counted and checked if alive for display.</li>
+<li><strong>times</strong> &#8211; The number of jobs initially given to our pool.</li>
+<li><strong>starttime</strong> &#8211; A timestamp for when our pool started.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="sw.utils.html"
+                        title="previous chapter">Utilities Module <tt class="docutils literal"><span class="pre">sw.utils</span></tt></a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/sw.formatting.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="sw.utils.html" title="Utilities Module sw.utils"
+             >previous</a> |</li>
+        <li><a href="index.html">selenium_wrapper 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Billy Rhoades.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

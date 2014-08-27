@@ -1,0 +1,295 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Selenium Wrapper &mdash; selenium_wrapper 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="selenium_wrapper 0.1 documentation" href="index.html" />
+    <link rel="next" title="Wrapper Module sw.wrapper" href="sw.wrapper.html" />
+    <link rel="prev" title="selenium_wrapper" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="sw.wrapper.html" title="Wrapper Module sw.wrapper"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="selenium_wrapper"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">selenium_wrapper 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="selenium-wrapper">
+<h1>Selenium Wrapper<a class="headerlink" href="#selenium-wrapper" title="Permalink to this headline">¶</a></h1>
+<p>Selenium Wrapper is a project designed to make
+<a class="reference external" href="http://docs.seleniumhq.org/projects/webdriver/">WebDriver</a>-based
+<a class="reference external" href="http://docs.seleniumhq.org/">Selenium</a>  more feasible for load testing. Using
+<a class="reference external" href="http://phantomjs.org/">PhantomJS</a> and <a class="reference external" href="https://github.com/detro/ghostdriver">GhostDriver</a>,
+it can spawn off as many child processes running provided test suites as your processor can
+handle. These test suites are optimized for sites becoming slow and not responding, and
+wait for elements to appear with minimal CPU usage (unlike native WebDriver). Unlike
+stock Selenium, this wrapper also offers logging capabilities, automatic screenshots, and
+launching arbitrary numbers of tests running simultaneously from one window.</p>
+<div class="section" id="project-outline">
+<h2>Project Outline<a class="headerlink" href="#project-outline" title="Permalink to this headline">¶</a></h2>
+<p>Selenium Wrapper is composed of two related components. The first component used and seen is
+the converter. The converter is used to take a
+<a class="reference external" href="http://docs.seleniumhq.org/docs/02_selenium_ide.jsp">Selenium IDE</a>-exported Python
+WebDriver script and convert it for usage with the wrapper, the second component. The wrapper
+is as described above, a framework making load testing possible with Selenium. The converter
+creates a folder which contains the wrapped script and can be transported between any number of
+computers.</p>
+</div>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>If initializing a brand new installation and not having a prepackaged converter, first checkout
+the repository:</p>
+<div class="highlight-python"><div class="highlight"><pre>git clone https://github.com/brhoades/selenium_wrapper.git
+</pre></div>
+</div>
+<div class="section" id="converter-setup">
+<h3>Converter Setup<a class="headerlink" href="#converter-setup" title="Permalink to this headline">¶</a></h3>
+<p>Install <a class="reference external" href="http://www.activestate.com/activetcl/downloads">ActiveTCL</a>. After installing,
+navigate to the directory cloned into and run:</p>
+<div class="highlight-python"><div class="highlight"><pre>bundle install
+</pre></div>
+</div>
+</div>
+<div class="section" id="wrapper-setup">
+<h3>Wrapper Setup<a class="headerlink" href="#wrapper-setup" title="Permalink to this headline">¶</a></h3>
+<p>Prepare a python installation for the converter program. Python 2.7.7 is the supported
+Python version. Create a folder named <tt class="docutils literal"><span class="pre">python277</span></tt> in <tt class="docutils literal"><span class="pre">conversion_files/</span></tt>. Now
+<a class="reference external" href="https://www.python.org/download/releases/2.7.7/">install Python</a> for the correct platform.</p>
+<p>On Windows, perform an
+<a class="reference external" href="http://technet.microsoft.com/en-us/library/cc759262(v=ws.10).aspx">administrative installation</a>
+of Python. Target the folder created above and finish the installation.</p>
+<p>Use pip to install <a class="reference external" href="https://pypi.python.org/pypi/selenium">Selenium</a> for Python into the local
+directory. Alternatively, manually download and install
+<a class="reference external" href="https://pypi.python.org/pypi/selenium">the module</a> locally into the Python libraries:</p>
+<div class="highlight-python"><div class="highlight"><pre>pip install selenium
+</pre></div>
+</div>
+<p>Also install the latest version of <a class="reference external" href="http://phantomjs.org/download.html">PhantomJS</a> and put it
+(in its folder) in the previously created <tt class="docutils literal"><span class="pre">python277/</span></tt> folder. The folder name may need to
+be update in <tt class="docutils literal"><span class="pre">conversion_files/run.bat</span></tt> if it is not 1.9.7.</p>
+<p>Now run the conversion program:</p>
+<div class="highlight-python"><div class="highlight"><pre>ruby main.rb
+</pre></div>
+</div>
+</div>
+<div class="section" id="converter-distribution">
+<h3>Converter Distribution<a class="headerlink" href="#converter-distribution" title="Permalink to this headline">¶</a></h3>
+<p>To ease other&#8217;s usage of the converter, consider packaging it into an exe using
+<a class="reference external" href="https://github.com/larsch/ocra">OCRA</a>. The following will install the gem and run the compiler:</p>
+<div class="highlight-python"><div class="highlight"><pre>gem install ocra
+ocra_compile.bat
+</pre></div>
+</div>
+<p>This will automatically generate a portable version of the converter in an exe.</p>
+</div>
+</div>
+</div>
+<div class="section" id="script-converter">
+<h1>Script Converter<a class="headerlink" href="#script-converter" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<p>The converter <tt class="docutils literal"><span class="pre">main.rb</span></tt> or <tt class="docutils literal"><span class="pre">selenium_convert.exe</span></tt> will launch after about 15 seconds
+(results may vary). This converter has the files necessary to create a portable Python
+installation with Selenium and PhantomJS.</p>
+<img alt="_images/converter_main.png" src="_images/converter_main.png" />
+<p>Browsing to a file will automatically choose a directory with the matching name to output to in
+<tt class="docutils literal"><span class="pre">out/</span></tt>. If the file is properly exported from selenium, it will be converted into a wrapped
+script. There are several options which will augment the way the wrapper runs.</p>
+<ul class="simple">
+<li>Images (<em>off</em>) will enable loading images in the headless browser.</li>
+<li>Python (<em>on</em>) will copy the included python installation to the output directory.</li>
+<li>Overwrite (<em>off</em>) will overwrite the output directory without prompting.</li>
+</ul>
+<p>After selecting your input Python file and (optionally) your output folder, hit convert.</p>
+<p>Conversion will take a while. It will initialize a new directory, copy a slimmed down Python
+install into it, and then convert the script into a form which utilizes the included Selenium
+wrapper. Once finished, it will prompt you to tell you so. Progress can be monitored in the
+black terminal that opened when the exe/script was initially ran.</p>
+<p>Conversion will automatically strip any assertions or clears from the script provided.
+Assertions are not currently supported as the wrapper does not currently wrap itself in a
+unit testing suite. Any <tt class="docutils literal"><span class="pre">driver.find_element_by(...).send_keys(</span> <span class="pre">&quot;text&quot;</span> <span class="pre">)</span></tt> is wrapped
+into a <tt class="xref py py-meth docutils literal"><span class="pre">sw.utils.sendKeys()</span></tt> function. This eliminates the need for a .clear( )
+statement and saves time. Conversion also replaces any <tt class="docutils literal"><span class="pre">find_element_by_</span></tt> segments with
+<tt class="xref py py-meth docutils literal"><span class="pre">sw.utils.sleepwait()</span></tt> which is a controlled (and CPU-optimized) function to wait for an
+element.</p>
+</div>
+<div class="section" id="directives">
+<h2>Directives<a class="headerlink" href="#directives" title="Permalink to this headline">¶</a></h2>
+<p>There are directives which may be inserted into the source script&#8217;s function which will be
+parsed by the converter into wrapper functions. Variables can be used in their arguments
+as the converter turns the directives into functions after conversion.</p>
+<ul>
+<li><p class="first"><tt class="docutils literal"><span class="pre">#log</span> <span class="pre">message</span></tt>
+- This will write to our child&#8217;s log &#8220;message&#8221;. Directly calls <tt class="xref py py-meth docutils literal"><span class="pre">sw.child.logMsg()</span></tt></p>
+</li>
+<li><p class="first"><tt class="docutils literal"><span class="pre">#msg</span> <span class="pre">message</span></tt>
+- Writes &#8220;Child #: message&#8221; to the console. Calls <tt class="xref py py-meth docutils literal"><span class="pre">sw.child.msg()</span></tt></p>
+</li>
+<li><p class="first"><tt class="docutils literal"><span class="pre">#wait</span> <span class="pre">element</span> <span class="pre">kwargs</span></tt>
+- This calls <tt class="xref py py-meth docutils literal"><span class="pre">sw.utils.waitToDisappear()</span></tt> and takes any of the kwargs as the second argument. Please reference that function for further details about its arguments and other options.
+- <tt class="docutils literal"><span class="pre">#wait</span> <span class="pre">overlay</span> <span class="pre">type=id</span></tt></p>
+<blockquote>
+<div><ul class="simple">
+<li>Waits for the element with id=overlay to disappear</li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">#wait</span> <span class="pre">overlay</span> <span class="pre">type=name,</span> <span class="pre">stayGone=3</span></tt>
+- Waits for the element with name=overlay to disappear and waits an additional 3 seconds for it to not come back.</li>
+<li><tt class="docutils literal"><span class="pre">#wait</span> <span class="pre">blurydiv</span> <span class="pre">timeout=5</span></tt>
+- Waits for id=blurydiv to disappear. If it doesn&#8217;t after 5 seconds, returns.</li>
+<li><tt class="docutils literal"><span class="pre">#wait</span> <span class="pre">blurydiv</span> <span class="pre">waitTimeout=5</span></tt>
+- Waits for id=blurydiv to disappear. Gives the element 5 seconds to appear first before waiting for it to disappear. Default time to appear is 1 second.</li>
+</ul>
+</li>
+<li><p class="first"><tt class="docutils literal"><span class="pre">#error</span> <span class="pre">message</span></tt>
+- Throws an error, which takes a screenshot, logs the screenshot name, and logs &#8220;message&#8221; to the log. Calls <tt class="xref py py-meth docutils literal"><span class="pre">sw.child.logMsg()</span></tt> with level=CRITICAL level.</p>
+</li>
+<li><p class="first"><tt class="docutils literal"><span class="pre">#screenshot</span></tt>
+- Takes a screenshot which appears as error_#.png within the child&#8217;s log directory. The log references the file name when this is called. Calls <tt class="xref py py-meth docutils literal"><span class="pre">sw.child.screenshot()</span></tt></p>
+</li>
+</ul>
+</div>
+<div class="section" id="options-directives">
+<h2>Options Directives<a class="headerlink" href="#options-directives" title="Permalink to this headline">¶</a></h2>
+<p>By including at the top of your script <tt class="docutils literal"><span class="pre">#OPTIONS</span></tt> with a following comment block, the converter will parse options into the output script:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#OPTIONS</span>
+<span class="c">#gd option=&quot;text&quot;</span>
+<span class="c">#import module</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Available options:</dt>
+<dd><ul class="first simple">
+<li><tt class="docutils literal"><span class="pre">#gd</span> <span class="pre">option=&quot;text&quot;</span></tt></li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li>Passes the string <tt class="docutils literal"><span class="pre">option=&quot;text&quot;</span></tt> directly to GhostDriver&#8217;s desired capabilities. Currently only the following are supported:</li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li><tt class="docutils literal"><span class="pre">#gd</span> <span class="pre">proxy=&quot;google.com:443&quot;</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">#gd</span> <span class="pre">proxy-type=&quot;http&quot;</span></tt></li>
+</ul>
+</div></blockquote>
+</div></blockquote>
+<ul class="last simple">
+<li><tt class="docutils literal"><span class="pre">#import</span> <span class="pre">module</span></tt>
+- Includes this import in the output (wrapped) script. This is useful for including, for example, random to randomly choose a user from a table.</li>
+</ul>
+</dd>
+</dl>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Selenium Wrapper</a><ul>
+<li><a class="reference internal" href="#project-outline">Project Outline</a></li>
+<li><a class="reference internal" href="#installation">Installation</a><ul>
+<li><a class="reference internal" href="#converter-setup">Converter Setup</a></li>
+<li><a class="reference internal" href="#wrapper-setup">Wrapper Setup</a></li>
+<li><a class="reference internal" href="#converter-distribution">Converter Distribution</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#script-converter">Script Converter</a><ul>
+<li><a class="reference internal" href="#usage">Usage</a></li>
+<li><a class="reference internal" href="#directives">Directives</a></li>
+<li><a class="reference internal" href="#options-directives">Options Directives</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">selenium_wrapper</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="sw.wrapper.html"
+                        title="next chapter">Wrapper Module <tt class="docutils literal"><span class="pre">sw.wrapper</span></tt></a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/sw.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="sw.wrapper.html" title="Wrapper Module sw.wrapper"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="selenium_wrapper"
+             >previous</a> |</li>
+        <li><a href="index.html">selenium_wrapper 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Billy Rhoades.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

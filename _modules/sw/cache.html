@@ -1,0 +1,175 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sw.cache &mdash; selenium_wrapper 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="selenium_wrapper 0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">selenium_wrapper 0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sw.cache</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">time</span><span class="o">,</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">selenium.common.exceptions</span> <span class="kn">import</span> <span class="o">*</span>
+
+<div class="viewcode-block" id="ElementCache"><a class="viewcode-back" href="../../sw.cache.html#sw.cache.ElementCache">[docs]</a><span class="k">class</span> <span class="nc">ElementCache</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Creates an object to store WebDriver elements on specific pages so subsequent lookups don&#39;t require scanning the DOM.</span>
+
+<span class="sd">    :return: ElementCache (self)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span> <span class="bp">self</span> <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cache</span> <span class="o">=</span> <span class="p">{</span> <span class="p">}</span>
+
+<div class="viewcode-block" id="ElementCache.add"><a class="viewcode-back" href="../../sw.cache.html#sw.cache.ElementCache.add">[docs]</a>    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add an element to the cache. It is stored by a handle and deleted automatically after a full run.</span>
+
+<span class="sd">        :param url: The URL of element e.</span>
+<span class="sd">        :param e: The `Webelement` to be stored.</span>
+<span class="sd">        </span>
+<span class="sd">        :Kwargs:</span>
+<span class="sd">          * **id** (*None*): Identifier for e on the passed url. </span>
+<span class="sd">          * **type** (*None*): Type of the identifier for e on the passed url.</span>
+<span class="sd">          * **handle** (*None*): (separate from id/type) A handle to identify this element by internally (unique).</span>
+
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">id</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&quot;id&quot;</span><span class="p">,</span> <span class="bp">None</span> <span class="p">)</span>
+        <span class="nb">type</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&quot;type&quot;</span><span class="p">,</span> <span class="bp">None</span> <span class="p">)</span>
+        <span class="n">handle</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&quot;handle&quot;</span><span class="p">,</span> <span class="bp">None</span> <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">handle</span> <span class="o">==</span> <span class="bp">None</span> <span class="ow">and</span> <span class="p">(</span> <span class="nb">id</span> <span class="o">==</span> <span class="bp">None</span> <span class="ow">or</span> <span class="nb">type</span> <span class="o">==</span> <span class="bp">None</span> <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NameError</span><span class="p">(</span> <span class="s">&quot;Must name either a type and an id or a handle in kwargs. &quot;</span><span class="p">)</span> 
+
+        <span class="k">if</span> <span class="n">handle</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">handle</span> <span class="o">=</span> <span class="s">&#39;_&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="nb">id</span><span class="p">,</span> <span class="nb">type</span> <span class="p">]</span> <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">url</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="n">url</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span> <span class="p">}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="n">url</span><span class="p">][</span><span class="n">handle</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span> <span class="bp">None</span><span class="p">,</span> <span class="n">e</span> <span class="p">]</span>
+</div>
+<div class="viewcode-block" id="ElementCache.get"><a class="viewcode-back" href="../../sw.cache.html#sw.cache.ElementCache.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets an element from the internal cache stored on the given url. If it doesn&#39;t exist, returns None.</span>
+
+<span class="sd">        :param url: The current url to search the cache for.</span>
+<span class="sd">        </span>
+<span class="sd">        :Kwargs:</span>
+<span class="sd">          * **id** (*None*): Identifier for the element in the cache, on the passed url. </span>
+<span class="sd">          * **type** (*None*): Type of the identifier for the element in the cache, on the passed url.</span>
+<span class="sd">          * **handle** (*None*): (separate from id/type) A handle to identify this element by internally (unique).</span>
+
+<span class="sd">          :return: `Webelement` for the cached item if a matching element exists. None if not.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">id</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&quot;id&quot;</span><span class="p">,</span> <span class="bp">None</span> <span class="p">)</span>
+        <span class="nb">type</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&quot;type&quot;</span><span class="p">,</span> <span class="bp">None</span> <span class="p">)</span>
+        <span class="n">handle</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&quot;handle&quot;</span><span class="p">,</span> <span class="bp">None</span> <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">handle</span> <span class="o">==</span> <span class="bp">None</span> <span class="ow">and</span> <span class="p">(</span> <span class="nb">id</span> <span class="o">==</span> <span class="bp">None</span> <span class="ow">or</span> <span class="nb">type</span> <span class="o">==</span> <span class="bp">None</span> <span class="p">):</span>
+           <span class="k">raise</span> <span class="ne">NameError</span><span class="p">(</span> <span class="s">&quot;Must name either a type and an id or a handle in kwargs. &quot;</span><span class="p">)</span> 
+         
+        <span class="k">if</span> <span class="n">handle</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">handle</span> <span class="o">=</span> <span class="s">&#39;_&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="nb">id</span><span class="p">,</span> <span class="nb">type</span> <span class="p">]</span> <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">url</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">handle</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="n">url</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+
+        <span class="n">e</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="n">url</span><span class="p">][</span><span class="n">handle</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">e</span><span class="o">.</span><span class="n">get_attribute</span><span class="p">(</span> <span class="s">&quot;class&quot;</span> <span class="p">)</span>
+        <span class="k">except</span> <span class="n">NoSuchAttributeException</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+
+        <span class="k">return</span> <span class="n">e</span>
+</div>
+<div class="viewcode-block" id="ElementCache.clear"><a class="viewcode-back" href="../../sw.cache.html#sw.cache.ElementCache.clear">[docs]</a>    <span class="k">def</span> <span class="nf">clear</span><span class="p">(</span> <span class="bp">self</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Clears the internal cache, deleting all cached elements. Typically called after every run of our test function.</span>
+<span class="sd">        </span>
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cache</span> <span class="o">=</span> <span class="p">{</span> <span class="p">}</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">selenium_wrapper 0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Billy Rhoades.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
