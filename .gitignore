@@ -1,6 +1,7 @@
 doc/_*
 out/*
 in/*
+*/build/*
 _*
 *.pyc
 *.lock
