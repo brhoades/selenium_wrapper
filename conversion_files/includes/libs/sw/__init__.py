@@ -1,2 +1,2 @@
-__all__ = ["child", "pool", "wrapper", "formatting", "utils"]
+__all__ = ["child", "pool", "wrapper", "formatting", "utils", "cache"]
 
