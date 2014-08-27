@@ -6,54 +6,16 @@
 selenium_wrapper
 ================
 
-:mod:`sw.wrapper` Module
-------------------------
-
-.. automodule:: sw.wrapper
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-:mod:`sw.pool` Module
----------------------
-
-.. automodule:: sw.pool
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-:mod:`sw.child` Module
-----------------------
-
-.. automodule:: sw.child
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-.. automodule:: sw.cache
-   :emembers:
-   :undoc-members:
-   :show-inheritance:
-
-:mod:`sw.formatting` Module
----------------------------
-
-.. automodule:: sw.formatting
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-:mod:`sw.utils` Module
-----------------------
-
-.. automodule:: sw.utils
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 .. toctree::
    :maxdepth: 3 
 
+   sw
+   sw.wrapper
+   sw.pool
+   sw.child
+   sw.cache
+   sw.utils
+   sw.formatting
 
 
 Indices and tables
