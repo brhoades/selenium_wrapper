@@ -4,3 +4,4 @@ in/*
 _*
 *.pyc
 *.lock
+conversion_files/python*/
