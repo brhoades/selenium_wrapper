@@ -2,8 +2,7 @@
 #
 
 # You can set these variables from the command line.
-SPHINXOPTS       = ../conversion_files/includes/libs
-GH_PAGES_SOURCES = $(SPHINXOPTS)
+SPHINXOPTS       = source
 SPHINXBUILD      = sphinx-build
 PAPER            =
 BUILDDIR         = build
