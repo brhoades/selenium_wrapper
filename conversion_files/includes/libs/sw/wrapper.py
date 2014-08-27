@@ -1,5 +1,5 @@
 from sw.pool import *
-import sys, time
+import sys, time, curses
 
 
 def main( func, file, **kwargs ):
@@ -24,13 +24,11 @@ def main( func, file, **kwargs ):
         if sys.argv[3] == "y":
             staggered = True
      
-    print( "\n" + ( "=" * 40 ) )
-
     kwargs['staggered'] = staggered
 
     pool = Pool( children, numTimes, func, file, kwargs )
 
-    mainLoop( pool )
+    curses.wrapper( mainLoop, pool )
 
     pool.reportStatistics( True )
 
@@ -38,13 +36,31 @@ def main( func, file, **kwargs ):
 
 
 
-def mainLoop( pool ):
+def mainLoop( stdscr, pool ):
     """Takes the pool created previously and just loops around it. Currently it just calls the pool's
         think function repeatedly.
 
+        :param stdscr: Our standard screen from curses.
         :param pool: Our created child pool in :func:`main`.
         :returns: None
     """
-    while not pool.done( ):
+
+    pool.curses = stdscr
+    stdscr.border( )
+    stdscr.nodelay( True ) # Don't wait on key presses
+    stdscr.addstr( 0, 3, "Selenium Wrapper Console" )
+    stdscr.vline( 1, stdscr.getmaxyx( )[1]-20, 0, stdscr.getmaxyx( )[0]-2 )
+
+    options = [ "q - Quit", "c+- - Children", "j+- - Jobs" ]
+    sx = stdscr.getmaxyx( )[1]-18
+    sy = 2
+    i = 0
+
+    for l in options:
+        stdscr.addstr( sy + i*2, sx, l )
+        i += 1
+    stdscr.refresh( )
+
+    while not pool.done( ) and not stdscr.getch( ) == ord("q"):
         pool.think( )
         time.sleep( 0.1 )

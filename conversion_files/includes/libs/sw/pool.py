@@ -63,8 +63,8 @@ class Pool:
         # General log directory, shared by all children
         self.log = os.path.join( os.path.dirname( os.path.abspath( file ) ), "logs", self.timestamp ) 
 
-        print( ''.join( [ "Preparing ", str( numChildren ), " ", ( "child" if numChildren == 1 else "children" ), \
-               " to do ", str( numJobs ), " job", ( "s" if numJobs != 1 else "" ), "." ] ) )
+        #print( ''.join( [ "Preparing ", str( numChildren ), " ", ( "child" if numChildren == 1 else "children" ), \
+        #       " to do ", str( numJobs ), " job", ( "s" if numJobs != 1 else "" ), "." ] ) )
 
         # Marks our start time, set when first child sends starting
         self.started = None

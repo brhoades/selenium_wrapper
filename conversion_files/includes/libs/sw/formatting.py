@@ -53,7 +53,7 @@ def childMessage( num, msg ):
        :param msg: The message for the child. Formatted like so: ``Child #num: msg``
        :return: None
     """
-    print( ''.join( [ "Child #", str( num + 1 ), ": ", msg ] ) )
+    #print( ''.join( [ "Child #", str( num + 1 ), ": ", msg ] ) )
 
 
 

@@ -72,7 +72,7 @@ class Child:
         :param msg: The message to be printed out to the console.
         :return: None
         """
-        print( "Child #" + str( self.num + 1 ) + ": " + message )
+        #print( "Child #" + str( self.num + 1 ) + ": " + message )
 
 
 
