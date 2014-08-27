@@ -78,7 +78,7 @@ class Child:
 
     def think( self ):
         """The meat of the wrapper, where the main thinking is done. Takes no arguments, just reads from 
-           self variables set in :class:`sw.Child`. PhantomJS is added into the python path by run.bat, so
+           self variables set in :py:class:`sw.Child`. PhantomJS is added into the python path by run.bat, so
            that is already handled.
 
            :return: None

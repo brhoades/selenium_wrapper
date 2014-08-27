@@ -197,7 +197,7 @@ def sleepwait( driver, element, type, **kwargs ):
 
 
 def sendKeys( driver, element, type, text ):
-    """Drop in, faster replacement for :py:meth:`~selenium.webdriver.remote.webelement.WebElement.send_keys`. Currently 
+    """Drop in, faster replacement for :py:func:`~selenium.webdriver.remote.webelement.WebElement.send_keys`. Currently 
        only supports fields with an `id` or `name` identifier. 
 
        :Parameters:

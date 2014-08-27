@@ -123,7 +123,7 @@ class Pool:
 
 
     def think( self ): 
-        """Runs through a single think loop; called by :func:`sw.mainmainLoop` until there is no more work remaining.
+        """Runs through a single think loop; called by :py:func:`sw.wrapper.mainLoop` until there is no more work remaining.
         Check children are alive/restart if there are more jobs. Checks queues and parses any data.
 
         :returns: None
