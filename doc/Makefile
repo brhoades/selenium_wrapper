@@ -5,7 +5,7 @@
 SPHINXOPTS       = source
 SPHINXBUILD      = sphinx-build
 PAPER            =
-BUILDDIR         = build
+BUILDDIR         = _build
 
 # User-friendly check for sphinx-build
 ifeq ($(shell which $(SPHINXBUILD) >/dev/null 2>&1; echo $$?), 1)
@@ -175,3 +175,28 @@ pseudoxml:
 	$(SPHINXBUILD) -b pseudoxml $(ALLSPHINXOPTS) $(BUILDDIR)/pseudoxml
 	@echo
 	@echo "Build finished. The pseudo-XML files are in $(BUILDDIR)/pseudoxml."
+
+gh-pages:
+	@echo "Removing old files"
+	-git rm -rf source 
+	-git rm -f ../*.html
+	-git rm -rf ../_*
+	-git rm -f ../*.js
+	-git rm -f ../*.inv
+	
+	@echo "Checking out new sources"
+	git checkout master source
+	git checkout master ../conversion_files/includes/libs/sw/ source/sw
+	
+	@echo "Making doc"
+	$(MAKE) html
+	
+	@echo "Moving / adding doc"
+	git add -f _build/html/*
+	git mv _build/html/* ../
+	
+	@echo "Cleaning up"
+	-git rm -rf source _build build
+	-rm -rf build _build
+	
+	git commit -a -m "Updated doc to master `git log master --abbrev-commit --pretty=oneline | head -1`"

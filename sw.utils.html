@@ -52,15 +52,15 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="module-sw.utils">
-<span id="utilities-module-sw-utils"></span><h1>Utilities Module <a class="reference internal" href="#module-sw.utils" title="sw.utils"><tt class="xref py py-mod docutils literal"><span class="pre">sw.utils</span></tt></a><a class="headerlink" href="#module-sw.utils" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="utilities-module-sw-utils">
+<h1>Utilities Module <a class="reference internal" href="#module-sw.utils" title="sw.utils"><tt class="xref py py-mod docutils literal"><span class="pre">sw.utils</span></tt></a><a class="headerlink" href="#utilities-module-sw-utils" title="Permalink to this headline">¶</a></h1>
 <p>This module primarily serves as a holder for all directly webdriver-facing functions. These functions
-usually serve only the purpose of interfacing with elements on the page and possibly logging when an 
+usually serve only the purpose of interfacing with elements on the page and possibly logging when an
 error occurs. A lot of the code of these functions revolves around waiting.</p>
 <div class="section" id="common-parameters">
 <span id="common-params"></span><h2>Common Parameters<a class="headerlink" href="#common-parameters" title="Permalink to this headline">¶</a></h2>
 <p>These parameters apply for functions in this module which link back to this documentation. In particular:
-<a class="reference internal" href="#sw.utils.sleepwait" title="sw.utils.sleepwait"><tt class="xref py py-func docutils literal"><span class="pre">sleepwait()</span></tt></a>, <a class="reference internal" href="#sw.utils.waitToDisappear" title="sw.utils.waitToDisappear"><tt class="xref py py-func docutils literal"><span class="pre">waitToDisappear()</span></tt></a>, and <a class="reference internal" href="#sw.utils.exists" title="sw.utils.exists"><tt class="xref py py-func docutils literal"><span class="pre">exists()</span></tt></a>.</p>
+<tt class="xref py py-func docutils literal"><span class="pre">sleepwait()</span></tt>, <tt class="xref py py-func docutils literal"><span class="pre">waitToDisappear()</span></tt>, and <tt class="xref py py-func docutils literal"><span class="pre">exists()</span></tt>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -74,21 +74,21 @@ error occurs. A lot of the code of these functions revolves around waiting.</p>
 </tr>
 <tr class="field-even field"><th class="field-name">Common Kwargs:</th><td class="field-body"><ul class="first last simple">
 <li><strong>timeout</strong> (<em>15</em>) &#8211; The amount of time, in seconds, before continuing on if the element is not found. Note that in
-some functions, such as <a class="reference internal" href="#sw.utils.sleepwait" title="sw.utils.sleepwait"><tt class="xref py py-func docutils literal"><span class="pre">sleepwait()</span></tt></a>, this can be fatal to the script. A timeout in sleepwait will cause the 
+some functions, such as <tt class="xref py py-func docutils literal"><span class="pre">sleepwait()</span></tt>, this can be fatal to the script. A timeout in sleepwait will cause the
 script to either kill the child process (if <cite>die</cite> is enabled) or return <cite>None</cite> which webdriver cannot interface with.</li>
 <li><strong>lightConfirm</strong> (<em>False</em>) &#8211; Only checks if an element exists, does not verify if it is enabled or visible. This saves
 some CPU usage but can be dangerous in the case of a disabled web prompt.</li>
-<li><strong>cache</strong> (<em>True</em>) &#8211; Determines if elements will be cached internally within our <tt class="xref py py-mod docutils literal"><span class="pre">sw.child</span></tt> process. This uses
+<li><strong>cache</strong> (<em>True</em>) &#8211; Determines if elements will be cached internally within our <a class="reference internal" href="sw.child.html#module-sw.child" title="sw.child"><tt class="xref py py-mod docutils literal"><span class="pre">sw.child</span></tt></a> process. This uses
 RAM over the a single run of the script, but has been shown to have speed savings in situations with a great deal
 of waiting. See <a class="reference internal" href="sw.cache.html#module-sw.cache" title="sw.cache"><tt class="xref py py-mod docutils literal"><span class="pre">sw.cache</span></tt></a> for more information.</li>
 <li><strong>url</strong> (<em>driver.current_url</em>) &#8211; Current URL of the page webdriver is on. If this is not specified it is pulled from our
 webdriver every time, which can get expensive over the lifetime of a script with a lot of waiting. This is only used if
 <cite>cache</cite> is enabled and is otherwise ignored.</li>
-<li><strong>thinkTime</strong> (<em>child.sleepTime</em>) &#8211; The time the script waits between polling for an element&#8217;s existance. This is usually 
-the child&#8217;s sleep time, but for <a class="reference internal" href="#sw.utils.waitToDisappear" title="sw.utils.waitToDisappear"><tt class="xref py py-func docutils literal"><span class="pre">waitToDisappear()</span></tt></a> it is twice that.</li>
-<li><strong>die</strong> (<em>True</em>) &#8211; Whether or not the function kills the child if this is not found. Even if False, in the case of <a class="reference internal" href="#sw.utils.sleepwait" title="sw.utils.sleepwait"><tt class="xref py py-func docutils literal"><span class="pre">sleepwait()</span></tt></a>
-at least, there will usually be a fatal error anyway, especially if a <a class="reference external" href="http://selenium-python.readthedocs.org/en/latest/api.html#selenium.webdriver.remote.webelement.WebElement" title="(in Selenium Python Bindings v2)"><tt class="xref py py-class docutils literal"><span class="pre">WebElement</span></tt></a> 
-is expected to be returned. <a class="reference internal" href="#sw.utils.sleepwait" title="sw.utils.sleepwait"><tt class="xref py py-func docutils literal"><span class="pre">sleepwait()</span></tt></a> typically returns a <a class="reference external" href="http://selenium-python.readthedocs.org/en/latest/api.html#selenium.webdriver.remote.webelement.WebElement" title="(in Selenium Python Bindings v2)"><tt class="xref py py-class docutils literal"><span class="pre">WebElement</span></tt></a>
+<li><strong>thinkTime</strong> (<em>child.sleepTime</em>) &#8211; The time the script waits between polling for an element&#8217;s existance. This is usually
+the child&#8217;s sleep time, but for <tt class="xref py py-func docutils literal"><span class="pre">waitToDisappear()</span></tt> it is twice that.</li>
+<li><strong>die</strong> (<em>True</em>) &#8211; Whether or not the function kills the child if this is not found. Even if False, in the case of <tt class="xref py py-func docutils literal"><span class="pre">sleepwait()</span></tt>
+at least, there will usually be a fatal error anyway, especially if a <a class="reference external" href="http://selenium-python.readthedocs.org/en/latest/api.html#selenium.webdriver.remote.webelement.WebElement" title="(in Selenium Python Bindings v2)"><tt class="xref py py-class docutils literal"><span class="pre">WebElement</span></tt></a>
+is expected to be returned. <tt class="xref py py-func docutils literal"><span class="pre">sleepwait()</span></tt> typically returns a <a class="reference external" href="http://selenium-python.readthedocs.org/en/latest/api.html#selenium.webdriver.remote.webelement.WebElement" title="(in Selenium Python Bindings v2)"><tt class="xref py py-class docutils literal"><span class="pre">WebElement</span></tt></a>
 but if the element is not found (and <cite>die</cite> is False) returns None.</li>
 </ul>
 </td>
@@ -96,8 +96,8 @@ but if the element is not found (and <cite>die</cite> is False) returns None.</l
 </tbody>
 </table>
 </div>
-<div class="section" id="functions">
-<h2>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-sw.utils">
+<span id="functions"></span><h2>Functions<a class="headerlink" href="#module-sw.utils" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="sw.utils.exists">
 <tt class="descclassname">sw.utils.</tt><tt class="descname">exists</tt><big>(</big><em>driver</em>, <em>element</em>, <em>type</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/sw/utils.html#exists"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.utils.exists" title="Permalink to this definition">¶</a></dt>
@@ -215,7 +215,7 @@ after that it just returns False so that the exists script will stop holding thi
 <dl class="function">
 <dt id="sw.utils.sendKeys">
 <tt class="descclassname">sw.utils.</tt><tt class="descname">sendKeys</tt><big>(</big><em>driver</em>, <em>element</em>, <em>type</em>, <em>text</em><big>)</big><a class="reference internal" href="_modules/sw/utils.html#sendKeys"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.utils.sendKeys" title="Permalink to this definition">¶</a></dt>
-<dd><p>Drop in, faster replacement for <a class="reference external" href="http://selenium-python.readthedocs.org/en/latest/api.html#selenium.webdriver.remote.webelement.WebElement.send_keys" title="(in Selenium Python Bindings v2)"><tt class="xref py py-meth docutils literal"><span class="pre">send_keys()</span></tt></a>. Currently 
+<dd><p>Drop in, faster replacement for <tt class="xref py py-func docutils literal"><span class="pre">send_keys()</span></tt>. Currently 
 only supports fields with an <cite>id</cite> or <cite>name</cite> identifier.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -340,7 +340,7 @@ waited in the previous call.</li>
   <ul>
 <li><a class="reference internal" href="#">Utilities Module <tt class="docutils literal"><span class="pre">sw.utils</span></tt></a><ul>
 <li><a class="reference internal" href="#common-parameters">Common Parameters</a></li>
-<li><a class="reference internal" href="#functions">Functions</a></li>
+<li><a class="reference internal" href="#module-sw.utils">Functions</a></li>
 </ul>
 </li>
 </ul>

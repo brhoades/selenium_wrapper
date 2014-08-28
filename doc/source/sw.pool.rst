@@ -1,12 +1,12 @@
 ================================
-Child Module :mod:`sw.child` 
+Child Pool Module :mod:`sw.pool` 
 ================================
 
 *******
 Classes
 *******
 
-.. automodule:: sw.child
+.. automodule:: sw.pool
    :members:
    :undoc-members:
    :show-inheritance:

@@ -35,6 +35,9 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
           <a href="sw.wrapper.html" title="Wrapper Module sw.wrapper"
              accesskey="N">next</a> |</li>
         <li class="right" >
@@ -72,7 +75,7 @@ computers.</p>
 </div>
 <div class="section" id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
-<p>If initializing a brand new installation and not having a prepackaged converter, first checkout
+<p>When initializing a brand new installation and not having a prepackaged converter, first checkout
 the repository:</p>
 <div class="highlight-python"><div class="highlight"><pre>git clone https://github.com/brhoades/selenium_wrapper.git
 </pre></div>
@@ -84,6 +87,7 @@ navigate to the directory cloned into and run:</p>
 <div class="highlight-python"><div class="highlight"><pre>bundle install
 </pre></div>
 </div>
+<p>This will install the Ruby gems required for the converter to function.</p>
 </div>
 <div class="section" id="wrapper-setup">
 <h3>Wrapper Setup<a class="headerlink" href="#wrapper-setup" title="Permalink to this headline">¶</a></h3>
@@ -100,8 +104,8 @@ directory. Alternatively, manually download and install
 </pre></div>
 </div>
 <p>Also install the latest version of <a class="reference external" href="http://phantomjs.org/download.html">PhantomJS</a> and put it
-(in its folder) in the previously created <tt class="docutils literal"><span class="pre">python277/</span></tt> folder. The folder name may need to
-be update in <tt class="docutils literal"><span class="pre">conversion_files/run.bat</span></tt> if it is not 1.9.7.</p>
+(in its folder) in the previously created <tt class="docutils literal"><span class="pre">conversion_files/python277</span></tt> folder. The folder
+path may need to be updated in <tt class="docutils literal"><span class="pre">conversion_files/run.bat</span></tt> if it is not 1.9.7.</p>
 <p>Now run the conversion program:</p>
 <div class="highlight-python"><div class="highlight"><pre>ruby main.rb
 </pre></div>
@@ -143,9 +147,9 @@ black terminal that opened when the exe/script was initially ran.</p>
 <p>Conversion will automatically strip any assertions or clears from the script provided.
 Assertions are not currently supported as the wrapper does not currently wrap itself in a
 unit testing suite. Any <tt class="docutils literal"><span class="pre">driver.find_element_by(...).send_keys(</span> <span class="pre">&quot;text&quot;</span> <span class="pre">)</span></tt> is wrapped
-into a <tt class="xref py py-meth docutils literal"><span class="pre">sw.utils.sendKeys()</span></tt> function. This eliminates the need for a .clear( )
+into a <a class="reference internal" href="sw.utils.html#sw.utils.sendKeys" title="sw.utils.sendKeys"><tt class="xref py py-func docutils literal"><span class="pre">sw.utils.sendKeys()</span></tt></a> function. This eliminates the need for a .clear( )
 statement and saves time. Conversion also replaces any <tt class="docutils literal"><span class="pre">find_element_by_</span></tt> segments with
-<tt class="xref py py-meth docutils literal"><span class="pre">sw.utils.sleepwait()</span></tt> which is a controlled (and CPU-optimized) function to wait for an
+<a class="reference internal" href="sw.utils.html#sw.utils.sleepwait" title="sw.utils.sleepwait"><tt class="xref py py-func docutils literal"><span class="pre">sw.utils.sleepwait()</span></tt></a> which is a controlled (and CPU-optimized) function to wait for an
 element.</p>
 </div>
 <div class="section" id="directives">
@@ -153,37 +157,53 @@ element.</p>
 <p>There are directives which may be inserted into the source script&#8217;s function which will be
 parsed by the converter into wrapper functions. Variables can be used in their arguments
 as the converter turns the directives into functions after conversion.</p>
-<ul>
-<li><p class="first"><tt class="docutils literal"><span class="pre">#log</span> <span class="pre">message</span></tt>
-- This will write to our child&#8217;s log &#8220;message&#8221;. Directly calls <tt class="xref py py-meth docutils literal"><span class="pre">sw.child.logMsg()</span></tt></p>
+<dl class="docutils">
+<dt>Available Directives:</dt>
+<dd><ul class="first last simple">
+<li><tt class="docutils literal"><span class="pre">#log</span> <span class="pre">message</span></tt><ul>
+<li>This will write to our child&#8217;s log &#8220;message&#8221;. Directly calls <tt class="xref py py-func docutils literal"><span class="pre">sw.child.logMsg()</span></tt></li>
+</ul>
 </li>
-<li><p class="first"><tt class="docutils literal"><span class="pre">#msg</span> <span class="pre">message</span></tt>
-- Writes &#8220;Child #: message&#8221; to the console. Calls <tt class="xref py py-meth docutils literal"><span class="pre">sw.child.msg()</span></tt></p>
+<li><tt class="docutils literal"><span class="pre">#msg</span> <span class="pre">message</span></tt><ul>
+<li>Writes &#8220;Child #: message&#8221; to the console. Calls <tt class="xref py py-func docutils literal"><span class="pre">sw.child.msg()</span></tt></li>
+</ul>
 </li>
-<li><p class="first"><tt class="docutils literal"><span class="pre">#wait</span> <span class="pre">element</span> <span class="pre">kwargs</span></tt>
-- This calls <tt class="xref py py-meth docutils literal"><span class="pre">sw.utils.waitToDisappear()</span></tt> and takes any of the kwargs as the second argument. Please reference that function for further details about its arguments and other options.
-- <tt class="docutils literal"><span class="pre">#wait</span> <span class="pre">overlay</span> <span class="pre">type=id</span></tt></p>
-<blockquote>
-<div><ul class="simple">
+<li><tt class="docutils literal"><span class="pre">#wait</span> <span class="pre">element</span> <span class="pre">kwargs</span></tt><ul>
+<li>This calls <a class="reference internal" href="sw.utils.html#sw.utils.waitToDisappear" title="sw.utils.waitToDisappear"><tt class="xref py py-func docutils literal"><span class="pre">sw.utils.waitToDisappear()</span></tt></a> and takes any of the kwargs as the second argument.
+Please reference that function for further details about its arguments and other options.</li>
+<li><tt class="docutils literal"><span class="pre">#wait</span> <span class="pre">overlay</span> <span class="pre">type=id</span></tt><ul>
 <li>Waits for the element with id=overlay to disappear</li>
 </ul>
-</div></blockquote>
-<ul class="simple">
-<li><tt class="docutils literal"><span class="pre">#wait</span> <span class="pre">overlay</span> <span class="pre">type=name,</span> <span class="pre">stayGone=3</span></tt>
-- Waits for the element with name=overlay to disappear and waits an additional 3 seconds for it to not come back.</li>
-<li><tt class="docutils literal"><span class="pre">#wait</span> <span class="pre">blurydiv</span> <span class="pre">timeout=5</span></tt>
-- Waits for id=blurydiv to disappear. If it doesn&#8217;t after 5 seconds, returns.</li>
-<li><tt class="docutils literal"><span class="pre">#wait</span> <span class="pre">blurydiv</span> <span class="pre">waitTimeout=5</span></tt>
-- Waits for id=blurydiv to disappear. Gives the element 5 seconds to appear first before waiting for it to disappear. Default time to appear is 1 second.</li>
+</li>
+<li><tt class="docutils literal"><span class="pre">#wait</span> <span class="pre">overlay</span> <span class="pre">type=name,</span> <span class="pre">stayGone=3</span></tt><ul>
+<li>Waits for the element with name=overlay to disappear and waits an additional 3 seconds
+for it to not come back.</li>
 </ul>
 </li>
-<li><p class="first"><tt class="docutils literal"><span class="pre">#error</span> <span class="pre">message</span></tt>
-- Throws an error, which takes a screenshot, logs the screenshot name, and logs &#8220;message&#8221; to the log. Calls <tt class="xref py py-meth docutils literal"><span class="pre">sw.child.logMsg()</span></tt> with level=CRITICAL level.</p>
+<li><tt class="docutils literal"><span class="pre">#wait</span> <span class="pre">blurydiv</span> <span class="pre">timeout=5</span></tt><ul>
+<li>Waits for id=blurydiv to disappear. If it doesn&#8217;t after 5 seconds, returns.</li>
+</ul>
 </li>
-<li><p class="first"><tt class="docutils literal"><span class="pre">#screenshot</span></tt>
-- Takes a screenshot which appears as error_#.png within the child&#8217;s log directory. The log references the file name when this is called. Calls <tt class="xref py py-meth docutils literal"><span class="pre">sw.child.screenshot()</span></tt></p>
+<li><tt class="docutils literal"><span class="pre">#wait</span> <span class="pre">blurydiv</span> <span class="pre">waitTimeout=5</span></tt><ul>
+<li>Waits for id=blurydiv to disappear. Gives the element 5 seconds to appear first before
+waiting for it to disappear. Default time to appear is 1 second.</li>
+</ul>
 </li>
 </ul>
+</li>
+<li><tt class="docutils literal"><span class="pre">#error</span> <span class="pre">message</span></tt><ul>
+<li>Throws an error, which takes a screenshot, logs the screenshot name, and logs &#8220;message&#8221;
+to the log. Calls <tt class="xref py py-func docutils literal"><span class="pre">sw.child.logMsg()</span></tt> with level=CRITICAL level.</li>
+</ul>
+</li>
+<li><tt class="docutils literal"><span class="pre">#screenshot</span></tt><ul>
+<li>Takes a screenshot which appears as error_#.png within the child&#8217;s log directory. The log
+references the file name when this is called. Calls <tt class="xref py py-func docutils literal"><span class="pre">sw.child.screenshot()</span></tt></li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
 </div>
 <div class="section" id="options-directives">
 <h2>Options Directives<a class="headerlink" href="#options-directives" title="Permalink to this headline">¶</a></h2>
@@ -195,26 +215,193 @@ as the converter turns the directives into functions after conversion.</p>
 </div>
 <dl class="docutils">
 <dt>Available options:</dt>
-<dd><ul class="first simple">
-<li><tt class="docutils literal"><span class="pre">#gd</span> <span class="pre">option=&quot;text&quot;</span></tt></li>
-</ul>
-<blockquote>
-<div><ul class="simple">
-<li>Passes the string <tt class="docutils literal"><span class="pre">option=&quot;text&quot;</span></tt> directly to GhostDriver&#8217;s desired capabilities. Currently only the following are supported:</li>
-</ul>
-<blockquote>
-<div><ul class="simple">
-<li><tt class="docutils literal"><span class="pre">#gd</span> <span class="pre">proxy=&quot;google.com:443&quot;</span></tt></li>
-<li><tt class="docutils literal"><span class="pre">#gd</span> <span class="pre">proxy-type=&quot;http&quot;</span></tt></li>
-</ul>
-</div></blockquote>
-</div></blockquote>
-<ul class="last simple">
+<dd><ul class="first last simple">
+<li><tt class="docutils literal"><span class="pre">#gd</span> <span class="pre">option=&quot;text&quot;</span></tt>
+- Passes the string <tt class="docutils literal"><span class="pre">option=&quot;text&quot;</span></tt> directly to GhostDriver&#8217;s desired capabilities. Currently only the following are supported:
+- <tt class="docutils literal"><span class="pre">#gd</span> <span class="pre">proxy=&quot;google.com:443&quot;</span></tt>
+- <tt class="docutils literal"><span class="pre">#gd</span> <span class="pre">proxy-type=&quot;http&quot;</span></tt></li>
 <li><tt class="docutils literal"><span class="pre">#import</span> <span class="pre">module</span></tt>
 - Includes this import in the output (wrapped) script. This is useful for including, for example, random to randomly choose a user from a table.</li>
 </ul>
 </dd>
 </dl>
+</div>
+</div>
+<div class="section" id="wrapper">
+<h1>Wrapper<a class="headerlink" href="#wrapper" title="Permalink to this headline">¶</a></h1>
+<p>The wrapper is automatically applied to the source script when the converter finishes. It is
+intended to be as transparent as possible after conversion, requiring minimal user interaction
+to get it running. Below is a real test run of a script:</p>
+<div class="highlight-python"><div class="highlight"><pre>.../out/example_script&gt;run.bat
+You may press enter to use the default values in parenthesis.
+Number of Children (3): 3
+Number of Jobs to Run (3): 3
+Stagger Children Spawning (n): n
+
+Libraries loaded!
+
+
+
+========================================
+Preparing 3 children to do 3 jobs.
+Child #1: LOADING
+Child #2: LOADING
+Child #3: LOADING
+Child #3: STARTING
+Child #2: STARTING
+Child #1: STARTING
+
+========================================
+Successful: 0   Failed: 0
+Total: 0   Remaining: 3
+Children (peak): 3   Children (active): 3
+No data to extrapolate or average from
+========================================
+
+Child #2: DONE (141.88s)
+Child #2: STOPPING (DONE)
+Child #3: DONE (142.62s)
+Child #3: STOPPING (DONE)
+Child #1: DONE (149.2s)
+Child #1: STOPPING
+
+========================================
+Successful: 3   Failed: 0
+Total: 3   Remaining: 0
+Children (peak): 3   Children (active): 0
+Failure Rate: 0.0%
+Average / Estimates:
+  Time per job: 144.57s
+  Jobs/s: 0.02   Jobs/m: 1.21   Jobs/hr: 72.35   Jobs/day: 1736.39
+========================================
+
+Press any key to continue . . .
+</pre></div>
+</div>
+<p>Running <tt class="docutils literal"><span class="pre">run.bat</span></tt> on Windows will present the user with questions for how the script will operate.
+It simply passes arguments on to <tt class="docutils literal"><span class="pre">run_test.py</span></tt>, with the order discussed below.</p>
+<div class="highlight-none"><div class="highlight"><pre>Number of Children (3): 3
+</pre></div>
+</div>
+<p>The number of children determines the number of concurrent <cite>PhantomJS</cite> processes the script will run.
+Although the default number is 3, users with a more powerful processor will find themselves capable
+of running over 20, though this varies wildly with the script ran. This is largely dependent on processing
+power but about 50-70 Mb of RAM is used as well.</p>
+<div class="highlight-none"><div class="highlight"><pre>Number of Jobs to Run (3): 3
+</pre></div>
+</div>
+<p>The jobs option determines the number of times the recorded script will run. Every child process
+will pull from a job queue (of this length) when it starts and will do so until the queue is empty</p>
+<div class="highlight-none"><div class="highlight"><pre>Stagger Children Spawning (n): n
+</pre></div>
+</div>
+<p>The last option, staggered child spawning, is intended to distribute load throughout a site more evenly.
+Without staggering and with a high number of children, the load will be very pinpointed at an exact point
+of the site consistently, at least at the beginning. This options spawns children 5 seconds apart.</p>
+<p>The options used in the example are equivalent to just running this:</p>
+<div class="highlight-python"><div class="highlight"><pre>python out/example_script.py
+</pre></div>
+</div>
+<p>It pulls the default options internally for the script.</p>
+<p>Standard argument order and format is like so:</p>
+<div class="highlight-python"><div class="highlight"><pre>python out/example_script.py &lt;number of jobs&gt; &lt;number of children&gt; &lt;staggered (y/n)&gt;
+</pre></div>
+</div>
+<div class="section" id="logging">
+<h2>Logging<a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h2>
+<p>Logging is automatically performed and there is currently not an option to turn it off. All logs
+are within a timestamped folder in <tt class="docutils literal"><span class="pre">logs/</span></tt>. Each child will create its own log in
+<tt class="docutils literal"><span class="pre">logs/&lt;timestamp&gt;/log-#.log</span></tt>, where the number is the child&#8217;s number printed to the console. This
+log will contain detailed information about errors, time taken, and the status of the script. Logging
+level is not currently easily configurable, but can be seen in <tt class="docutils literal"><span class="pre">conversion_files/includes/libs/sw/child.py</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre>        <span class="c"># Our log handle</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lh</span> <span class="o">=</span> <span class="s">&quot;&quot;</span> 
+
+        <span class="c"># Logging level</span>
+<span class="hll">        <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">=</span> <span class="n">INFO</span> 
+</span>
+        <span class="c"># Do we load images</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">options</span> <span class="o">=</span> <span class="n">options</span>
+</pre></div>
+</div>
+<p>There are several levels as seen in <tt class="docutils literal"><span class="pre">conversion_files/includes/libs/sw/const.py</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">####################################################################################################</span>
+<span class="c"># Error Log Levels</span>
+<span class="c">#   Error log levels are used to mark a message as a certain category, then output it if that level</span>
+<span class="c">#   of detail is requested.</span>
+<span class="n">INFO</span>           <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+<span class="n">NOTICE</span>         <span class="o">=</span> <span class="mi">0</span>
+<span class="n">WARNING</span>        <span class="o">=</span> <span class="mi">1</span>
+<span class="n">ERR</span>            <span class="o">=</span> <span class="mi">2</span>
+<span class="n">CRITICAL</span>       <span class="o">=</span> <span class="mi">3</span>
+<span class="n">NONE</span>           <span class="o">=</span> <span class="mi">5</span>
+<span class="c">####################################################################################################</span>
+</pre></div>
+</div>
+<p>With the lowest log level, <tt class="docutils literal"><span class="pre">INFO</span></tt>, this is an example of a log that is prepared:</p>
+<div class="highlight-none"><div class="highlight"><pre>[15:37:14] (NOTICE)   Child process started and loaded
+[15:37:20] (NOTICE)   Beginning wait for element &quot;accounts&quot; of type &quot;link_text&quot;.
+[15:37:35] (NOTICE)   Beginning wait for element &quot;OrderPage_Row_6&quot; of type &quot;name&quot;.
+[15:37:42] (NOTICE)   Beginning wait for element &quot;clear_overlay&quot; of type &quot;id&quot;.
+[15:37:46] (NOTICE)   In waitToDisappear &quot;clear_overlay&quot; was never there to begin with.
+[15:37:46] (INFO)     Waiting for &quot;clear_overlay&quot;
+[15:37:49] (INFO)     Element &quot;clear_overlay&quot; disappeared!
+[15:37:50] (NOTICE)   Beginning wait for element &quot;clear_overlay&quot; of type &quot;id&quot;.
+[15:37:54] (NOTICE)   In waitToDisappear &quot;clear_overlay&quot; was never there to begin with.
+[15:37:57] (NOTICE)   Beginning wait for element &quot;AmountPage_Row_27&quot; of type &quot;name&quot;.
+[15:38:02] (INFO)     Waiting for &quot;clear_overlay&quot;
+[15:38:04] (INFO)     Element &quot;clear_overlay&quot; disappeared!
+[15:38:05] (NOTICE)   Beginning wait for element &quot;clear_overlay&quot; of type &quot;id&quot;.
+[15:38:08] (NOTICE)   In waitToDisappear &quot;clear_overlay&quot; was never there to begin with.
+[15:38:08] (INFO)     Waiting for &quot;clear_overlay&quot;
+[15:38:10] (INFO)     Element &quot;clear_overlay&quot; disappeared!
+[15:38:10] (INFO)     Waiting for &quot;clear_overlay&quot;
+[15:38:13] (INFO)     Element &quot;clear_overlay&quot; disappeared!
+[15:38:13] (NOTICE)   Beginning wait for element &quot;clear_overlay&quot; of type &quot;id&quot;.
+[15:38:16] (NOTICE)   In waitToDisappear &quot;clear_overlay&quot; was never there to begin with.
+[15:38:17] (INFO)     Waiting for &quot;clear_overlay&quot;
+[15:38:19] (INFO)     Element &quot;clear_overlay&quot; disappeared!
+[15:38:19] (INFO)     Waiting for &quot;clear_overlay&quot;
+[15:38:21] (INFO)     Element &quot;clear_overlay&quot; disappeared!
+[15:38:22] (NOTICE)   Beginning wait for element &quot;clear_overlay&quot; of type &quot;id&quot;.
+[15:38:25] (NOTICE)   In waitToDisappear &quot;clear_overlay&quot; was never there to begin with.
+[15:38:25] (INFO)     Waiting for &quot;clear_overlay&quot;
+[15:38:27] (INFO)     Element &quot;clear_overlay&quot; disappeared!
+===================== &lt;More Waiting&gt;
+[15:39:18] (INFO)     Waiting for &quot;clear_overlay&quot;
+[15:39:25] (INFO)     Element &quot;clear_overlay&quot; disappeared!
+[15:39:36] (NOTICE)   Successfully finished job (141.878000021s)
+[15:39:36] (NOTICE)   Stopping child process: &quot;DONE&quot;
+</pre></div>
+</div>
+<p>On the lowest log level, the wrapper gives a great deal of information about where it is waiting
+for debugging purposes. Waits are only documented if they are engaged; if an element can already
+be selected, no time is wasted waiting and the script directly interacts with it. The timestamp
+on the far left is the exact time in which the message was printed, the next field is the log level
+that this was printed at&#8212; if <tt class="docutils literal"><span class="pre">child.level</span></tt> were greater than this, it wouldn&#8217;t print. The final
+field is the message itself.</p>
+<p>Also placed within the log directory are any screenshots that were taken either as a directive
+within the script or for an error. Any time a screenshot is created, it is noted in the respective
+child&#8217;s log file where it was stored and at what time. For example, here is a log where an error was
+encountered:</p>
+<div class="highlight-none"><div class="highlight"><pre>[14:15:48] (NOTICE)   Child process started and loaded
+[14:15:52] (NOTICE)   Beginning wait for element &quot;Accounts&quot; of type &quot;link_text&quot;.
+[14:15:57] (NOTICE)   Choosing grower #16
+[15:37:57] (NOTICE)   Beginning wait for element &quot;AmountPage_Row_27&quot; of type &quot;name&quot;.
+[14:16:07] (ERROR)    &#39;sleepwait() takes exactly 3 arguments (4 given)&#39;
+<span class="hll">[14:16:08] (ERROR)    Wrote screenshot to: /home/test/script_converter/out/test_script/logs/2014-08-26_14-15-45/error_0.png
+</span>[14:16:08] (ERROR)    Stack trace: Traceback (most recent call last):
+  File &quot;/home/test/script_converter/out/test_script/includes/libs/sw/child.py&quot;, line 144, in think
+    func( self.driver )
+  File &quot;/home/test/script_converter/out/test_script/run_test.py&quot;, line 30, in test_func
+    waitToDisappear( driver, &#39;AmountPage_Row_27&#39; )
+  File &quot;/home/test/script_converter/out/test_script/includes/libs/sw/utils.py&quot;, line 212, in waitToDisappear
+    sleepwait( driver, element, type, kwargs )
+  TypeError: sleepwait() takes exactly 3 arguments (4 given)
+[14:16:08] (NOTICE)   Stopping child process: &quot;RESTARTING&quot;
+</pre></div>
+</div>
+<p>The highlighted line shows where the screenshot was written to, <tt class="docutils literal"><span class="pre">error_#.png</span></tt>. Every new error increases #.</p>
 </div>
 </div>
 
@@ -240,6 +427,10 @@ as the converter turns the directives into functions after conversion.</p>
 <li><a class="reference internal" href="#usage">Usage</a></li>
 <li><a class="reference internal" href="#directives">Directives</a></li>
 <li><a class="reference internal" href="#options-directives">Options Directives</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#wrapper">Wrapper</a><ul>
+<li><a class="reference internal" href="#logging">Logging</a></li>
 </ul>
 </li>
 </ul>
@@ -278,6 +469,9 @@ as the converter turns the directives into functions after conversion.</p>
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
         <li class="right" >
           <a href="sw.wrapper.html" title="Wrapper Module sw.wrapper"
              >next</a> |</li>

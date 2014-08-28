@@ -47,46 +47,6 @@
           <div class="body">
             
   <h1>Source code for sw.utils</h1><div class="highlight"><pre>
-<span class="sd">&quot;&quot;&quot;This module primarily serves as a holder for all directly webdriver-facing functions. These functions</span>
-<span class="sd">   usually serve only the purpose of interfacing with elements on the page and possibly logging when an </span>
-<span class="sd">   error occurs. A lot of the code of these functions revolves around waiting.</span>
-
-<span class="sd">   .. _common-params:</span>
-
-<span class="sd">   -----------------</span>
-<span class="sd">   Common Parameters</span>
-<span class="sd">   -----------------</span>
-<span class="sd">   These parameters apply for functions in this module which link back to this documentation. In particular:</span>
-<span class="sd">   :func:`sleepwait`, :func:`waitToDisappear`, and :func:`exists`.</span>
-
-<span class="sd">   :Common Params:</span>
-<span class="sd">     * **driver** -- The webdriver instance that is being acted on by this script.</span>
-<span class="sd">     * **element** -- An identifier for the element to search for.</span>
-<span class="sd">     * **type** -- The type of `element`&#39;s identifier. </span>
-<span class="sd">     </span>
-<span class="sd">   :Common Kwargs: </span>
-<span class="sd">     * **timeout** (*15*) -- The amount of time, in seconds, before continuing on if the element is not found. Note that in</span>
-<span class="sd">       some functions, such as :func:`sleepwait`, this can be fatal to the script. A timeout in sleepwait will cause the </span>
-<span class="sd">       script to either kill the child process (if `die` is enabled) or return `None` which webdriver cannot interface with.</span>
-<span class="sd">     * **lightConfirm** (*False*) -- Only checks if an element exists, does not verify if it is enabled or visible. This saves</span>
-<span class="sd">       some CPU usage but can be dangerous in the case of a disabled web prompt.</span>
-<span class="sd">     * **cache** (*True*) -- Determines if elements will be cached internally within our :mod:`sw.child` process. This uses</span>
-<span class="sd">       RAM over the a single run of the script, but has been shown to have speed savings in situations with a great deal</span>
-<span class="sd">       of waiting. See :mod:`sw.cache` for more information.</span>
-<span class="sd">     * **url** (*driver.current_url*) -- Current URL of the page webdriver is on. If this is not specified it is pulled from our</span>
-<span class="sd">       webdriver every time, which can get expensive over the lifetime of a script with a lot of waiting. This is only used if</span>
-<span class="sd">       `cache` is enabled and is otherwise ignored.</span>
-<span class="sd">     * **thinkTime** (*child.sleepTime*) -- The time the script waits between polling for an element&#39;s existance. This is usually </span>
-<span class="sd">       the child&#39;s sleep time, but for :func:`waitToDisappear` it is twice that.</span>
-<span class="sd">     * **die** (*True*) -- Whether or not the function kills the child if this is not found. Even if False, in the case of :func:`sleepwait`</span>
-<span class="sd">       at least, there will usually be a fatal error anyway, especially if a :py:class:`~selenium.webdriver.remote.webelement.WebElement` </span>
-<span class="sd">       is expected to be returned. :func:`sleepwait` typically returns a :py:class:`~selenium.webdriver.remote.webelement.WebElement`</span>
-<span class="sd">       but if the element is not found (and `die` is False) returns None. </span>
-<span class="sd"> </span>
-<span class="sd">   ---------</span>
-<span class="sd">   Functions</span>
-<span class="sd">   ---------</span>
-<span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">time</span><span class="o">,</span> <span class="nn">traceback</span>
 <span class="kn">from</span> <span class="nn">const</span> <span class="kn">import</span> <span class="o">*</span>
 
@@ -222,7 +182,7 @@
     
     <span class="n">e</span> <span class="o">=</span> <span class="n">exists</span><span class="p">(</span> <span class="n">driver</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="n">cache</span><span class="p">,</span> <span class="n">lightConfirm</span><span class="o">=</span><span class="n">lightConfirm</span> <span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">e</span><span class="p">:</span>
-        <span class="n">driver</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Beginning wait for element</span><span class="se">\&quot;</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="s">&quot;</span><span class="se">\&quot;</span><span class="s"> of type </span><span class="se">\&quot;</span><span class="s">&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="s">&quot;</span><span class="se">\&quot;</span><span class="s">.&quot;</span> <span class="p">]</span> <span class="p">),</span> <span class="n">NOTICE</span> <span class="p">)</span>
+        <span class="n">driver</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Beginning wait for element </span><span class="se">\&quot;</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="s">&quot;</span><span class="se">\&quot;</span><span class="s"> of type </span><span class="se">\&quot;</span><span class="s">&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="s">&quot;</span><span class="se">\&quot;</span><span class="s">.&quot;</span> <span class="p">]</span> <span class="p">),</span> <span class="n">NOTICE</span> <span class="p">)</span>
 
         <span class="k">while</span> <span class="ow">not</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">)</span> <span class="o">-</span> <span class="n">start</span> <span class="o">&gt;</span> <span class="n">timeout</span><span class="p">:</span> 
@@ -246,7 +206,7 @@
 
 </div>
 <div class="viewcode-block" id="sendKeys"><a class="viewcode-back" href="../../sw.utils.html#sw.utils.sendKeys">[docs]</a><span class="k">def</span> <span class="nf">sendKeys</span><span class="p">(</span> <span class="n">driver</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">text</span> <span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Drop in, faster replacement for :py:meth:`~selenium.webdriver.remote.webelement.WebElement.send_keys`. Currently </span>
+    <span class="sd">&quot;&quot;&quot;Drop in, faster replacement for :py:func:`~selenium.webdriver.remote.webelement.WebElement.send_keys`. Currently </span>
 <span class="sd">       only supports fields with an `id` or `name` identifier. </span>
 
 <span class="sd">       :Parameters:</span>
@@ -316,7 +276,7 @@
             <span class="k">return</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">recur</span><span class="p">:</span>
-                <span class="n">driver</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Waiting for </span><span class="se">\&quot;</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="s">&quot;</span><span class="se">\&quot;</span><span class="s">&quot;</span> <span class="p">]</span> <span class="p">),</span> <span class="n">INFO</span> <span class="p">)</span>
+                <span class="n">driver</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Waiting for </span><span class="se">\&quot;</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="s">&quot;</span><span class="se">\&quot;</span><span class="s">.&quot;</span> <span class="p">]</span> <span class="p">),</span> <span class="n">INFO</span> <span class="p">)</span>
             <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span> <span class="n">thinkTime</span> <span class="p">)</span>
 
         <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;die&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">die</span>

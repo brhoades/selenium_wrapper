@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Child Pool Module sw.pool &mdash; selenium_wrapper 0.1 documentation</title>
+    <title>Child Module sw.child &mdash; selenium_wrapper 0.1 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -25,7 +25,7 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="selenium_wrapper 0.1 documentation" href="index.html" />
     <link rel="next" title="ElementCache Module sw.cache" href="sw.cache.html" />
-    <link rel="prev" title="Wrapper Module sw.wrapper" href="sw.wrapper.html" /> 
+    <link rel="prev" title="Child Pool Module sw.pool" href="sw.pool.html" /> 
   </head>
   <body>
     <div class="related">
@@ -41,7 +41,7 @@
           <a href="sw.cache.html" title="ElementCache Module sw.cache"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="sw.wrapper.html" title="Wrapper Module sw.wrapper"
+          <a href="sw.pool.html" title="Child Pool Module sw.pool"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">selenium_wrapper 0.1 documentation</a> &raquo;</li> 
       </ul>
@@ -52,58 +52,126 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="module-sw.pool">
-<span id="child-pool-module-sw-pool"></span><h1>Child Pool Module <a class="reference internal" href="#module-sw.pool" title="sw.pool"><tt class="xref py py-mod docutils literal"><span class="pre">sw.pool</span></tt></a><a class="headerlink" href="#module-sw.pool" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="child-module-sw-child">
+<h1>Child Module <a class="reference internal" href="#module-sw.child" title="sw.child"><tt class="xref py py-mod docutils literal"><span class="pre">sw.child</span></tt></a><a class="headerlink" href="#child-module-sw-child" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-sw.child">
+<span id="classes"></span><h2>Classes<a class="headerlink" href="#module-sw.child" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
-<dt id="sw.pool.Pool">
-<em class="property">class </em><tt class="descclassname">sw.pool.</tt><tt class="descname">Pool</tt><big>(</big><em>numChildren</em>, <em>numJobs</em>, <em>func</em>, <em>file</em>, <em>kwargs</em><big>)</big><a class="reference internal" href="_modules/sw/pool.html#Pool"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.pool.Pool" title="Permalink to this definition">¶</a></dt>
-<dd><p>Stores parameters across all children, sets out log directory, initializes our data arrays,
-records start times, and pops <cite>numJobs</cite> functions into a Queue. Abstracts and makes it easier to
-manage scores of child processes. Also has a <a class="reference internal" href="#sw.pool.Pool.think" title="sw.pool.Pool.think"><tt class="xref py py-func docutils literal"><span class="pre">think()</span></tt></a> process to continuously manage them.</p>
+<dt id="sw.child.Child">
+<em class="property">class </em><tt class="descclassname">sw.child.</tt><tt class="descname">Child</tt><big>(</big><em>cq</em>, <em>wq</em>, <em>num</em>, <em>log</em>, <em>options</em><big>)</big><a class="reference internal" href="_modules/sw/child.html#Child"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.child.Child" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes our child and then starts it. It takes our pool&#8217;s childqueue, our pool&#8217;s workqueue,
+our child&#8217;s number to report back statuses, our base log directory, and a collection of options.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>numChildren</strong> &#8211; Number of children the pool will start with.</li>
-<li><strong>numJobs</strong> &#8211; Number of jobs to fill our work queue with.</li>
-<li><strong>func</strong> &#8211; The function reference that will be put into our work queue <cite>numJobs</cite> times.</li>
-<li><strong>file</strong> &#8211; Filename with directory of our script which contained <cite>func</cite>. This is used to create a relative log directory.</li>
-<li><strong>kwargs</strong> &#8211; Kwargs dict passed to <tt class="xref py py-func docutils literal"><span class="pre">main()</span></tt>, eventually passes arguments on to GhostDriver. 
-&#8216;staggered&#8217; is pulled from this dict if it exists.</li>
+<li><strong>cq</strong> &#8211; ChildQueue, this is passed from <a class="reference internal" href="sw.pool.html#module-sw.pool" title="sw.pool"><tt class="xref py py-class docutils literal"><span class="pre">sw.pool</span></tt></a> and is used to transmit the status of the child
+to our pool.</li>
+<li><strong>wq</strong> &#8211; WorkQueue, also passed from <a class="reference internal" href="sw.pool.html#module-sw.pool" title="sw.pool"><tt class="xref py py-class docutils literal"><span class="pre">sw.pool</span></tt></a> and child pops a function off of it to run (a job) 
+when it finishes a job / starts initially.</li>
+<li><strong>num</strong> &#8211; Number of the child relevant to <a class="reference internal" href="sw.pool.html#module-sw.pool" title="sw.pool"><tt class="xref py py-class docutils literal"><span class="pre">sw.pool</span></tt></a>&#8216;s self.data array. This index is used to 
+easily communicate results and relate them to the child in that array. <cite>num</cite> is also used when printing
+out a status message.</li>
+<li><strong>log</strong> &#8211; Base log directory which a child will create a <cite>num</cite>-<cite>self.run</cite> folder in to log to.</li>
+<li><strong>options</strong> &#8211; Dict from kwargs which contains directives to pass to GhostDriver.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Pool (self)</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Child (self)</p>
 </td>
 </tr>
 </tbody>
 </table>
 <dl class="method">
-<dt id="sw.pool.Pool.done">
-<tt class="descname">done</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sw/pool.html#Pool.done"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.pool.Pool.done" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a True/False if the pool is done processing jobs. Called continuously by our main 
-loop. When False, the program terminates.</p>
+<dt id="sw.child.Child.is_alive">
+<tt class="descname">is_alive</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sw/child.html#Child.is_alive"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.child.Child.is_alive" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if the child&#8217;s process is still running, if it is then it returns True, otherwise False.
+There&#8217;s a check for if the process is None, which is set when a child terminates.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Boolean for if there are children still running work.</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Boolean for if Child process is still active (different from if a child is processing data).</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
 <dl class="method">
-<dt id="sw.pool.Pool.newChild">
-<tt class="descname">newChild</tt><big>(</big><em>i=None</em><big>)</big><a class="reference internal" href="_modules/sw/pool.html#Pool.newChild"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.pool.Pool.newChild" title="Permalink to this definition">¶</a></dt>
-<dd><p>Creates a new <tt class="xref py py-class docutils literal"><span class="pre">child</span></tt> which will in turn start itself. If i is none, it grabs the next available array
-index, assuming it was initialized for this many children (will grab an index that doesn&#8217;t exist if not).</p>
+<dt id="sw.child.Child.is_done">
+<tt class="descname">is_done</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sw/child.html#Child.is_done"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.child.Child.is_done" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if a child is done. When a child process is finished its self.proc is set to None.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>i</strong> (<em>None</em>) &#8211; Index for child process within pool&#8217;s data structure.</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Boolean for if Child is finished processing data. This is usually signal to kill the subprocess.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sw.child.Child.logError">
+<tt class="descname">logError</tt><big>(</big><em>e</em>, <em>noScreenshot=False</em><big>)</big><a class="reference internal" href="_modules/sw/child.html#Child.logError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.child.Child.logError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Log Screenshot of Error with Exception
+Renders a screenshot of what it sees then writes it to our log directory as error_#.png
+Also takes the exception we received and exports it as text</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>e</strong> &#8211; Unicode json-encoded string from a webdriver-thrown error.</li>
+<li><strong>noScreenshot</strong> (<em>False</em>) &#8211; Whether or not to take a screenshot of the error.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sw.child.Child.logMsg">
+<tt class="descname">logMsg</tt><big>(</big><em>e</em>, <em>level=0</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/sw/child.html#Child.logMsg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.child.Child.logMsg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes to our message log if level is greater than or equal to our level (in self.log).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>e</strong> &#8211; The message to be written to the log.</li>
+<li><strong>level</strong> (<em>NOTICE</em>) &#8211; This determines whether or not the error message will be logged according to the
+level set in self.level. If this error is not greater or equal to the level specified in self.level,
+it is not printed. If it is, the message is printed into log.txt with the level specified by the timestamp.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Kwargs:</th><td class="field-body"><ul class="first simple">
+<li><strong>locals</strong> (<em>None</em>): Optional locals dict to print out cleanly.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sw.child.Child.msg">
+<tt class="descname">msg</tt><big>(</big><em>message</em><big>)</big><a class="reference internal" href="_modules/sw/child.html#Child.msg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.child.Child.msg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Formats a message for this child to be printed out.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>msg</strong> &#8211; The message to be printed out to the console.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">None</td>
 </tr>
@@ -112,16 +180,14 @@ index, assuming it was initialized for this many children (will grab an index th
 </dd></dl>
 
 <dl class="method">
-<dt id="sw.pool.Pool.reportStatistics">
-<tt class="descname">reportStatistics</tt><big>(</big><em>force=False</em><big>)</big><a class="reference internal" href="_modules/sw/pool.html#Pool.reportStatistics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.pool.Pool.reportStatistics" title="Permalink to this definition">¶</a></dt>
-<dd><p>Translates statistics into the archaic form used by the <a class="reference internal" href="sw.formatting.html#sw.formatting.stats" title="sw.formatting.stats"><tt class="xref py py-func docutils literal"><span class="pre">sw.formatting.stats()</span></tt></a>.
-Map and reduce are used to get things quickly out of the self.data 2-d array. This function
-is only called every self.timePerReport seconds as set in this class&#8217;s initialization func.</p>
+<dt id="sw.child.Child.restart">
+<tt class="descname">restart</tt><big>(</big><em>msg='restarting'</em><big>)</big><a class="reference internal" href="_modules/sw/child.html#Child.restart"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.child.Child.restart" title="Permalink to this definition">¶</a></dt>
+<dd><p>Restarts the child process and gets webdriver running again.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>force</strong> (<em>False</em>) &#8211; Forces a report of statistics. Only called by the script itself when done.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>msg</strong> (<em>&#8220;RESTARTING&#8221;</em>) &#8211; A message to print out in parenenthesis.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">None</td>
 </tr>
@@ -130,9 +196,27 @@ is only called every self.timePerReport seconds as set in this class&#8217;s ini
 </dd></dl>
 
 <dl class="method">
-<dt id="sw.pool.Pool.stop">
-<tt class="descname">stop</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sw/pool.html#Pool.stop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.pool.Pool.stop" title="Permalink to this definition">¶</a></dt>
-<dd><p>Stops the pool cleanly and terminates all the children in it.</p>
+<dt id="sw.child.Child.screenshot">
+<tt class="descname">screenshot</tt><big>(</big><em>level=0</em><big>)</big><a class="reference internal" href="_modules/sw/child.html#Child.screenshot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.child.Child.screenshot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves a screenshot to <cite>num</cite>-<cite>run</cite>/error_#.png and prints a message into the log specifying the file logged to.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>level</strong> (<em>NOTICE</em>) &#8211; This determines whether or not the error message will be logged according to the
+level set in self.level. The screenshot will print anyway. If this error is not greater or equal to the level specified in self.level,
+it is not printed. If it is, the message is printed into log.txt with the level specified by the timestamp.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sw.child.Child.start">
+<tt class="descname">start</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sw/child.html#Child.start"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.child.Child.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Starts our child process off properly, used after a restart typically.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -144,10 +228,28 @@ is only called every self.timePerReport seconds as set in this class&#8217;s ini
 </dd></dl>
 
 <dl class="method">
-<dt id="sw.pool.Pool.think">
-<tt class="descname">think</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sw/pool.html#Pool.think"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.pool.Pool.think" title="Permalink to this definition">¶</a></dt>
-<dd><p>Runs through a single think loop; called by <tt class="xref py py-func docutils literal"><span class="pre">sw.mainmainLoop()</span></tt> until there is no more work remaining.
-Check children are alive/restart if there are more jobs. Checks queues and parses any data.</p>
+<dt id="sw.child.Child.stop">
+<tt class="descname">stop</tt><big>(</big><em>msg=''</em><big>)</big><a class="reference internal" href="_modules/sw/child.html#Child.stop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.child.Child.stop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stops a child process properly and sets its self.proc to None. Optionally takes a message
+to print out.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>msg</strong> (<em>&#8220;&#8221;</em>) &#8211; A message to show in parenthesis on the console next to <tt class="docutils literal"><span class="pre">Child</span> <span class="pre">#:</span> <span class="pre">STOPPING</span> <span class="pre">(msg)</span></tt>.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sw.child.Child.think">
+<tt class="descname">think</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sw/child.html#Child.think"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.child.Child.think" title="Permalink to this definition">¶</a></dt>
+<dd><p>The meat of the wrapper, where the main thinking is done. Takes no arguments, just reads from 
+self variables set in <tt class="xref py py-class docutils literal"><span class="pre">sw.Child</span></tt>. PhantomJS is added into the python path by run.bat, so
+that is already handled.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -160,6 +262,25 @@ Check children are alive/restart if there are more jobs. Checks queues and parse
 
 </dd></dl>
 
+<dl class="class">
+<dt id="sw.child.PhantomJSNoImages">
+<em class="property">class </em><tt class="descclassname">sw.child.</tt><tt class="descname">PhantomJSNoImages</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/sw/child.html#PhantomJSNoImages"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.child.PhantomJSNoImages" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">selenium.webdriver.phantomjs.service.Service</span></tt></p>
+<p>This class sits atop our PhantomJSService class included in webdriver to implemention service_args
+inclusion, which we pass by default &#8211;load-images=no to disable images.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>PhantomJSService</strong> &#8211; Pass this function the PhantomJSService class so that it can patch on top of it.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">PhantomJsNoImages (self)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
 </div>
 
 
@@ -168,9 +289,17 @@ Check children are alive/restart if there are more jobs. Checks queues and parse
       </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Child Module <tt class="docutils literal"><span class="pre">sw.child</span></tt></a><ul>
+<li><a class="reference internal" href="#module-sw.child">Classes</a></li>
+</ul>
+</li>
+</ul>
+
   <h4>Previous topic</h4>
-  <p class="topless"><a href="sw.wrapper.html"
-                        title="previous chapter">Wrapper Module <tt class="docutils literal"><span class="pre">sw.wrapper</span></tt></a></p>
+  <p class="topless"><a href="sw.pool.html"
+                        title="previous chapter">Child Pool Module <tt class="docutils literal"><span class="pre">sw.pool</span></tt></a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="sw.cache.html"
                         title="next chapter">ElementCache Module <tt class="docutils literal"><span class="pre">sw.cache</span></tt></a></p>
@@ -209,7 +338,7 @@ Check children are alive/restart if there are more jobs. Checks queues and parse
           <a href="sw.cache.html" title="ElementCache Module sw.cache"
              >next</a> |</li>
         <li class="right" >
-          <a href="sw.wrapper.html" title="Wrapper Module sw.wrapper"
+          <a href="sw.pool.html" title="Child Pool Module sw.pool"
              >previous</a> |</li>
         <li><a href="index.html">selenium_wrapper 0.1 documentation</a> &raquo;</li> 
       </ul>
