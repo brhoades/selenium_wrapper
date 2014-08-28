@@ -12,7 +12,7 @@ error occurs. A lot of the code of these functions revolves around waiting.
 Common Parameters
 *****************
 These parameters apply for functions in this module which link back to this documentation. In particular:
-:func:`sleepwait`, :func:`waitToDisappear`, and :func:`exists`.
+:py:func:`~sw.utils.sleepwait`, :py:func:`~sw.utils.waitToDisappear`, and :py:func:`~sw.utils.exists`.
 
 :Common Params:
   * **driver** -- The webdriver instance that is being acted on by this script.
@@ -21,7 +21,7 @@ These parameters apply for functions in this module which link back to this docu
   
 :Common Kwargs: 
   * **timeout** (*15*) -- The amount of time, in seconds, before continuing on if the element is not found. Note that in
-    some functions, such as :func:`sleepwait`, this can be fatal to the script. A timeout in sleepwait will cause the 
+    some functions, such as :py:func:`~sw.utils.sleepwait`, this can be fatal to the script. A timeout in sleepwait will cause the 
     script to either kill the child process (if `die` is enabled) or return `None` which webdriver cannot interface with.
   * **lightConfirm** (*False*) -- Only checks if an element exists, does not verify if it is enabled or visible. This saves
     some CPU usage but can be dangerous in the case of a disabled web prompt.
@@ -32,10 +32,10 @@ These parameters apply for functions in this module which link back to this docu
     webdriver every time, which can get expensive over the lifetime of a script with a lot of waiting. This is only used if
     `cache` is enabled and is otherwise ignored.
   * **thinkTime** (*child.sleepTime*) -- The time the script waits between polling for an element's existance. This is usually 
-    the child's sleep time, but for :func:`waitToDisappear` it is twice that.
-  * **die** (*True*) -- Whether or not the function kills the child if this is not found. Even if False, in the case of :func:`sleepwait`
+    the child's sleep time, but for :py:func:`~sw.utils.waitToDisappear` it is twice that.
+  * **die** (*True*) -- Whether or not the function kills the child if this is not found. Even if False, in the case of :py:func:`~sw.utils.sleepwait`
     at least, there will usually be a fatal error anyway, especially if a :py:class:`~selenium.webdriver.remote.webelement.WebElement` 
-    is expected to be returned. :func:`sleepwait` typically returns a :py:class:`~selenium.webdriver.remote.webelement.WebElement`
+    is expected to be returned. :py:func:`~sw.utils.sleepwait` typically returns a :py:class:`~selenium.webdriver.remote.webelement.WebElement`
     but if the element is not found (and `die` is False) returns None. 
  
 *********

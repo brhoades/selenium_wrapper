@@ -114,7 +114,7 @@ def sleepwait( driver, element, type, **kwargs ):
          * :ref:`type <common-params>`
 
        :Kwargs:
-         * :ref:`die <common-params>` -- This is only passed to subfunctions. :py:func:`waitToDisappear` never ends the script if something does not
+         * :ref:`die <common-params>` -- This is only passed to subfunctions. :py:func:`~util.waitToDisappear` never ends the script if something does not
             disappear.
          * :ref:`timeout <common-params>`
          * :ref:`thinkTime <common-params>`
@@ -186,7 +186,7 @@ def waitToDisappear( driver, element, **kwargs ):
           * :ref:`element <common-params>`
        :Kwargs:
          * :ref:`type <common-params>` (*"id"*)
-         * :ref:`die <common-params>` -- This is only passed to subfunctions. :py:func:`waitToDisappear` never ends the script if something does not
+         * :ref:`die <common-params>` -- This is only passed to subfunctions. :py:func:`~util.waitToDisappear` never ends the script if something does not
            disappear.
        :(wait-related):
          * :ref:`timeout <common-params>` (*60*)
