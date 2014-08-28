@@ -28,7 +28,7 @@ computers.
 Installation
 ************
 
-If initializing a brand new installation and not having a prepackaged converter, first checkout
+When initializing a brand new installation and not having a prepackaged converter, first checkout
 the repository::
 
   git clone https://github.com/brhoades/selenium_wrapper.git
@@ -233,7 +233,8 @@ to get it running. Below is a real test run of a script::
 Running ``run.bat`` on Windows will present the user with questions for how the script will operate. 
 It simply passes arguments on to ``run_test.py``, with the order discussed below.
 
-.. code-block::
+.. code-block:: none
+
   Number of Children (3): 3
 
 The number of children determines the number of concurrent `PhantomJS` processes the script will run.
@@ -241,13 +242,15 @@ Although the default number is 3, users with a more powerful processor will find
 of running over 20, though this varies wildly with the script ran. This is largely dependent on processing
 power but about 50-70 Mb of RAM is used as well.
 
-.. code-block::
+.. code-block:: none
+
   Number of Jobs to Run (3): 3
 
 The jobs option determines the number of times the recorded script will run. Every child process 
 will pull from a job queue (of this length) when it starts and will do so until the queue is empty 
 
-.. code-block::
+.. code-block:: none
+
   Stagger Children Spawning (n): n
 
 The last option, staggered child spawning, is intended to distribute load throughout a site more evenly. 
@@ -263,3 +266,96 @@ It pulls the default options internally for the script.
 Standard argument order and format is like so::
 
   python out/example_script.py <number of jobs> <number of children> <staggered (y/n)>
+
+*******
+Logging
+*******
+
+Logging is automatically performed and there is currently not an option to turn it off. All logs
+are within a timestamped folder in ``logs/``. Each child will create its own log in 
+``logs/<timestamp>/log-#.log``, where the number is the child's number printed to the console. This 
+log will contain detailed information about errors, time taken, and the status of the script. Logging
+level is not currently easily configurable, but can be seen in ``conversion_files/includes/libs/sw/child.py``:
+
+.. literalinclude:: sw/child.py
+   :language: python
+   :lines: 51-58 
+   :emphasize-lines: 5 
+
+There are several levels as seen in ``conversion_files/includes/libs/sw/const.py``:
+
+.. literalinclude:: sw/const.py
+   :lines: 35-45 
+   :language: python
+
+With the lowest log level, ``INFO``, this is an example of a log that is prepared:
+
+.. code-block:: none
+
+  [15:37:14] (NOTICE)   Child process started and loaded
+  [15:37:20] (NOTICE)   Beginning wait for element "accounts" of type "link_text".
+  [15:37:35] (NOTICE)   Beginning wait for element "OrderPage_Row_6" of type "name".
+  [15:37:42] (NOTICE)   Beginning wait for element "clear_overlay" of type "id".
+  [15:37:46] (NOTICE)   In waitToDisappear "clear_overlay" was never there to begin with.
+  [15:37:46] (INFO)     Waiting for "clear_overlay"
+  [15:37:49] (INFO)     Element "clear_overlay" disappeared!
+  [15:37:50] (NOTICE)   Beginning wait for element "clear_overlay" of type "id".
+  [15:37:54] (NOTICE)   In waitToDisappear "clear_overlay" was never there to begin with.
+  [15:37:57] (NOTICE)   Beginning wait for element "AmountPage_Row_27" of type "name".
+  [15:38:02] (INFO)     Waiting for "clear_overlay"
+  [15:38:04] (INFO)     Element "clear_overlay" disappeared!
+  [15:38:05] (NOTICE)   Beginning wait for element "clear_overlay" of type "id".
+  [15:38:08] (NOTICE)   In waitToDisappear "clear_overlay" was never there to begin with.
+  [15:38:08] (INFO)     Waiting for "clear_overlay"
+  [15:38:10] (INFO)     Element "clear_overlay" disappeared!
+  [15:38:10] (INFO)     Waiting for "clear_overlay"
+  [15:38:13] (INFO)     Element "clear_overlay" disappeared!
+  [15:38:13] (NOTICE)   Beginning wait for element "clear_overlay" of type "id".
+  [15:38:16] (NOTICE)   In waitToDisappear "clear_overlay" was never there to begin with.
+  [15:38:17] (INFO)     Waiting for "clear_overlay"
+  [15:38:19] (INFO)     Element "clear_overlay" disappeared!
+  [15:38:19] (INFO)     Waiting for "clear_overlay"
+  [15:38:21] (INFO)     Element "clear_overlay" disappeared!
+  [15:38:22] (NOTICE)   Beginning wait for element "clear_overlay" of type "id".
+  [15:38:25] (NOTICE)   In waitToDisappear "clear_overlay" was never there to begin with.
+  [15:38:25] (INFO)     Waiting for "clear_overlay"
+  [15:38:27] (INFO)     Element "clear_overlay" disappeared!
+  ===================== <More Waiting>
+  [15:39:18] (INFO)     Waiting for "clear_overlay"
+  [15:39:25] (INFO)     Element "clear_overlay" disappeared!
+  [15:39:36] (NOTICE)   Successfully finished job (141.878000021s)
+  [15:39:36] (NOTICE)   Stopping child process: "DONE"
+
+On the lowest log level, the wrapper gives a great deal of information about where it is waiting
+for debugging purposes. Waits are only documented if they are engaged; if an element can already
+be selected, no time is wasted waiting and the script directly interacts with it. The timestamp 
+on the far left is the exact time in which the message was printed, the next field is the log level
+that this was printed at--- if ``child.level`` were greater than this, it wouldn't print. The final
+field is the message itself.
+
+Also placed within the log directory are any screenshots that were taken either as a directive 
+within the script or for an error. Any time a screenshot is created, it is noted in the respective
+child's log file where it was stored and at what time. For example, here is a log where an error was
+encountered:
+
+.. code-block:: none 
+  :emphasize-lines: 6 
+  
+  [14:15:48] (NOTICE)   Child process started and loaded
+  [14:15:52] (NOTICE)   Beginning wait for element "Accounts" of type "link_text".
+  [14:15:57] (NOTICE)   Choosing grower #16
+  [15:37:57] (NOTICE)   Beginning wait for element "AmountPage_Row_27" of type "name".
+  [14:16:07] (ERROR)    'sleepwait() takes exactly 3 arguments (4 given)'
+  [14:16:08] (ERROR)    Wrote screenshot to: /home/test/script_converter/out/test_script/logs/2014-08-26_14-15-45/error_0.png
+  [14:16:08] (ERROR)    Stack trace: Traceback (most recent call last):
+    File "/home/test/script_converter/out/test_script/includes/libs/sw/child.py", line 144, in think
+      func( self.driver )
+    File "/home/test/script_converter/out/test_script/run_test.py", line 30, in test_func
+      waitToDisappear( driver, 'AmountPage_Row_27' )
+    File "/home/test/script_converter/out/test_script/includes/libs/sw/utils.py", line 212, in waitToDisappear
+      sleepwait( driver, element, type, kwargs )
+    TypeError: sleepwait() takes exactly 3 arguments (4 given)
+  [14:16:08] (NOTICE)   Stopping child process: "RESTARTING"  
+
+The highlighted line shows where the screenshot was written to, ``error_#.png``. Every new error increases #.
+ 
