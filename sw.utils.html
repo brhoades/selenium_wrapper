@@ -60,7 +60,7 @@ error occurs. A lot of the code of these functions revolves around waiting.</p>
 <div class="section" id="common-parameters">
 <span id="common-params"></span><h2>Common Parameters<a class="headerlink" href="#common-parameters" title="Permalink to this headline">¶</a></h2>
 <p>These parameters apply for functions in this module which link back to this documentation. In particular:
-<tt class="xref py py-func docutils literal"><span class="pre">sleepwait()</span></tt>, <tt class="xref py py-func docutils literal"><span class="pre">waitToDisappear()</span></tt>, and <tt class="xref py py-func docutils literal"><span class="pre">exists()</span></tt>.</p>
+<a class="reference internal" href="#sw.utils.sleepwait" title="sw.utils.sleepwait"><tt class="xref py py-func docutils literal"><span class="pre">sleepwait()</span></tt></a>, <a class="reference internal" href="#sw.utils.waitToDisappear" title="sw.utils.waitToDisappear"><tt class="xref py py-func docutils literal"><span class="pre">waitToDisappear()</span></tt></a>, and <a class="reference internal" href="#sw.utils.exists" title="sw.utils.exists"><tt class="xref py py-func docutils literal"><span class="pre">exists()</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -74,7 +74,7 @@ error occurs. A lot of the code of these functions revolves around waiting.</p>
 </tr>
 <tr class="field-even field"><th class="field-name">Common Kwargs:</th><td class="field-body"><ul class="first last simple">
 <li><strong>timeout</strong> (<em>15</em>) &#8211; The amount of time, in seconds, before continuing on if the element is not found. Note that in
-some functions, such as <tt class="xref py py-func docutils literal"><span class="pre">sleepwait()</span></tt>, this can be fatal to the script. A timeout in sleepwait will cause the
+some functions, such as <a class="reference internal" href="#sw.utils.sleepwait" title="sw.utils.sleepwait"><tt class="xref py py-func docutils literal"><span class="pre">sleepwait()</span></tt></a>, this can be fatal to the script. A timeout in sleepwait will cause the
 script to either kill the child process (if <cite>die</cite> is enabled) or return <cite>None</cite> which webdriver cannot interface with.</li>
 <li><strong>lightConfirm</strong> (<em>False</em>) &#8211; Only checks if an element exists, does not verify if it is enabled or visible. This saves
 some CPU usage but can be dangerous in the case of a disabled web prompt.</li>
@@ -85,10 +85,10 @@ of waiting. See <a class="reference internal" href="sw.cache.html#module-sw.cach
 webdriver every time, which can get expensive over the lifetime of a script with a lot of waiting. This is only used if
 <cite>cache</cite> is enabled and is otherwise ignored.</li>
 <li><strong>thinkTime</strong> (<em>child.sleepTime</em>) &#8211; The time the script waits between polling for an element&#8217;s existance. This is usually
-the child&#8217;s sleep time, but for <tt class="xref py py-func docutils literal"><span class="pre">waitToDisappear()</span></tt> it is twice that.</li>
-<li><strong>die</strong> (<em>True</em>) &#8211; Whether or not the function kills the child if this is not found. Even if False, in the case of <tt class="xref py py-func docutils literal"><span class="pre">sleepwait()</span></tt>
+the child&#8217;s sleep time, but for <a class="reference internal" href="#sw.utils.waitToDisappear" title="sw.utils.waitToDisappear"><tt class="xref py py-func docutils literal"><span class="pre">waitToDisappear()</span></tt></a> it is twice that.</li>
+<li><strong>die</strong> (<em>True</em>) &#8211; Whether or not the function kills the child if this is not found. Even if False, in the case of <a class="reference internal" href="#sw.utils.sleepwait" title="sw.utils.sleepwait"><tt class="xref py py-func docutils literal"><span class="pre">sleepwait()</span></tt></a>
 at least, there will usually be a fatal error anyway, especially if a <a class="reference external" href="http://selenium-python.readthedocs.org/en/latest/api.html#selenium.webdriver.remote.webelement.WebElement" title="(in Selenium Python Bindings v2)"><tt class="xref py py-class docutils literal"><span class="pre">WebElement</span></tt></a>
-is expected to be returned. <tt class="xref py py-func docutils literal"><span class="pre">sleepwait()</span></tt> typically returns a <a class="reference external" href="http://selenium-python.readthedocs.org/en/latest/api.html#selenium.webdriver.remote.webelement.WebElement" title="(in Selenium Python Bindings v2)"><tt class="xref py py-class docutils literal"><span class="pre">WebElement</span></tt></a>
+is expected to be returned. <a class="reference internal" href="#sw.utils.sleepwait" title="sw.utils.sleepwait"><tt class="xref py py-func docutils literal"><span class="pre">sleepwait()</span></tt></a> typically returns a <a class="reference external" href="http://selenium-python.readthedocs.org/en/latest/api.html#selenium.webdriver.remote.webelement.WebElement" title="(in Selenium Python Bindings v2)"><tt class="xref py py-class docutils literal"><span class="pre">WebElement</span></tt></a>
 but if the element is not found (and <cite>die</cite> is False) returns None.</li>
 </ul>
 </td>
@@ -254,7 +254,7 @@ sleeps until timeout for it. It always returns something, even if it fails.</p>
 </tr>
 <tr class="field-even field"><th class="field-name">Kwargs:</th><td class="field-body"><ul class="first">
 <li><dl class="first docutils">
-<dt><a class="reference internal" href="#common-params"><em>die</em></a> &#8211; This is only passed to subfunctions. <a class="reference internal" href="#sw.utils.waitToDisappear" title="sw.utils.waitToDisappear"><tt class="xref py py-func docutils literal"><span class="pre">waitToDisappear()</span></tt></a> never ends the script if something does not</dt>
+<dt><a class="reference internal" href="#common-params"><em>die</em></a> &#8211; This is only passed to subfunctions. <tt class="xref py py-func docutils literal"><span class="pre">waitToDisappear()</span></tt> never ends the script if something does not</dt>
 <dd><p class="first last">disappear.</p>
 </dd>
 </dl>
@@ -297,7 +297,7 @@ and call itself again to wait longer.</p>
 </tr>
 <tr class="field-even field"><th class="field-name">Kwargs:</th><td class="field-body"><ul class="first simple">
 <li><a class="reference internal" href="#common-params"><em>type</em></a> (<em>&#8220;id&#8221;</em>)</li>
-<li><a class="reference internal" href="#common-params"><em>die</em></a> &#8211; This is only passed to subfunctions. <a class="reference internal" href="#sw.utils.waitToDisappear" title="sw.utils.waitToDisappear"><tt class="xref py py-func docutils literal"><span class="pre">waitToDisappear()</span></tt></a> never ends the script if something does not
+<li><a class="reference internal" href="#common-params"><em>die</em></a> &#8211; This is only passed to subfunctions. <tt class="xref py py-func docutils literal"><span class="pre">waitToDisappear()</span></tt> never ends the script if something does not
 disappear.</li>
 </ul>
 </td>
