@@ -42,6 +42,8 @@ navigate to the directory cloned into and run::
 
   bundle install
 
+This will install the Ruby gems required for the converter to function.
+
 ^^^^^^^^^^^^^
 Wrapper Setup
 ^^^^^^^^^^^^^
@@ -61,8 +63,8 @@ directory. Alternatively, manually download and install
   pip install selenium
 
 Also install the latest version of `PhantomJS <http://phantomjs.org/download.html>`_ and put it 
-(in its folder) in the previously created ``python277/`` folder. The folder name may need to 
-be update in ``conversion_files/run.bat`` if it is not 1.9.7.
+(in its folder) in the previously created ``conversion_files/python277`` folder. The folder
+path may need to be updated in ``conversion_files/run.bat`` if it is not 1.9.7.
 
 Now run the conversion program::
 
@@ -74,6 +76,7 @@ Converter Distribution
 
 To ease other's usage of the converter, consider packaging it into an exe using 
 `OCRA <https://github.com/larsch/ocra>`_. The following will install the gem and run the compiler::
+
   gem install ocra
   ocra_compile.bat
 
@@ -124,25 +127,39 @@ There are directives which may be inserted into the source script's function whi
 parsed by the converter into wrapper functions. Variables can be used in their arguments 
 as the converter turns the directives into functions after conversion.
 
+Available Directives:
+  - ``#log message``
 
-- ``#log message``
-  - This will write to our child's log "message". Directly calls :py:func:`sw.child.logMsg`
-- ``#msg message``
-  - Writes "Child #: message" to the console. Calls :py:func:`sw.child.msg`
-- ``#wait element kwargs``
-  - This calls :py:func:`sw.utils.waitToDisappear` and takes any of the kwargs as the second argument. Please reference that function for further details about its arguments and other options.
-  - ``#wait overlay type=id``
-    - Waits for the element with id=overlay to disappear
-  - ``#wait overlay type=name, stayGone=3``
-    - Waits for the element with name=overlay to disappear and waits an additional 3 seconds for it to not come back.
-  - ``#wait blurydiv timeout=5``
-    - Waits for id=blurydiv to disappear. If it doesn't after 5 seconds, returns.
-  - ``#wait blurydiv waitTimeout=5``
-    - Waits for id=blurydiv to disappear. Gives the element 5 seconds to appear first before waiting for it to disappear. Default time to appear is 1 second.
-- ``#error message``
-  - Throws an error, which takes a screenshot, logs the screenshot name, and logs "message" to the log. Calls :py:func:`sw.child.logMsg` with level=CRITICAL level.
-- ``#screenshot``
-  - Takes a screenshot which appears as error_#.png within the child's log directory. The log references the file name when this is called. Calls :py:func:`sw.child.screenshot`
+    - This will write to our child's log "message". Directly calls :py:func:`sw.child.logMsg`
+  - ``#msg message``
+
+    - Writes "Child #: message" to the console. Calls :py:func:`sw.child.msg`
+  - ``#wait element kwargs``
+
+    - This calls :py:func:`sw.utils.waitToDisappear` and takes any of the kwargs as the second argument. 
+      Please reference that function for further details about its arguments and other options.
+    - ``#wait overlay type=id``
+
+      - Waits for the element with id=overlay to disappear
+    - ``#wait overlay type=name, stayGone=3``
+
+      - Waits for the element with name=overlay to disappear and waits an additional 3 seconds 
+        for it to not come back.
+    - ``#wait blurydiv timeout=5``
+
+      - Waits for id=blurydiv to disappear. If it doesn't after 5 seconds, returns.
+    - ``#wait blurydiv waitTimeout=5``
+
+      - Waits for id=blurydiv to disappear. Gives the element 5 seconds to appear first before 
+        waiting for it to disappear. Default time to appear is 1 second.
+  - ``#error message``
+
+    - Throws an error, which takes a screenshot, logs the screenshot name, and logs "message" 
+      to the log. Calls :py:func:`sw.child.logMsg` with level=CRITICAL level.
+  - ``#screenshot``
+
+    - Takes a screenshot which appears as error_#.png within the child's log directory. The log 
+      references the file name when this is called. Calls :py:func:`sw.child.screenshot`
 
 ******************
 Options Directives
@@ -154,10 +171,95 @@ By including at the top of your script ``#OPTIONS`` with a following comment blo
   #import module
 
 Available options:
- - ``#gd option="text"``
-  - Passes the string ``option="text"`` directly to GhostDriver's desired capabilities. Currently only the following are supported:
-   - ``#gd proxy="google.com:443"``
-   - ``#gd proxy-type="http"``
- - ``#import module``
-   - Includes this import in the output (wrapped) script. This is useful for including, for example, random to randomly choose a user from a table.
+  - ``#gd option="text"``
+    - Passes the string ``option="text"`` directly to GhostDriver's desired capabilities. Currently only the following are supported:
+    - ``#gd proxy="google.com:443"``
+    - ``#gd proxy-type="http"``
+  - ``#import module``
+    - Includes this import in the output (wrapped) script. This is useful for including, for example, random to randomly choose a user from a table.
 
+=======
+Wrapper
+=======
+The wrapper is automatically applied to the source script when the converter finishes. It is
+intended to be as transparent as possible after conversion, requiring minimal user interaction
+to get it running. Below is a real test run of a script::
+
+  .../out/example_script>run.bat
+  You may press enter to use the default values in parenthesis.
+  Number of Children (3): 3
+  Number of Jobs to Run (3): 3
+  Stagger Children Spawning (n): n
+
+  Libraries loaded!
+
+
+
+  ========================================
+  Preparing 3 children to do 3 jobs.
+  Child #1: LOADING
+  Child #2: LOADING
+  Child #3: LOADING
+  Child #3: STARTING
+  Child #2: STARTING
+  Child #1: STARTING
+
+  ========================================
+  Successful: 0   Failed: 0
+  Total: 0   Remaining: 3
+  Children (peak): 3   Children (active): 3
+  No data to extrapolate or average from
+  ========================================
+
+  Child #2: DONE (141.88s)
+  Child #2: STOPPING (DONE)
+  Child #3: DONE (142.62s)
+  Child #3: STOPPING (DONE)
+  Child #1: DONE (149.2s)
+  Child #1: STOPPING
+
+  ========================================
+  Successful: 3   Failed: 0
+  Total: 3   Remaining: 0
+  Children (peak): 3   Children (active): 0
+  Failure Rate: 0.0%
+  Average / Estimates:
+    Time per job: 144.57s
+    Jobs/s: 0.02   Jobs/m: 1.21   Jobs/hr: 72.35   Jobs/day: 1736.39
+  ========================================
+
+  Press any key to continue . . .
+
+Running ``run.bat`` on Windows will present the user with questions for how the script will operate. 
+It simply passes arguments on to ``run_test.py``, with the order discussed below.
+
+.. code-block::
+  Number of Children (3): 3
+
+The number of children determines the number of concurrent `PhantomJS` processes the script will run.
+Although the default number is 3, users with a more powerful processor will find themselves capable 
+of running over 20, though this varies wildly with the script ran. This is largely dependent on processing
+power but about 50-70 Mb of RAM is used as well.
+
+.. code-block::
+  Number of Jobs to Run (3): 3
+
+The jobs option determines the number of times the recorded script will run. Every child process 
+will pull from a job queue (of this length) when it starts and will do so until the queue is empty 
+
+.. code-block::
+  Stagger Children Spawning (n): n
+
+The last option, staggered child spawning, is intended to distribute load throughout a site more evenly. 
+Without staggering and with a high number of children, the load will be very pinpointed at an exact point
+of the site consistently, at least at the beginning. This options spawns children 5 seconds apart.
+
+The options used in the example are equivalent to just running this::
+
+  python out/example_script.py
+
+It pulls the default options internally for the script.
+
+Standard argument order and format is like so::
+
+  python out/example_script.py <number of jobs> <number of children> <staggered (y/n)>
