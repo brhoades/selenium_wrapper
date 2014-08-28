@@ -133,7 +133,7 @@ def sleepwait( driver, element, type, **kwargs ):
     
     e = exists( driver, element, type, url=url, cache=cache, lightConfirm=lightConfirm )
     if not e:
-        driver.child.logMsg( ''.join( [ "Beginning wait for element\"", element, "\" of type \"", type, "\"." ] ), NOTICE )
+        driver.child.logMsg( ''.join( [ "Beginning wait for element \"", element, "\" of type \"", type, "\"." ] ), NOTICE )
 
         while not e:
             if time.time( ) - start > timeout: 
@@ -227,7 +227,7 @@ def waitToDisappear( driver, element, **kwargs ):
             return
         else:
             if not recur:
-                driver.child.logMsg( ''.join( [ "Waiting for \"", element, "\"" ] ), INFO )
+                driver.child.logMsg( ''.join( [ "Waiting for \"", element, "\"." ] ), INFO )
             time.sleep( thinkTime )
 
         kwargs['die'] = die
