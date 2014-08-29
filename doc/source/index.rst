@@ -3,13 +3,24 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+================
 selenium_wrapper
 ================
 
+*******************
+Usage Documentation
+*******************
 .. toctree::
    :maxdepth: 3 
 
    sw
+
+****************
+Module Reference
+****************
+.. toctree::
+   :maxdepth: 3 
+
    sw.wrapper
    sw.pool
    sw.child
@@ -18,8 +29,9 @@ selenium_wrapper
    sw.formatting
 
 
+******************
 Indices and tables
-==================
+******************
 
 * :ref:`genindex`
 * :ref:`modindex`

@@ -47,7 +47,7 @@ class ElementCache:
           * **type** (*None*): Type of the identifier for the element in the cache, on the passed url.
           * **handle** (*None*): (separate from id/type) A handle to identify this element by internally (unique).
 
-          :return: `Webelement` for the cached item if a matching element exists. None if not.
+        :return: :py:class:`~selenium.webdriver.remote.webelement.WebElement` for the cached item if a matching element exists. None if not.
         """
         id = kwargs.get( "id", None )
         type = kwargs.get( "type", None )
