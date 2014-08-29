@@ -99,6 +99,37 @@ class Pool:
 
 
 
+    def successful( self ):
+        """Reports the number of jobs successfully completed so far.
+
+        :returns: Integer for number of jobs successfully completed.
+        """
+        return reduce( lambda x, y: x + y, map( lambda x: x[SUCCESSES], self.data ) )
+
+
+
+    def failed( self ):
+        """Reports failed jobs so far.
+
+        :returns: Integer for number of failed jobs.
+        """
+        return reduce( lambda x, y: x + y, map( lambda x: x[FAILURES], self.data ) )
+
+    
+
+    def timeTaken( self, sum=False ):
+        """Reports how long everything has taken so far.
+
+        :param False sum: Whether or not to return the sum of the time taken on jobs.
+        :returns: List of individual job run times if sum is False, otherwise the amount of time taken as a float.
+        """
+        timetaken = [ item for sublist in timetaken for item in sublist ] # Flatten
+        
+        if sum:
+            return sum( timetaken )
+        else:
+            return timetaken
+
     def reportStatistics( self, force=False ):
         """Translates statistics into the archaic form used by the :func:`sw.formatting.stats`.
         Map and reduce are used to get things quickly out of the self.data 2-d array. This function
@@ -114,8 +145,7 @@ class Pool:
             # Reduces our good/bad results into a single "this many succeeded, this many failed" number.
             # Maps our times into a single list.
             good = reduce( lambda x, y: x + y, map( lambda x: x[SUCCESSES], self.data ) )
-            bad  = reduce( lambda x, y: x + y, map( lambda x: x[FAILURES], self.data ) )
-            timetaken = map( lambda x: x[TIMES], self.data )
+            bad  =             timetaken = map( lambda x: x[TIMES], self.data )
             timetaken = [ item for sublist in timetaken for item in sublist ] # Flatten
 
             stats( good, bad, timetaken, self.children, self.numJobs, self.started ) 

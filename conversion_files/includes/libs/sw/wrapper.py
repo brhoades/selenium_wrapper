@@ -1,4 +1,5 @@
-from sw.pool import *
+from sw.pool import Pool
+from sw.ui import Ui
 import sys, time, curses
 
 
@@ -45,22 +46,9 @@ def mainLoop( stdscr, pool ):
         :returns: None
     """
 
-    pool.curses = stdscr
-    stdscr.border( )
-    stdscr.nodelay( True ) # Don't wait on key presses
-    stdscr.addstr( 0, 3, "Selenium Wrapper Console" )
-    stdscr.vline( 1, stdscr.getmaxyx( )[1]-20, 0, stdscr.getmaxyx( )[0]-2 )
+    pool.ui = Ui( stdscr, pool )
 
-    options = [ "q - Quit", "c+- - Children", "j+- - Jobs" ]
-    sx = stdscr.getmaxyx( )[1]-18
-    sy = 2
-    i = 0
-
-    for l in options:
-        stdscr.addstr( sy + i*2, sx, l )
-        i += 1
-    stdscr.refresh( )
-
-    while not pool.done( ) and not stdscr.getch( ) == ord("q"):
+    while not pool.done( ):
         pool.think( )
+        pool.ui.think( )
         time.sleep( 0.1 )
