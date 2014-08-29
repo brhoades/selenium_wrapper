@@ -31,8 +31,6 @@ def main( func, file, **kwargs ):
 
     curses.wrapper( mainLoop, pool )
 
-    pool.reportStatistics( True )
-
     pool.stop( )
 
 

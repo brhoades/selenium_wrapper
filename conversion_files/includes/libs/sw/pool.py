@@ -47,12 +47,6 @@ class Pool:
         # Our function
         self.func = func
 
-        # Time between statistics reporting
-        self.timePerReport = 100 
-
-        # Don't report statistics for another minute
-        self.nextStat = time.time( ) + int( self.timePerReport*1.1 )
-
         # Our timestamp
         self.timestamp = datetime.datetime.now( ).strftime( "%Y-%m-%d_%H-%M-%S" )
 
@@ -130,26 +124,6 @@ class Pool:
         else:
             return timetaken
 
-    def reportStatistics( self, force=False ):
-        """Translates statistics into the archaic form used by the :func:`sw.formatting.stats`.
-        Map and reduce are used to get things quickly out of the self.data 2-d array. This function
-        is only called every self.timePerReport seconds as set in this class's initialization func.
-
-        :param False force: Forces a report of statistics. Only called by the script itself when done.
-        :returns: None
-        """
-        # Check if it's time yet
-        if force or ( time.time( ) >= self.nextStat and len( self.data[0] ) > 0 ):
-            self.nextStat = time.time( ) + self.timePerReport
-            
-            # Reduces our good/bad results into a single "this many succeeded, this many failed" number.
-            # Maps our times into a single list.
-            good = reduce( lambda x, y: x + y, map( lambda x: x[SUCCESSES], self.data ) )
-            bad  =             timetaken = map( lambda x: x[TIMES], self.data )
-            timetaken = [ item for sublist in timetaken for item in sublist ] # Flatten
-
-            stats( good, bad, timetaken, self.children, self.numJobs, self.started ) 
-
 
 
     def think( self ): 
@@ -199,9 +173,6 @@ class Pool:
                 elif not self.children[i].is_alive( ) \
                      and not self.children[i].is_done( ) and self.workQueue.empty( ):
                     self.children[i].stop( "DONE" )
-
-        # Statistics reporting
-        self.reportStatistics( )
 
 
 
