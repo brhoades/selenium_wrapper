@@ -1,4 +1,5 @@
 import time
+from sw.formatting import *
 
 class Ui:
     def __init__( self, screen, pool ):
@@ -71,13 +72,17 @@ class Ui:
     def updateStats( self ):
         statstrs = [ ]
 
+        # Wipe the box
+        for i in range( self.STATS_HEIGHT ):
+            self.scr.addstr( self.scr.getmaxyx( )[0]-self.STATS_HEIGHT+i, self.STATS_WIDTH, " " )
+
         # Number of Children
         statstrs.append( ''.join( [ "Children: ", str( len( self.pool.children ) ) ] ) )
 
         # Number of Active Children
         numactive = 0
         for c in self.pool.children:
-            if c.is_alive and not c.is_done:
+            if c is not None and c.is_alive and not c.is_done:
                 numactive += 1
         statstrs.append( ''.join( [ "Act: ", str( numactive ) ] ) )
 
@@ -89,6 +94,10 @@ class Ui:
 
         # Number of Failed Jobs
         statstrs.append( ''.join( [ "Failed: ", str( self.pool.failed( ) ) ] ) )
+
+        # Average Job Time
+        times = self.pool.timeTaken( )
+        statstrs.append( ''.join( [ "Avg Job: ", format( avg( times ) ), "s" ] ) )
 
         adj = 2
         k = 0

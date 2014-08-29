@@ -117,12 +117,12 @@ class Pool:
         :param False sum: Whether or not to return the sum of the time taken on jobs.
         :returns: List of individual job run times if sum is False, otherwise the amount of time taken as a float.
         """
-        timetaken = [ item for sublist in timetaken for item in sublist ] # Flatten
+        times = [ item for sublist in map( lambda x: x[TIMES], self.data ) for item in sublist ] # Flatten
         
         if sum:
-            return sum( timetaken )
+            return sum( times )
         else:
-            return timetaken
+            return times
 
 
 
