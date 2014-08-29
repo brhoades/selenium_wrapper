@@ -14,10 +14,11 @@ class Ui:
         # Last time stats were updated
         self.nextStats = time.time( )
 
-        self.OPTIONS_WIDTH = 20
-
         self.STATS_HEIGHT  = 7
-        self.STATS_WIDTH   = self.scr.getmaxyx( )[1]-self.OPTIONS_WIDTH
+        self.STATS_WIDTH   = self.scr.getmaxyx( )[1]-2
+
+        self.OPTIONS_HEIGHT = self.STATS_HEIGHT + 1
+        self.OPTIONS_WIDTH  = 20
 
         self.drawMainScreen( )
 
@@ -29,7 +30,7 @@ class Ui:
         self.scr.addstr( 0, 3, "Selenium Wrapper Console" )
 
         # Line for key panel
-        self.scr.vline( 1, self.scr.getmaxyx( )[1]-self.OPTIONS_WIDTH, 0, self.scr.getmaxyx( )[0]-2 )
+        self.scr.vline( 1, self.scr.getmaxyx( )[1]-self.OPTIONS_WIDTH, 0, self.scr.getmaxyx( )[0]-self.STATS_HEIGHT )
 
         # Calculate the dimensions of our key panel
         sx = self.scr.getmaxyx( )[1]-( self.OPTIONS_WIDTH - 2 )
@@ -40,7 +41,7 @@ class Ui:
             self.scr.addstr( sy + i*2, sx, l )
             i += 1
 
-        self.scr.hline( self.scr.getmaxyx( )[0]-self.STATS_HEIGHT, 1, 0, self.scr.getmaxyx( )[1]-( self.OPTIONS_WIDTH + 1 ) )
+        self.scr.hline( self.scr.getmaxyx( )[0]-self.STATS_HEIGHT, 1, 0, self.STATS_WIDTH )
         self.scr.refresh( )
 
     def think( self ):
@@ -96,7 +97,7 @@ class Ui:
             if ( adj + stl ) >= self.STATS_WIDTH:
                 k += 1
                 adj = 2
-            self.scr.addstr( self.scr.getmaxyx( )[0]-self.STATS_HEIGHT+( 2 + 2*k ), adj, st )
+            self.scr.addstr( self.scr.getmaxyx( )[0]-self.STATS_HEIGHT+( 1 + 1*k ), adj, st )
             adj += stl + 3
         self.scr.refresh( )
 
