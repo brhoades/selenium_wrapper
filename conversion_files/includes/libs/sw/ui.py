@@ -15,12 +15,20 @@ class Ui:
         # Last time stats were updated
         self.nextStats = time.time( )
 
+        # Next time jobs per second are updated
+        self.nextJobTime = self.nextStats + 10 
+
+        # Cached jobs per second string
+        self.jpstr = None
+
+        # Dimensions and subwindow for statistics section
         self.STATS_HEIGHT  = 7
         self.STATS_WIDTH   = self.x( )-2
 
         self.stats = self.scr.subwin( self.STATS_HEIGHT-1, self.STATS_WIDTH, 
                 self.y( )-self.STATS_HEIGHT, 1 )
         
+        # Dimensions and subwindow for options section
         self.OPTIONS_HEIGHT = self.y( ) - self.STATS_HEIGHT 
         self.OPTIONS_WIDTH  = 20
 
@@ -78,6 +86,7 @@ class Ui:
 
     def updateStats( self ):
         statstrs = [ ]
+        t = time.time( )
 
         # Clear our window
         self.stats.clear( )
@@ -104,6 +113,21 @@ class Ui:
         # Average Job Time
         times = self.pool.timeTaken( )
         statstrs.append( ''.join( [ "Avg Job: ", format( avg( times ) ), "s" ] ) )
+
+        # Jobs per minute
+        if t > self.nextJobTime and len( times ) > 0:
+            jps = ( len( times ) / ( t - self.pool.started ) )
+
+            if jps > 1:
+                self.jpstr = ''.join( [ "Jobs/s: ", format( jps ) ] )
+            else:
+                self.jpstr = ''.join( [ "Jobs/m: ", format( jps * 60 ) ] )
+            
+            self.nextJobTime += 10 
+        
+        if self.jpstr is not None:
+            statstrs.append( self.jpstr )
+
 
         adj = 2 # Amount we are shifting right in characters
         k = 0   # Amount we are shifting vertically
