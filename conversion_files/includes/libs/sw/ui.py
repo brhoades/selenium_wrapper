@@ -73,8 +73,8 @@ class Ui:
         statstrs = [ ]
 
         # Wipe the box
-        for i in range( self.STATS_HEIGHT ):
-            self.scr.addstr( self.scr.getmaxyx( )[0]-self.STATS_HEIGHT+i, self.STATS_WIDTH, " " )
+        for i in range( 1, self.STATS_HEIGHT-1 ):
+            self.scr.addstr( self.scr.getmaxyx( )[0]-self.STATS_HEIGHT+i, 1, " "*self.STATS_WIDTH )
 
         # Number of Children
         statstrs.append( ''.join( [ "Children: ", str( len( self.pool.children ) ) ] ) )
