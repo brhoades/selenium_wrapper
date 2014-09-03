@@ -21,6 +21,12 @@ class Ui:
         # Cached jobs per second string
         self.jpstr = None
 
+        # Frames for loading
+        self.loadFrame = [ "-", "\\", "|", "/" ]
+
+        # Current frame
+        self.curFrame  = 0
+
         # Dimensions and subwindow for statistics section
         self.STATS_HEIGHT  = 7
         self.STATS_WIDTH   = self.x( )-2
@@ -35,6 +41,12 @@ class Ui:
         self.opts = self.scr.subwin( self.OPTIONS_HEIGHT, self.OPTIONS_WIDTH, 1, 
                 self.x( ) - self.OPTIONS_WIDTH ) 
 
+        # Main area
+        self.MAIN_HEIGHT = self.y( ) - 2 - self.STATS_HEIGHT
+        self.MAIN_WIDTH  = self.x( ) - 2 - self.OPTIONS_WIDTH
+        
+        self.main = self.scr.subwin( self.MAIN_HEIGHT, self.MAIN_WIDTH, 1, 1 )
+
         self.drawMainScreen( )
 
     def x( self ):
@@ -44,8 +56,14 @@ class Ui:
         return self.scr.getmaxyx( )[0]
 
     def drawMainScreen( self ):
-        self.scr.border( )
         self.scr.nodelay( True ) # Don't wait on key presses
+
+        # Allow color
+        print self.scr.has_color( ) 
+        return
+        self.scr.start_color( )
+
+        self.scr.border( )
 
         # Draw our title at the top
         self.scr.addstr( 0, 3, "Selenium Wrapper Console" )
@@ -60,6 +78,7 @@ class Ui:
 
         # Line for stats window
         self.scr.hline( self.y( )-self.STATS_HEIGHT-1, 1, 0, self.STATS_WIDTH )
+
         self.scr.refresh( )
 
     def think( self ):
@@ -78,11 +97,20 @@ class Ui:
             print "J"
             # Change # Jobs
 
-        
         if self.nextStats > time.time( ):
             self.nextStats = time.time( ) + 1
 
+        self.updateMain( )
         self.updateStats( )
+
+    def updateMain( self ):
+        # Change dash frame
+        self.curFrame += 1
+        if self.curFrame > len( self.loadFrames ):
+            self.curFrame = 0
+        
+        # Draw each child with an appropriate background color / anim
+
 
     def updateStats( self ):
         statstrs = [ ]
