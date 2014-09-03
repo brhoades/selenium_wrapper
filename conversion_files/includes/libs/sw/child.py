@@ -328,10 +328,10 @@ class Child:
 
         if msg != "":
             self.logMsg( ''.join( [ "Stopping child process: \"", msg, "\"" ] ) )
-            self.msg( ''.join( [ "STOPPING (", msg, ")" ] ) )
         else:
             self.logMsg( "Stopping child process" )
-            self.msg( "STOPPING" )
+
+        self.status( STAT_DONE )
 
         self.proc.terminate( )
         self.proc.join( )
