@@ -124,8 +124,8 @@ class Ui:
             self.main.addstr( y, x, s, curses.color_pair( self.pool.data[c.num][STATUS] ) )
 
             y += 2
-            if y > self.x( ) - self.STATS_HEIGHT-2:
-                x += 2
+            if y > self.y( ) - self.STATS_HEIGHT - 4:
+                x += 3
                 y = 0
 
         self.main.refresh( )
