@@ -123,7 +123,7 @@ def sleepwait( driver, element, type, **kwargs ):
          * :ref:`lightConfirm <common-params>`
        :return: Boolean if doesn't exist, :py:class:`~selenium.webdriver.remote.webelement.WebElement` if it does.
     """
-    start = time.time( )
+    start        = time.time( )
     timeout      = kwargs.get( 'timeout', 15 )
     lightConfirm = kwargs.get( 'lightConfirm', False )
     cache        = kwargs.get( 'cache', True )

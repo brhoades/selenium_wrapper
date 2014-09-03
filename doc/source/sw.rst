@@ -37,8 +37,9 @@ the repository::
 Converter Setup
 ^^^^^^^^^^^^^^^
 
-Install `ActiveTCL <http://www.activestate.com/activetcl/downloads>`_. After installing, 
-navigate to the directory cloned into and run::
+Install `Ruby <https://www.ruby-lang.org/en/>`_ and then the appropriate
+`ActiveTCL <http://www.activestate.com/activetcl/downloads>`_ library for your version.
+After installing, navigate to the directory cloned into and run::
 
   bundle install
 
@@ -49,22 +50,40 @@ Wrapper Setup
 ^^^^^^^^^^^^^
 
 Prepare a python installation for the converter program. Python 2.7.8 is the supported 
-Python version. Create a folder named ``python27`` in ``conversion_files/``. Now
-`install Python <https://www.python.org/download/releases/2.7.8/>`_ for the correct platform. 
+Python version. Now `install Python <https://www.python.org/download/releases/2.7.8/>`_ 
+for the correct platform. 
 
-On Windows, perform an installation of Python into ``conversion_files/python27``. The less
-modules included, the better. No lib-tk, documentation, or testing suites will be required.
+Use `pip <https://pip.pypa.io/en/latest/installing.html>`_ to install 
+`Selenium <https://pypi.python.org/pypi/selenium>`_:: 
 
-Use pip to install `Selenium <https://pypi.python.org/pypi/selenium>`_ and
-Unicurses for Python into the local directory. Alternatively, manually download and install 
-`Selenium <https://pypi.python.org/pypi/selenium>`_ and
-`Unicurses <http://sourceforge.net/projects/pyunicurses/>`_ locally into the Python libraries::
+  pip install selenium
 
-  pip install selenium unicurses
+Also install the latest version of `PhantomJS <http://phantomjs.org/download.html>`_ for your 
+platform.
 
-Also install the latest version of `PhantomJS <http://phantomjs.org/download.html>`_ and put it 
-(in its folder) in the previously created ``conversion_files/python278`` folder. The folder
-path may need to be updated in ``conversion_files/run.bat`` if it is not 1.9.7.
+Currently a distributed setup where a separate install of Python is shipped with each script
+is only possible for Windows. For other operating systems, there will need to be a system wide
+installation on every machine participating. For these other operating systems ensure that the
+"Python" option is unchecked on the converter.
+
+"""""""""""""
+Windows Setup
+"""""""""""""
+
+Perform an installation of `Python <https://www.python.org/download/releases/2.7.8/>`_ 
+into the default folder. The fewer modules that are included, the better. 
+Excluding lib-tk, documentation, and testing suites will streamline things. 
+This folder will later be copied to the correct spot.
+
+Install `pip <https://pip.pypa.io/en/latest/installing.html>`_ into your Python installation
+and now install the module for `Selenium <https://pypi.python.org/pypi/selenium>`_::
+
+  pip install selenium
+
+Now install the `curses extension package <http://www.lfd.uci.edu/~gohlke/pythonlibs/#curses>`_.
+
+Afterwards copy/move the Python folder that was just created to ``conversion_utils/python27``. 
+Extract the ``phantomjs-release.zip`` for Windows into the Python folder as well.
 
 Now run the conversion program::
 

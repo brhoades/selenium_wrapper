@@ -49,4 +49,4 @@ def mainLoop( stdscr, pool ):
     while not pool.done( ):
         pool.think( )
         pool.ui.think( )
-        time.sleep( 0.1 )
+        pool.ui.sleep( 0.1 )
