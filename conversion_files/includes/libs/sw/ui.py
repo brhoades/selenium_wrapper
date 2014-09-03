@@ -1,4 +1,4 @@
-import time
+import time, curses
 from sw.formatting import *
 
 class Ui:
@@ -49,6 +49,14 @@ class Ui:
 
         self.drawMainScreen( )
 
+        # Colors
+        curses.init_pair( STAT_LOAD,  curses.COLOR_BLACK, curses.COLOR_YELLOW )
+        curses.init_pair( STAT_START, curses.COLOR_BLACK, curses.COLOR_YELLOW )
+        curses.init_pair( STAT_GOOD,  curses.COLOR_WHITE, curses.COLOR_BLACK )
+        curses.init_pair( STAT_ERROR, curses.COLOR_BLACK, curses.COLOR_RED )
+        curses.init_pair( STAT_WAIT,  curses.COLOR_WHITE, curses.COLOR_BLUE )
+        curses.init_pair( STAT_DONE,  curses.COLOR_BLACK, curses.COLOR_WHITE )
+
     def x( self ):
         return self.scr.getmaxyx( )[1]
 
@@ -57,11 +65,6 @@ class Ui:
 
     def drawMainScreen( self ):
         self.scr.nodelay( True ) # Don't wait on key presses
-
-        # Allow color
-        print self.scr.has_color( ) 
-        return
-        self.scr.start_color( )
 
         self.scr.border( )
 
@@ -104,13 +107,23 @@ class Ui:
         self.updateStats( )
 
     def updateMain( self ):
-        # Change dash frame
-        self.curFrame += 1
-        if self.curFrame > len( self.loadFrames ):
-            self.curFrame = 0
-        
         # Draw each child with an appropriate background color / anim
 
+        y = 0
+        x = 0
+        for c in self.pool.children:
+            if c is None:
+                continue
+            s = ''.join( [ "#", str( c.num ) ] )
+
+            self.main.addstr( y, x, s, curses.color_pair( self.pool.data[c.num][STATUS] ) )
+
+            y += 2
+            if y > self.x( ) - self.STATS_HEIGHT-2:
+                x += 2
+                y = 0
+
+        self.main.refresh( )
 
     def updateStats( self ):
         statstrs = [ ]

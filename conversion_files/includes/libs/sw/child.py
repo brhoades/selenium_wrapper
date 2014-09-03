@@ -125,8 +125,9 @@ class Child:
         # Change our implicit wait time
         self.driver.implicitly_wait( 0 )
 
-        # Push a STARTING message to our pool, if we print it we risk scrambling text in stdout
-        cq.put( [ self.num, READY, time.time( ), "" ] )
+        # Push a STARTING message to our pool
+        self.status( STAT_START )
+        cq.put( [ self.num, READY, "" ] )
 
         # Write to our log another message indicating we are starting our runs
         self.logMsg( "Child process started and loaded" )
@@ -141,11 +142,12 @@ class Child:
             try:
                 self.cache.clear( )
                 start = time.time( )
+                self.status( STAT_GOOD )
                 func( self.driver )
             except TimeoutException as e:
                 self.logMsg( ''.join( [ "Stack trace: ", traceback.format_exc( ) ] ), CRITICAL )
                 
-                self.msg( "TIMEOUT" )
+                self.status( STAT_ERROR )
                 self.logMsg( "Timeout when finding element." )
             except Exception as e:
                 self.logError( str( e ) ) # Capture the exception and log it
@@ -160,6 +162,7 @@ class Child:
 
         # Quit after we have finished our work queue, this kills the phantomjs process.
         self.driver.quit( )
+        self.status( STAT_DONE )
 
 
 
@@ -231,6 +234,10 @@ class Child:
         # String
         w = ''.join( [ "[", timestamp, "] ", errorLevelToStr( level ), "\t", e, "\n" ] )
 
+        # Send error if appropriate
+        if level >= ERROR:
+            self.status( STAT_ERROR )
+
         # Locals if specified
         if locals != None:
             self.logMsg( ''.join( [ "Local variables: ", pformat( locals ) ] ), level )
@@ -241,6 +248,12 @@ class Child:
         except:
             self.lh = open( os.path.join( self.log, ''.join( [ 'log-', str( self.num + 1 ), '.txt' ] ) ), 'a+', 0 )
             self.lh.write( w ) 
+
+
+
+    def status( self, t ):
+        """Sends a status error message to the main loop, which is then translated to the UI."""
+        self.cq.put( [ self.num, STATUS_UP, t ] )
 
 
 

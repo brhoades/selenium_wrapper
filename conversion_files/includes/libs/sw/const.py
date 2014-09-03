@@ -3,7 +3,8 @@
 #   Used to communicate via pool's childQueue in the first array slot.
 FAILED         = 0
 DONE           = 1
-READY          = 2 
+READY          = 2
+STATUS_UP      = 3
 ####################################################################################################
 
 
@@ -14,8 +15,8 @@ READY          = 2
 #   while times is another array that stores all the time taken for each child.
 FAILURES       = 0
 SUCCESSES      = 1
-TIMES          = 2
-WAIT_TIME      = 3
+STATUS         = 2
+TIMES          = 3
 ####################################################################################################
 
 
@@ -42,4 +43,19 @@ WARNING        = 1
 ERR            = 2
 CRITICAL       = 3
 NONE           = 5
+####################################################################################################
+
+
+
+####################################################################################################
+# Status Types
+#   Statuses for children which coordinate with colors.
+STAT_LOAD      = 1
+STAT_START     = 2
+STAT_GOOD      = 3
+STAT_ERROR     = 4
+STAT_WAIT      = 5
+STAT_DONE      = 6
+#unused
+STAT_DEAD      = 7
 ####################################################################################################

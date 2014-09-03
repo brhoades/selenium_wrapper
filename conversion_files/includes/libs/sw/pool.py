@@ -25,7 +25,7 @@ class Pool:
         self.children = [ None for x in range(numChildren) ]
         
         # Statistics and data per child
-        self.data = [ [ 0, 0, [ ], 0, [ ] ] for x in range(numChildren) ]
+        self.data = [ [ 0, 0, STAT_LOAD, [ ] ] for x in range(numChildren) ]
 
         # Our one way queue from our children
         self.childQueue = Queue( )
@@ -118,7 +118,7 @@ class Pool:
         :returns: List of individual job run times if sum is False, otherwise the amount of time taken as a float.
         """
         times = [ item for sublist in map( lambda x: x[TIMES], self.data ) for item in sublist ] # Flatten
-        
+
         if sum:
             return sum( times )
         else:
@@ -140,7 +140,7 @@ class Pool:
 
             if r[RESULT] == DONE:
                 self.data[i][SUCCESSES] += 1
-                self.data[i][TIMES].append( r[TIMES] )
+                self.data[i][TIMES].append( r[TIME] )
                 self.children[i].msg( ''.join( ["DONE (", str( format( r[TIME] ) ), "s)" ] ) )
 
             elif r[RESULT] == FAILED:
@@ -150,10 +150,11 @@ class Pool:
                 self.workQueue.put( self.func )
                 self.children[i].msg( ''.join( [ "ERROR: ", formatError( r[ERROR] ) ] ) ) 
 
-            elif r[RESULT] == READY:
-                if self.started == None:
-                    self.started = time.time( )
-                self.children[i].msg( "STARTING" )
+            elif r[RESULT] == READY and self.started == None:
+                self.started = time.time( )
+
+            elif r[RESULT] == STATUS_UP:
+                self.data[i][STATUS] = r[TIME]
 
         # Still spawning children, ignore their status until done.
         if self.starting == True:

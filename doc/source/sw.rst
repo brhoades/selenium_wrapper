@@ -48,22 +48,22 @@ This will install the Ruby gems required for the converter to function.
 Wrapper Setup
 ^^^^^^^^^^^^^
 
-Prepare a python installation for the converter program. Python 2.7.7 is the supported 
-Python version. Create a folder named ``python277`` in ``conversion_files/``. Now
-`install Python <https://www.python.org/download/releases/2.7.7/>`_ for the correct platform. 
+Prepare a python installation for the converter program. Python 2.7.8 is the supported 
+Python version. Create a folder named ``python27`` in ``conversion_files/``. Now
+`install Python <https://www.python.org/download/releases/2.7.8/>`_ for the correct platform. 
 
-On Windows, perform an 
-`administrative installation <http://technet.microsoft.com/en-us/library/cc759262(v=ws.10).aspx>`_ 
-of Python. Target the folder created above and finish the installation.
+On Windows, perform an installation of Python into ``conversion_files/python27``. The less
+modules included, the better. No lib-tk, documentation, or testing suites will be required.
 
-Use pip to install `Selenium <https://pypi.python.org/pypi/selenium>`_ for Python into the local 
-directory. Alternatively, manually download and install 
-`the module <https://pypi.python.org/pypi/selenium>`_ locally into the Python libraries::
+Use pip to install `Selenium <https://pypi.python.org/pypi/selenium>`_ and
+Unicurses for Python into the local directory. Alternatively, manually download and install 
+`Selenium <https://pypi.python.org/pypi/selenium>`_ and
+`Unicurses <http://sourceforge.net/projects/pyunicurses/>`_ locally into the Python libraries::
 
-  pip install selenium
+  pip install selenium unicurses
 
 Also install the latest version of `PhantomJS <http://phantomjs.org/download.html>`_ and put it 
-(in its folder) in the previously created ``conversion_files/python277`` folder. The folder
+(in its folder) in the previously created ``conversion_files/python278`` folder. The folder
 path may need to be updated in ``conversion_files/run.bat`` if it is not 1.9.7.
 
 Now run the conversion program::

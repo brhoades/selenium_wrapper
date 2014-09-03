@@ -218,15 +218,15 @@ def prepareDirectory( outputfn )
   end
 
   # Check for the python cache extracted folder
-  if not Dir.exists? cf+"python277/" and $python.bool
-    if not File.exists? cf+"python277.zip"
-      error "Missing packaged Python 2.7.7 installation folder or zip in conversion_files, this is required for the \"Include Python\" option.\n\nThe conversion process cannot continue."
+  if not Dir.exists? cf+"python27/" and $python.bool
+    if not File.exists? cf+"python27.zip"
+      error "Missing packaged Python 2.7.8 installation folder or zip in conversion_files, this is required for the \"Include Python\" option.\n\nThe conversion process cannot continue."
       return nil
     else
       # Extract our python277.zip folder
       phasePrint "Extracting Python", i+=0.5, max
-      error "Extracting python277.zip, this may take some time.\n\nIt is quicker to extract this by hand into the conversion_files folder using 7-zip or Peazip, as they are capable of using multiple cores."
-      unzip "#{cf}python277.zip", cf
+      error "Extracting python27.zip, this may take some time.\n\nIt is quicker to extract this by hand into the conversion_files folder using 7-zip or Peazip, as they are capable of using multiple cores."
+      unzip "#{cf}python27.zip", cf
     end
   end
 
@@ -234,8 +234,8 @@ def prepareDirectory( outputfn )
   phasePrint "Copying Python to Output Folder", i+=1, max
   print "  This will take some time\n"
   # Copy Python over to the directory
-  if not Dir.exists? outputfn + "python277/" and $python.bool
-    FileUtils.cp_r cf + "python277", outputfn
+  if not Dir.exists? outputfn + "python27/" and $python.bool
+    FileUtils.cp_r cf + "python27", outputfn
   end
 
   phasePrint "Initializing File Structure", i+=1, max

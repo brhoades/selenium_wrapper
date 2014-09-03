@@ -134,6 +134,7 @@ def avg( numbers ):
        :param numbers: A list of numbers.
        :return: The average
     """
+
     if len( numbers ) == 0:
         return 0
     else:
