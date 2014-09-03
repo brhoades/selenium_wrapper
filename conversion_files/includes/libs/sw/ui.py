@@ -57,11 +57,7 @@ class Ui:
         curses.init_pair( STAT_WAIT,  curses.COLOR_WHITE, curses.COLOR_BLUE )
         curses.init_pair( STAT_DONE,  curses.COLOR_BLACK, curses.COLOR_WHITE )
 
-    def x( self ):
-        return self.scr.getmaxyx( )[1]
 
-    def y( self ):
-        return self.scr.getmaxyx( )[0]
 
     def drawMainScreen( self ):
         self.scr.nodelay( True ) # Don't wait on key presses
@@ -82,27 +78,38 @@ class Ui:
 
         self.scr.refresh( )
 
-    def think( self ):
-        # Check for keypresses
-        key = self.scr.getch( )
-        
-        if key == ord( "q" ):
-            self.pool.stop( )
-        elif key == ord( "p" ):
-            print "P"
-            # Pause
-        elif key == ord( "c" ):
-            print "C"
-            # Change # Children
-        elif key == ord( "j" ):
-            print "J"
-            # Change # Jobs
 
+
+    def think( self ):
         if self.nextStats > time.time( ):
             self.nextStats = time.time( ) + 1
 
         self.updateMain( )
         self.updateStats( )
+
+
+
+    def sleep( self, amount ):
+        end = amount + time.time( )
+        while time.time( ) <= end:
+            key = self.scr.getch( )
+
+            if key == ord( "q" ):
+                self.pool.stop( )
+                curses.flash( )
+            elif key == ord( "p" ):
+                print "P"
+                # Pause
+            elif key == ord( "c" ):
+                print "C"
+                # Change # Children
+            elif key == ord( "j" ):
+                print "J"
+                # Change # Jobs
+
+            time.sleep( 0.01 )
+
+
 
     def updateMain( self ):
         # Draw each child with an appropriate background color / anim
@@ -122,6 +129,8 @@ class Ui:
                 y = 0
 
         self.main.refresh( )
+
+
 
     def updateStats( self ):
         statstrs = [ ]
@@ -179,3 +188,12 @@ class Ui:
             adj += stl + 3
         self.stats.refresh( )
 
+
+
+    def x( self ):
+        return self.scr.getmaxyx( )[1]
+
+
+
+    def y( self ):
+        return self.scr.getmaxyx( )[0]
