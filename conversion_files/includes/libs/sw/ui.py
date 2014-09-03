@@ -10,7 +10,7 @@ class Ui:
         self.pool = pool
 
         # Options for buttons to press
-        self.options = [ "c+- - Children", "j+- - Jobs", "p - Pause", "q - Quit" ]
+        self.options = [ "c+- - Children", "j+- - Jobs", "p   - Pause", "h   - Help", "q   - Quit" ]
 
         # Last time stats were updated
         self.nextStats = time.time( )
@@ -70,8 +70,8 @@ class Ui:
 
         i = 0
         for l in self.options:
-            self.opts.addstr( i*2, 2, l )
-            i += 1
+            self.opts.addstr( i, 2, l )
+            i += 2
 
         # Line for stats window
         self.scr.hline( self.y( )-self.STATS_HEIGHT-1, 1, 0, self.STATS_WIDTH )
@@ -113,19 +113,18 @@ class Ui:
 
     def updateMain( self ):
         # Draw each child with an appropriate background color / anim
-
-        y = 0
-        x = 0
+        y = 0 # Our cursor's y position
+        x = 0 # ^ but x
         for c in self.pool.children:
-            if c is None:
+            if c is None: # Children are None for a while, these are ignored
                 continue
             s = ''.join( [ "#", str( c.num ) ] )
 
             self.main.addstr( y, x, s, curses.color_pair( self.pool.data[c.num][STATUS] ) )
 
-            y += 2
+            y += 2 # Scoot down two lines for each number
             if y > self.y( ) - self.STATS_HEIGHT - 4:
-                x += 3
+                x += 3 # Over three, an extra character to space
                 y = 0
 
         self.main.refresh( )

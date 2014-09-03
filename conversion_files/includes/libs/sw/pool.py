@@ -63,8 +63,11 @@ class Pool:
         # Marks our start time, set when first child sends starting
         self.started = None
 
-        # Starting for now...
+        # Starting for now
         self.starting = True
+
+        # Not stopped yet
+        self.stopped = False
 
         # Children left
         self.childrenLeft = self.numChildren
@@ -155,7 +158,7 @@ class Pool:
                 self.data[i][STATUS] = r[TIME]
 
         # Still spawning children, ignore their status until done.
-        if self.starting == True:
+        if self.starting and not self.stopped:
             if self.childrenLeft > 0 and time.time( ) > self.nextSpawn:
                 self.newChild( )
                 if self.options['staggered']:
@@ -163,7 +166,7 @@ class Pool:
                 self.childrenLeft -= 1
             elif self.childrenLeft == 0:
                 self.starting = False
-        else: 
+        elif not self.stopped: 
             # Check that children are alive, restart
             for i in range(self.numChildren):
                 if not self.children[i].is_alive( ) and not self.workQueue.empty( ):
@@ -181,6 +184,9 @@ class Pool:
 
         :return: Boolean for if there are children still running work.
         """
+        if self.stopped:
+            return True
+
         if self.childQueue.empty( ) and self.workQueue.empty( ):
             for c in self.children:
                 if c.is_alive( ):
@@ -199,3 +205,5 @@ class Pool:
         """
         for c in self.children:
             c.stop( )
+
+        self.stopped = True

@@ -287,7 +287,10 @@ class Child:
         # Open our handle
         self.lh = open( os.path.join( self.log, ''.join( [ 'log-', str( self.num + 1 ), '.txt' ] ) ), 'a+' )
 
-        # Our process        
+        # Show loading
+        self.status( STAT_LOAD )
+
+        # Our process 
         self.proc = Process( target=self.think, args=( ) )
         self.proc.start( )
 
@@ -319,12 +322,19 @@ class Child:
         else:
             self.logMsg( "Stopping child process" )
 
+        # Inform the TUI that we're done.
         self.status( STAT_DONE )
 
+        # Kill our browser instance
+        if self.driver is not None:
+            self.driver.quit( )
+
+        # Kill our process
         self.proc.terminate( )
         self.proc.join( )
         self.proc = None
 
+        # Close our log
         self.lh.close( )
 
 

@@ -11,7 +11,6 @@ def main( func, file, **kwargs ):
         :param file: Usually __file__, the name of a script in the directory that log/ will be in.
         :returns: None
     """
-    print( "\nLibraries loaded!\n\n" )
     numTimes = 1
     children = 3 
     images = False
@@ -46,7 +45,7 @@ def mainLoop( stdscr, pool ):
 
     pool.ui = Ui( stdscr, pool )
 
-    while not pool.done( ):
+    while True:
         pool.think( )
         pool.ui.think( )
         pool.ui.sleep( 0.1 )
