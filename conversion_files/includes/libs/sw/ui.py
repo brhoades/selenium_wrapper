@@ -65,11 +65,9 @@ class Ui:
 
     def drawMainScreen( self ):
         self.scr.nodelay( True ) # Don't wait on key presses
-
-        self.scr.border( )
-
-        # Draw our title at the top
-        self.scr.addstr( 0, 3, "Selenium Wrapper Console" )
+        curses.curs_set( 0 )     # Invisible Cursor
+        self.scr.border( )       # Draws a pretty border around the window
+        self.scr.addstr( 0, 3, "Selenium Wrapper Console" ) # Puts a line on top
 
         # Line for key window
         self.scr.vline( 1, self.x( )-self.OPTIONS_WIDTH, 0, self.y( )-self.STATS_HEIGHT )
