@@ -66,16 +66,6 @@ class Child:
 
 
 
-    def msg( self, message ):
-        """Formats a message for this child to be printed out.
-
-        :param msg: The message to be printed out to the console.
-        :return: None
-        """
-        #print( "Child #" + str( self.num + 1 ) + ": " + message )
-
-
-
     def think( self ):
         """The meat of the wrapper, where the main thinking is done. Takes no arguments, just reads from 
            self variables set in :py:class:`sw.Child`. PhantomJS is added into the python path by run.bat, so
@@ -112,7 +102,6 @@ class Child:
                                                service_args=sargs )
         except Exception as e:
             self.logMsg( ''.join( [ "Webdriver failed to load: ", str( e ), "\n", traceback.formatexc( ) ] ), CRITICAL )
-            self.msg( "WEBDRIVER ERROR" )
             try: 
                 self.driver.quit( )
             except:
@@ -300,7 +289,6 @@ class Child:
 
         # Our process        
         self.proc = Process( target=self.think, args=( ) )
-        self.msg( "LOADING" )
         self.proc.start( )
 
 

@@ -46,16 +46,6 @@ def formatError( res, type="message" ):
     return res
 
 
-def childMessage( num, msg ):
-    """Consistently formats a message to be print out to the console for this child.
-       
-       :param num: The number of the child we are printing a message for.
-       :param msg: The message for the child. Formatted like so: ``Child #num: msg``
-       :return: None
-    """
-    #print( ''.join( [ "Child #", str( num + 1 ), ": ", msg ] ) )
-
-
 
 def stats( good, bad, timetaken, children, times, starttime ):
     """Prints out statistics for the current running pool.

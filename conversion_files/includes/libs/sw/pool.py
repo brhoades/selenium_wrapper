@@ -141,14 +141,12 @@ class Pool:
             if r[RESULT] == DONE:
                 self.data[i][SUCCESSES] += 1
                 self.data[i][TIMES].append( r[TIME] )
-                self.children[i].msg( ''.join( ["DONE (", str( format( r[TIME] ) ), "s)" ] ) )
 
             elif r[RESULT] == FAILED:
                 self.data[i][FAILURES] += 1
 
                 # When we get a failure we put the job back on the queue
                 self.workQueue.put( self.func )
-                self.children[i].msg( ''.join( [ "ERROR: ", formatError( r[ERROR] ) ] ) ) 
 
             elif r[RESULT] == READY and self.started == None:
                 self.started = time.time( )
