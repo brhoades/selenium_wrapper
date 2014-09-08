@@ -7,7 +7,8 @@ require 'fileutils'
 #
 def convert_keywords( file, filename, func )
   start = false     # Indicator for the start of our function
-  startOps = false  # Indicator for the start of our options header
+  startOps = false  # Indicator for the start of our $options header
+  i = 0
 
   # Now find our "main" test method (should == file name) in a loop
   fn = File.basename filename, ".py"
@@ -17,14 +18,14 @@ def convert_keywords( file, filename, func )
       start = true
       func << l
       next
-    elsif i == 0 and l =~ /^#OPTIONS/
+    elsif i == 0 and l =~ /^#$options/
       startOps = true
       next
     end
 
     ################################################################################################
-    # Options Parsing Section
-    # If we found #OPTIONS at the top of the file, parse any following comment as options.
+    # $options Parsing Section
+    # If we found #$options at the top of the file, parse any following comment as $options.
     # Anything starting with gd (ghostdriver) is passed directly as it'll be a ghostdriver arg.
     #
     if startOps
@@ -137,7 +138,7 @@ def convert_func_swap( func, kwargs )
   func.insert( 1, ( " "*8 ) + "driver.set_window_size( 1920, 1080 )\n" )
 
   # Get our args sorted out
-  if options[:images] == true
+  if $options[:images] == true
     kwargs << "images=True"
   else
     kwargs << "images=False"
@@ -177,25 +178,24 @@ def convert_print_prep( func, kwargs, base_url, imports )
   func << " "*4 + "main( test_func, __file__, #{kwargs.join ", "} )\n"
 end
 
-def convert( filename, outputfn, options={} )
+def convert( filename, outputfn )
   file = []
   func = []
   base_url = ""
-  i = -1
   kwargs = []       # Passed to our main function at the end
   imports = []      # Manually added imports later
 
-  # Grab our options and make sure keys exist
-  options[:python] = true unless options.has_hey? :python
-  options[:images] = false unless options.has_hey? :images
-  options[:recopy] = false unless options.has_hey? :recopy
+  # Grab our $options and make sure keys exist
+  $options[:python] = true unless $options.has_key? :python
+  $options[:images] = false unless $options.has_key? :images
+  $options[:recopy] = false unless $options.has_key? :recopy
 
   # Read in our input file  
   File.new( filename, "r:UTF-8" ).each_line { |l| file << l }
 
-  convert_keywords filename, file, func
+  convert_keywords file, filename, func
 
-  convert_func_swap filename, file, options
+  convert_func_swap file, kwargs
 
   ##################
   # Prep for printing
@@ -215,7 +215,7 @@ end
 
 # Prepare our desired directory. This includes extracting Python to that location, creating a .bat wrapper, and touching a file to launch everything.
 # We return our handle to the touched file.
-def prepareDirectory( outputfn, options )
+def prepareDirectory( outputfn )
   scriptpath = File.dirname __FILE__
   cf = scriptpath+"/conversion_files/"
   i = 0 
@@ -236,7 +236,7 @@ def prepareDirectory( outputfn, options )
   end
 
   # Check for the python cache extracted folder
-  if not Dir.exists? cf+"python277/" and options[:python].bool
+  if not Dir.exists? cf+"python277/" and $options[:python]
     if not File.exists? cf+"python277.zip"
       error "Missing packaged Python 2.7.7 installation folder or zip in conversion_files, this is required for the \"Include Python\" option.\n\nThe conversion process cannot continue."
       return nil
@@ -252,7 +252,7 @@ def prepareDirectory( outputfn, options )
   phasePrint "Copying Python to Output Folder", i+=1, max
   print "  This will take some time\n"
   # Copy Python over to the directory
-  if not Dir.exists? outputfn + "python277/" and options[:python].bool
+  if not Dir.exists? outputfn + "python277/" and $options[:python]
     FileUtils.cp_r cf + "python277", outputfn
   end
 
