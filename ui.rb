@@ -156,7 +156,7 @@ bSubmit_click = Proc.new do
   end
 
   $th = Thread.new do 
-    $res = convert $filename, $outputfn 
+    $res = convert $filename, $outputfn, { python: $python, images: $images, recopy: false }
     error "Complete!"
   end
 end

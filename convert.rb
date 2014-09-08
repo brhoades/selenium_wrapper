@@ -4,19 +4,10 @@ require 'fileutils'
 ###################################################################################################
 # Conversion Logic 
 ###################################################################################################
-
-def convert( filename, outputfn, options={} )
-  file = []
-  func = []
-  base_url = ""
+#
+def convert_keywords( file, filename, func )
   start = false     # Indicator for the start of our function
   startOps = false  # Indicator for the start of our options header
-  i = -1
-  kwargs = []       # Passed to our main function at the end
-  imports = []      # Manually added imports later
-
-  # Read in our input file  
-  File.new( filename, "r:UTF-8" ).each_line { |l| file << l }
 
   # Now find our "main" test method (should == file name) in a loop
   fn = File.basename filename, ".py"
@@ -48,8 +39,8 @@ def convert( filename, outputfn, options={} )
       startOps = false if l !~ /^#/
       next
     end
-    ################################################################################################
 
+    ################################################################################################
     # Catch for the base_url
     if l =~ /self\.base_url[\s]*=[\s]*(.*)$/
       base_url = $~.captures.first
@@ -121,7 +112,9 @@ def convert( filename, outputfn, options={} )
       func << l
     end
   end
+end
 
+def convert_func_swap( func, kwargs )
   # Now apply regexes for my custom functions
   func.map! do |l|
     if l !~ /\.send_keys/
@@ -144,7 +137,7 @@ def convert( filename, outputfn, options={} )
   func.insert( 1, ( " "*8 ) + "driver.set_window_size( 1920, 1080 )\n" )
 
   # Get our args sorted out
-  if $images.bool == true
+  if options[:images] == true
     kwargs << "images=True"
   else
     kwargs << "images=False"
@@ -155,11 +148,9 @@ def convert( filename, outputfn, options={} )
       kwargs[kwargs.index( k )].gsub! /\-/, ""
     end
   end
-  
-  ##################
-  # Prep for printing
-  ##################
+end
 
+def convert_print_prep( func, kwargs, base_url, imports )
   # Drop the base_url at the beginning of the function
   func.insert 1, "        base_url = #{base_url}\n"
 
@@ -184,6 +175,33 @@ def convert( filename, outputfn, options={} )
   func << "\n" << "\n"
   func << "if __name__ == '__main__':\n" 
   func << " "*4 + "main( test_func, __file__, #{kwargs.join ", "} )\n"
+end
+
+def convert( filename, outputfn, options={} )
+  file = []
+  func = []
+  base_url = ""
+  i = -1
+  kwargs = []       # Passed to our main function at the end
+  imports = []      # Manually added imports later
+
+  # Grab our options and make sure keys exist
+  options[:python] = true unless options.has_hey? :python
+  options[:images] = false unless options.has_hey? :images
+  options[:recopy] = false unless options.has_hey? :recopy
+
+  # Read in our input file  
+  File.new( filename, "r:UTF-8" ).each_line { |l| file << l }
+
+  convert_keywords filename, file, func
+
+  convert_func_swap filename, file, options
+
+  ##################
+  # Prep for printing
+  ##################
+
+  convert_print_prep func, kwargs, base_url, imports
 
   ################
   # Output to file
@@ -197,7 +215,7 @@ end
 
 # Prepare our desired directory. This includes extracting Python to that location, creating a .bat wrapper, and touching a file to launch everything.
 # We return our handle to the touched file.
-def prepareDirectory( outputfn )
+def prepareDirectory( outputfn, options )
   scriptpath = File.dirname __FILE__
   cf = scriptpath+"/conversion_files/"
   i = 0 
@@ -218,7 +236,7 @@ def prepareDirectory( outputfn )
   end
 
   # Check for the python cache extracted folder
-  if not Dir.exists? cf+"python277/" and $python.bool
+  if not Dir.exists? cf+"python277/" and options[:python].bool
     if not File.exists? cf+"python277.zip"
       error "Missing packaged Python 2.7.7 installation folder or zip in conversion_files, this is required for the \"Include Python\" option.\n\nThe conversion process cannot continue."
       return nil
@@ -234,7 +252,7 @@ def prepareDirectory( outputfn )
   phasePrint "Copying Python to Output Folder", i+=1, max
   print "  This will take some time\n"
   # Copy Python over to the directory
-  if not Dir.exists? outputfn + "python277/" and $python.bool
+  if not Dir.exists? outputfn + "python277/" and options[:python].bool
     FileUtils.cp_r cf + "python277", outputfn
   end
 
