@@ -21,12 +21,6 @@ class Ui:
         # Cached jobs per second string
         self.jpstr = None
 
-        # Frames for loading
-        self.loadFrame = [ "-", "\\", "|", "/" ]
-
-        # Current frame
-        self.curFrame  = 0
-
         # Dimensions and subwindow for statistics section
         self.STATS_HEIGHT  = 7
         self.STATS_WIDTH   = self.x( )-2
@@ -60,10 +54,16 @@ class Ui:
 
 
     def drawMainScreen( self ):
+        """Renders the initial screen and sets up options for curses. Draws
+           the border around the screen and the separators for the various sections
+           with the title.
+
+           :returns: None
+        """
         self.scr.nodelay( True ) # Don't wait on key presses
         curses.curs_set( 0 )     # Invisible Cursor
         self.scr.border( )       # Draws a pretty border around the window
-        self.scr.addstr( 0, 3, "Selenium Wrapper Console" ) # Puts a line on top
+        self.scr.addstr( 0, 3, "Selenium Wrapper Console" ) # Puts a message up top
 
         # Line for key window
         self.scr.vline( 1, self.x( )-self.OPTIONS_WIDTH, 0, self.y( )-self.STATS_HEIGHT )
@@ -90,6 +90,14 @@ class Ui:
 
 
     def sleep( self, amount ):
+        """Handles sleeping while listening for button presses. The hardcoded subsleep (0.01s)
+           amount is an appropriate resolution that allows for seemingly instant button press responses
+           without consuming an entire core (when constantly listening).
+        
+           :param amount: Float for amount of seconds to wait while listening to button presses.
+             This is accurately followed to a resolution of 0.01s.
+           :returns: None
+        """
         end = amount + time.time( )
         while time.time( ) <= end:
             key = self.scr.getch( )
@@ -112,6 +120,12 @@ class Ui:
 
 
     def updateMain( self ):
+        """Prints out a number for each of our children with an appropriate color
+           for each corresponding with the last status message they reported. Refreshes
+           the screen when done.
+            
+           :returns: None
+        """
         # Draw each child with an appropriate background color / anim
         y = 0 # Our cursor's y position
         x = 0 # ^ but x
@@ -132,6 +146,12 @@ class Ui:
 
 
     def updateStats( self ):
+        """Updates the statistics field within our window. Completely clears all of it initally
+           then slowly goes through and reads from each individual pool value to rebuild it.
+           This is called from :func:`sw.ui.think` and refreshes several times per second.
+
+           :return: None
+        """
         statstrs = [ ]
         t = time.time( )
 
@@ -174,7 +194,6 @@ class Ui:
         
         if self.jpstr is not None:
             statstrs.append( self.jpstr )
-
 
         adj = 2 # Amount we are shifting right in characters
         k = 0   # Amount we are shifting vertically
