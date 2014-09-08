@@ -238,7 +238,7 @@ def prepareDirectory( outputfn )
   # Check for the python cache extracted folder
   if not Dir.exists? cf+"python277/" and $options[:python]
     if not File.exists? cf+"python277.zip"
-      error "Missing packaged Python 2.7.7 installation folder or zip in conversion_files, this is required for the \"Include Python\" option.\n\nThe conversion process cannot continue."
+      error "Missing packaged Python 2.7.7 installation folder or zip in conversion_files, this is required for the \"Include Python\"//\"--python\" option.\n\nThe conversion process cannot continue."
       return nil
     else
       # Extract our python277.zip folder

@@ -9,20 +9,20 @@ $options = { images: false, recopy: false, overwrite: false }
 OptionParser.new do |opts|
   opts.banner = "Usage: main.rb [options] script.py"
   
-  opts.on "-m", "--images", "Exported script should load images." do 
-    $options[:images] = true
+  opts.on "-m", "--[no-]images", "Exported script should load images." do |o|
+    $options[:images] = o
   end
   
-  opts.on "-o", "--overwrite", "Overwrite any conflicting files on output." do
-    $options[:overwrite] = true
+  opts.on "-o", "--[no-]overwrite", "Overwrite any conflicting files on output." do |o|
+    $options[:overwrite] = o
   end
 
-  opts.on "-c", "--recopy", "Recopy missing or different files." do
-    $options[:recopy] = true
+  opts.on "-c", "--[no-]recopy", "Recopy missing or different files." do |o|
+    $options[:recopy] = o
   end
 
-  opts.on "-p", "--python", "Include python in installation (Windows only)." do
-    $options[:python] = true
+  opts.on "-p", "--[no-]python", "Include python in installation (Windows only)." do |o|
+    $options[:python] = o
   end
 
   opts.on "-i", "--script [SCRIPT]", String, "Script to convert, UI isn't launched if this is specified" do |s|
@@ -32,12 +32,12 @@ OptionParser.new do |opts|
     ### Check input
     # Check that input file exists and is from Selenium
     if not File.file? s
-      print "ERROR: Input file does not appear to exist. Conversion cannot continue.\n" 
+      error "Input file does not appear to exist. Conversion cannot continue.\n" 
       exit
     end
 
     if not isSeleniumFile? s
-      print "ERROR: Input file does not appear to be exported from the Selenium IDE " \
+      error "Input file does not appear to be exported from the Selenium IDE " \
                     + "in the proper format. It should be a Python 2.7 unittest-wrapped for Webdriver. " \
                     + "Continuing may have unknown effects, "
       ask_continue
@@ -56,7 +56,7 @@ OptionParser.new do |opts|
     end
 
     if File.file? out
-      print "ERROR: Output folder is a file, it should be a folder or nonexistant."
+      error "Output folder is a file, it should be a folder or nonexistant."
       exit
     end
 

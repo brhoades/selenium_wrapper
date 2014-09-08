@@ -227,7 +227,7 @@ tOverwrite.grid       :column => 2, :row => 3, :sticky => 'e', :pady => 5
 
 # Throw up an error window
 def error( text, die=false )
-  if not $options[:error]
+  if not $options[:silent]
     Tk::messageBox :message => text
   else
     print "ERROR: ", text, "\n"
@@ -237,5 +237,5 @@ def error( text, die=false )
 end
 
 def ask_continue
-  exit unless agree "are you sure you wish to continue?\t"
+  exit unless agree "are you sure you wish to continue?"
 end
