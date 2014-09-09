@@ -43,10 +43,8 @@ OptionParser.new do |opts|
       ask_continue
     end
 
-    # Splits apart our directory and file name
-    fn = /.*([\/\\])([^\\\/\n]+)\.py$/.match s
-
-    out = File.dirname( s ) + fn[1] + "out" + fn[1] + fn[2] + fn[1]
+    # This gets our parent folder name and then puts in out/ the base file name of the conversion script.
+    out = File.join File.expand_path(  File.join( File.dirname( s ), "..", "out", ) ), File.basename( s, ".py" ) 
 
     # Check if output folder exists
     if File.directory? out and Dir.exists? out and not File.file? out and not $options[:overwrite]

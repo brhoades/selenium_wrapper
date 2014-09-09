@@ -1,6 +1,6 @@
 @echo off
 
-set PATH=%PATH%;%~dp0\python277;%~dp0\python277\phantomjs-1.9.7-windows
+set PATH=%PATH%;%~dp0\python27;%~dp0\python27\phantomjs-1.9.7-windows
 set child=3
 set times=3
 set staggered=n

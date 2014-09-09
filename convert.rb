@@ -217,7 +217,7 @@ end
 # We return our handle to the touched file.
 def prepareDirectory( outputfn )
   scriptpath = File.dirname __FILE__
-  cf = scriptpath+"/conversion_files/"
+  cf = File.join scriptpath, "conversion_files"
   i = 0 
   max = 3
 
@@ -236,32 +236,32 @@ def prepareDirectory( outputfn )
   end
 
   # Check for the python cache extracted folder
-  if not Dir.exists? cf+"python277/" and $options[:python]
-    if not File.exists? cf+"python277.zip"
-      error "Missing packaged Python 2.7.7 installation folder or zip in conversion_files, this is required for the \"Include Python\"//\"--python\" option.\n\nThe conversion process cannot continue."
+  if not Dir.exists? File.join( cf, "python27" ) and $options[:python]
+    if not File.exists? File.join( cf, "python27.zip" )
+      error "Missing packaged Python 2.7.7 (conversion_files/python27) installation folder or zip in conversion_files, this is required for the \"Include Python\"//\"--python\" option.\n\nThe conversion process cannot continue."
       return nil
     else
-      # Extract our python277.zip folder
+      # Extract our python27.zip folder
       phasePrint "Extracting Python", i+=0.5, max
-      error "Extracting python277.zip, this may take some time.\n\nIt is quicker to extract this by hand into the conversion_files folder using 7-zip or Peazip, as they are capable of using multiple cores."
-      unzip "#{cf}python277.zip", cf
+      error "Extracting python27.zip, this may take some time.\n\nIt is quicker to extract this by hand into the conversion_files folder using 7-zip or Peazip, as they are capable of using multiple cores."
+      unzip "#{cf}python27.zip", cf
     end
   end
 
   i = i.floor if i.is_a? Float
-  phasePrint "Copying Python to Output Folder", i+=1, max
+  phasePrint "Copying Python to utput Folder", i+=1, max
   print "  This will take some time\n"
   # Copy Python over to the directory
-  if not Dir.exists? outputfn + "python277/" and $options[:python]
-    FileUtils.cp_r cf + "python277", outputfn
+  if not Dir.exists? File.join( outputfn, "python27" ) and $options[:python]
+    FileUtils.cp_r File.join( cf, "python27" ), outputfn
   end
 
   phasePrint "Initializing File Structure", i+=1, max
-  FileUtils.cp cf + "run.bat", outputfn
+  FileUtils.cp File.join( cf, "run.bat" ), outputfn
 
-  FileUtils.cp_r cf + "includes", outputfn
-  
-  return File.new( outputfn + "run_test.py", "w+:UTF-8" )
+  FileUtils.cp_r File.join( cf, "includes" ), outputfn
+
+  return File.new( File.join( outputfn, "run_test.py" ), "w+:UTF-8" )
 end
 
 def phasePrint( title, num, max )
