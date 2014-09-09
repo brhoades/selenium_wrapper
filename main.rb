@@ -44,8 +44,7 @@ OptionParser.new do |opts|
     end
 
     # This gets our parent folder name and then puts in out/ the base file name of the conversion script.
-    out = File.join File.expand_path(  File.join( File.dirname( s ), "..", "out", ) ), File.basename( s, ".py" ) 
-
+    out = outputFN s 
     # Check if output folder exists
     if File.directory? out and Dir.exists? out and not File.file? out and not $options[:overwrite]
       print "WARNING: Output folder already exists. Files within the folder that conflict will be " \

@@ -309,3 +309,10 @@ def unzip( fn, dest )
     end
   end
 end
+
+# Gets out output folder name from input filename and the main script
+def outputFN( input )
+  # This gets our parent folder name and then puts in out/ the base file name of the conversion script.
+  File.join File.dirname( __FILE__ ), "out", File.basename( input, ".py" ) 
+end
+
