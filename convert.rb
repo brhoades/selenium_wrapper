@@ -4,19 +4,11 @@ require 'fileutils'
 ###################################################################################################
 # Conversion Logic 
 ###################################################################################################
-
-def convert( filename, outputfn, options={} )
-  file = []
-  func = []
-  base_url = ""
+#
+def convert_keywords( file, filename, func )
   start = false     # Indicator for the start of our function
-  startOps = false  # Indicator for the start of our options header
-  i = -1
-  kwargs = []       # Passed to our main function at the end
-  imports = []      # Manually added imports later
-
-  # Read in our input file  
-  File.new( filename, "r:UTF-8" ).each_line { |l| file << l }
+  startOps = false  # Indicator for the start of our $options header
+  i = 0
 
   # Now find our "main" test method (should == file name) in a loop
   fn = File.basename filename, ".py"
@@ -26,14 +18,14 @@ def convert( filename, outputfn, options={} )
       start = true
       func << l
       next
-    elsif i == 0 and l =~ /^#OPTIONS/
+    elsif i == 0 and l =~ /^#$options/
       startOps = true
       next
     end
 
     ################################################################################################
-    # Options Parsing Section
-    # If we found #OPTIONS at the top of the file, parse any following comment as options.
+    # $options Parsing Section
+    # If we found #$options at the top of the file, parse any following comment as $options.
     # Anything starting with gd (ghostdriver) is passed directly as it'll be a ghostdriver arg.
     #
     if startOps
@@ -48,8 +40,8 @@ def convert( filename, outputfn, options={} )
       startOps = false if l !~ /^#/
       next
     end
-    ################################################################################################
 
+    ################################################################################################
     # Catch for the base_url
     if l =~ /self\.base_url[\s]*=[\s]*(.*)$/
       base_url = $~.captures.first
@@ -121,7 +113,9 @@ def convert( filename, outputfn, options={} )
       func << l
     end
   end
+end
 
+def convert_func_swap( func, kwargs )
   # Now apply regexes for my custom functions
   func.map! do |l|
     if l !~ /\.send_keys/
@@ -144,7 +138,7 @@ def convert( filename, outputfn, options={} )
   func.insert( 1, ( " "*8 ) + "driver.set_window_size( 1920, 1080 )\n" )
 
   # Get our args sorted out
-  if $images.bool == true
+  if $options[:images] == true
     kwargs << "images=True"
   else
     kwargs << "images=False"
@@ -155,11 +149,9 @@ def convert( filename, outputfn, options={} )
       kwargs[kwargs.index( k )].gsub! /\-/, ""
     end
   end
-  
-  ##################
-  # Prep for printing
-  ##################
+end
 
+def convert_print_prep( func, kwargs, base_url, imports )
   # Drop the base_url at the beginning of the function
   func.insert 1, "        base_url = #{base_url}\n"
 
@@ -184,6 +176,32 @@ def convert( filename, outputfn, options={} )
   func << "\n" << "\n"
   func << "if __name__ == '__main__':\n" 
   func << " "*4 + "main( test_func, __file__, #{kwargs.join ", "} )\n"
+end
+
+def convert( filename, outputfn )
+  file = []
+  func = []
+  base_url = ""
+  kwargs = []       # Passed to our main function at the end
+  imports = []      # Manually added imports later
+
+  # Grab our $options and make sure keys exist
+  $options[:python] = true unless $options.has_key? :python
+  $options[:images] = false unless $options.has_key? :images
+  $options[:recopy] = false unless $options.has_key? :recopy
+
+  # Read in our input file  
+  File.new( filename, "r:UTF-8" ).each_line { |l| file << l }
+
+  convert_keywords file, filename, func
+
+  convert_func_swap file, kwargs
+
+  ##################
+  # Prep for printing
+  ##################
+
+  convert_print_prep func, kwargs, base_url, imports
 
   ################
   # Output to file
@@ -199,7 +217,7 @@ end
 # We return our handle to the touched file.
 def prepareDirectory( outputfn )
   scriptpath = File.dirname __FILE__
-  cf = scriptpath+"/conversion_files/"
+  cf = File.join scriptpath, "conversion_files"
   i = 0 
   max = 3
 
@@ -218,12 +236,12 @@ def prepareDirectory( outputfn )
   end
 
   # Check for the python cache extracted folder
-  if not Dir.exists? cf+"python27/" and $python.bool
+  if not Dir.exists? File.join( cf, "python27" ) and $options[:python]
     if not File.exists? cf+"python27.zip"
-      error "Missing packaged Python 2.7.8 installation folder or zip in conversion_files, this is required for the \"Include Python\" option.\n\nThe conversion process cannot continue."
+      error "Missing packaged Python 2.7.8 installation folder or zip in conversion_files, this is required for the \"Include Python\"//\"--python\" option.\n\nThe conversion process cannot continue."
       return nil
     else
-      # Extract our python277.zip folder
+      # Extract our python27.zip folder
       phasePrint "Extracting Python", i+=0.5, max
       error "Extracting python27.zip, this may take some time.\n\nIt is quicker to extract this by hand into the conversion_files folder using 7-zip or Peazip, as they are capable of using multiple cores."
       unzip "#{cf}python27.zip", cf
@@ -231,19 +249,19 @@ def prepareDirectory( outputfn )
   end
 
   i = i.floor if i.is_a? Float
-  phasePrint "Copying Python to Output Folder", i+=1, max
+  phasePrint "Copying Python to utput Folder", i+=1, max
   print "  This will take some time\n"
   # Copy Python over to the directory
-  if not Dir.exists? outputfn + "python27/" and $python.bool
-    FileUtils.cp_r cf + "python27", outputfn
+  if not Dir.exists? File.join( outputfn, "python27" ) and $options[:python]
+    FileUtils.cp_r File.join( cf, "python27" ), outputfn
   end
 
   phasePrint "Initializing File Structure", i+=1, max
-  FileUtils.cp cf + "run.bat", outputfn
+  FileUtils.cp File.join( cf, "run.bat" ), outputfn
 
-  FileUtils.cp_r cf + "includes", outputfn
-  
-  return File.new( outputfn + "run_test.py", "w+:UTF-8" )
+  FileUtils.cp_r File.join( cf, "includes" ), outputfn
+
+  return File.new( File.join( outputfn, "run_test.py" ), "w+:UTF-8" )
 end
 
 def phasePrint( title, num, max )
@@ -291,3 +309,10 @@ def unzip( fn, dest )
     end
   end
 end
+
+# Gets out output folder name from input filename and the main script
+def outputFN( input )
+  # This gets our parent folder name and then puts in out/ the base file name of the conversion script.
+  File.join File.dirname( __FILE__ ), "out", File.basename( input, ".py" ) 
+end
+

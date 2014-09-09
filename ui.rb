@@ -1,5 +1,6 @@
 require 'tk'
 require 'tkextlib/tile'  
+require 'highline/import'
 
 ###################################################################################################
 # UI Logic
@@ -62,16 +63,10 @@ bBrowseIn_click = Proc.new do
     if $filename != nil and $filename != ""
       if $filename !~ /\.py$/
         Tk::messageBox :message => "Input file must be a python file (end in .py)."
-      else  # This just gets whatever slash type we're using, then spits out an appropriate folder with it
+      else
         inp = /[\/\\]in(put)?/
-
-        # Get rid of any input or in folders
         $filename.sub!( inp, "" ) if inp.match( $filename )
-
-        # Splits apart our directory and file name
-        fn = /.*([\/\\])([^\\\/\n]+)\.py$/.match $filename
-
-        $outputfn = eOutputfn.value = File.dirname( $filename ) + fn[1] + "out" + fn[1] + fn[2] + fn[1]
+        $outputfn = eOutputfn.value = outputFN $filename 
       end
     end
   end
@@ -140,7 +135,7 @@ bSubmit_click = Proc.new do
   end
 
   # Check if output folder exists
-  if File.directory? $outputfn and Dir.exists? $outputfn and not File.file? $outputfn and not $overwrite.bool
+  if File.directory? $outputfn and Dir.exists? $outputfn and not File.file? $outputfn and not $options[:overwrite]
     action = Tk::messageBox \
       :type => 'yesno', :icon => 'question', :title => 'Folder Exists', \
       :message => "Output folder already exists. Files within the folder that conflict will be " \
@@ -156,7 +151,11 @@ bSubmit_click = Proc.new do
   end
 
   $th = Thread.new do 
-    $res = convert $filename, $outputfn 
+    $options[:python] = $python
+    $options[:images] = $images
+    $options[:recopy] = false
+
+    $res = convert $filename, $outputfn
     error "Complete!"
   end
 end
@@ -226,37 +225,15 @@ tOverwrite.grid       :column => 2, :row => 3, :sticky => 'e', :pady => 5
 
 # Throw up an error window
 def error( text, die=false )
-  Tk::messageBox :message => text
+  if not $options[:silent]
+    Tk::messageBox :message => text
+  else
+    print "ERROR: ", text, "\n"
+  end
 
   exit if die
 end
 
-##Unused
-# Intended to be a console window so you can monitor progress
-def prepareOutputWin( root )
-  window = TkToplevel.new root
-  window['title'] = "Conversion Details"
-  window['geometry'] = "400x500"
-
-  text = TkText.new window do
-    width 350
-    height 400
-    state 'disabled'
-    wrap 'none'
-    borderwidth 1
-  end
-
-  eCancel = TkButton.new window
-
-  eCancel_click = Proc.new do
-  end
-
-  eCancel = TkButton.new window do
-    text "Cancel"
-  end
-  eCancel.comman = eCancel_click
-
-  window.grid :row => 0, :column => 0, :rowspan => 6, :columnspan => 1
-  text.grid :row => 0, :column => 0, :rowspan => 5
-  eCancel.grid :row => 5, :column => 0
+def ask_continue
+  exit unless agree "are you sure you wish to continue?"
 end
