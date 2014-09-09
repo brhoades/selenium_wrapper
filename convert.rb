@@ -5,10 +5,12 @@ require 'fileutils'
 # Conversion Logic 
 ###################################################################################################
 #
-def convert_keywords( file, filename, func )
+def convert_keywords( file, filename )
   start = false     # Indicator for the start of our function
   startOps = false  # Indicator for the start of our $options header
+  base_url = ""     # Stores our base url
   i = 0
+  func = [ ]
 
   # Now find our "main" test method (should == file name) in a loop
   fn = File.basename filename, ".py"
@@ -113,6 +115,8 @@ def convert_keywords( file, filename, func )
       func << l
     end
   end
+
+  return func, base_url
 end
 
 def convert_func_swap( func, kwargs )
@@ -149,6 +153,8 @@ def convert_func_swap( func, kwargs )
       kwargs[kwargs.index( k )].gsub! /\-/, ""
     end
   end
+
+  return func
 end
 
 def convert_print_prep( func, kwargs, base_url, imports )
@@ -192,10 +198,8 @@ def convert( filename, outputfn )
 
   # Read in our input file  
   File.new( filename, "r:UTF-8" ).each_line { |l| file << l }
-
-  convert_keywords file, filename, func
-
-  convert_func_swap file, kwargs
+  func, base_url = convert_keywords( file, filename )
+  func = convert_func_swap func, kwargs
 
   ##################
   # Prep for printing
