@@ -332,11 +332,12 @@ class Child:
             self.logMsg( "Stopping child process" )
 
         # Kill our browser instance
-        if self.driver is not None:
+        if self.driver != None:
+            self.logMsg( "Driver was started, stopping it." )
             self.driver.quit( )
 
         # Kill our process
-        if self.proc is not None:
+        if self.proc != None:
             self.proc.terminate( )
             self.proc.join( )
             self.proc = None

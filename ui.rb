@@ -113,7 +113,13 @@ bSubmit_click = Proc.new do
     error "Already running conversion routine, please wait. You will be prompted on completion."
     return
   elsif $th.is_a? Thread
-    $th.join
+    begin
+      $th.join
+    rescue 
+      raise
+    ensure
+      $th = nil
+    end
   end
 
   ### Check input
@@ -135,7 +141,7 @@ bSubmit_click = Proc.new do
   end
 
   # Check if output folder exists
-  if File.directory? $outputfn and Dir.exists? $outputfn and not File.file? $outputfn and not $options[:overwrite]
+  if File.directory? $outputfn and Dir.exists? $outputfn and not File.file? $outputfn and not $overwrite
     action = Tk::messageBox \
       :type => 'yesno', :icon => 'question', :title => 'Folder Exists', \
       :message => "Output folder already exists. Files within the folder that conflict will be " \
@@ -154,6 +160,7 @@ bSubmit_click = Proc.new do
     $options[:python] = $python
     $options[:images] = $images
     $options[:recopy] = false
+    $options[:overwrite] = $overwrite
 
     $res = convert $filename, $outputfn
     error "Complete!"
