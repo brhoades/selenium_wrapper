@@ -23,7 +23,6 @@ def convert_keywords( file, filename )
       next
     elsif i == 0 and l =~ /^#OPTIONS/i
       startOps = true
-      print "OPTIONS DIRECTIVE\n"
       next
     end
 
@@ -198,11 +197,8 @@ def convert( filename, outputfn )
 
   # Read in our input file  
   File.new( filename, "r:UTF-8" ).each_line { |l| file << l }
-  print "Kwargs: ", kwargs, "\n"
   func, kwargs, imports, base_url = convert_keywords file, filename
-  print "Kwargs: ", kwargs, "\n"
   convert_func_swap func, kwargs
-  print "Kwargs: ", kwargs, "\n"
 
   ##################
   # Prep for printing
