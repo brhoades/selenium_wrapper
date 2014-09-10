@@ -12,6 +12,9 @@ class Ui:
         # Options for buttons to press
         self.options = [ "c+- - Children", "j+- - Jobs", "p   - Pause", "h   - Help", "q   - Quit" ]
 
+        # Key buffer
+        self.keys = [ ]
+
         # Last time stats were updated
         self.nextStats = time.time( )
 
@@ -101,20 +104,43 @@ class Ui:
         end = amount + time.time( )
         while time.time( ) <= end:
             key = self.scr.getch( )
+            if key == -1:
+                if "p" in self.keys or "q" in self.keys:
+                    self.keys = [ ]
+            else:
+                key = chr( key )
+                # Flip between all our accepted keys
+                if key == "q" and not self.pool.stopped: 
+                    self.pool.stop( )
+                    curses.flash( )
+                    self.keys = [ "q" ]
+                elif key == "p":
+                    print "P"
+                    self.keys = [ "p" ]
+                    # Pause
+                else:
+                    # If we have more than 4 keys and this key isn't +/-, clear everything and return
+                    if len( self.keys ) >= 4 and key != "+" and key != "-":
+                        self.keys = [ ]
 
-            if key == ord( "q" ):
-                self.pool.stop( )
-                curses.flash( )
-            elif key == ord( "p" ):
-                print "P"
-                # Pause
-            elif key == ord( "c" ):
-                print "C"
-                # Change # Children
-            elif key == ord( "j" ):
-                print "J"
-                # Change # Jobs
-
+                    if key == "j" or key == "c":
+                        # Check we have no other commands queued, else clear.
+                        if "j" in self.keys or "c" in self.keys:
+                            self.keys = [ ]
+                        self.keys.append( key )
+                    elif key == "+" or key == "-":
+                        # This key acts as an executor
+                        if not "j" in self.keys and not "c" in self.keys:
+                            self.keys = [ ]
+                        else:
+                            # Look for numbers
+                            for c in self.keys:
+                                if c.isdigit( ):
+                                    break
+                            else:
+                                self.keys = [ ] # There were no digits included, command is void
+                            # Command is now valid, so execute
+                            #TODO: execute
             time.sleep( 0.01 )
 
 
