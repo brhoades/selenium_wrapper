@@ -89,6 +89,7 @@ class Ui:
 
         self.updateMain( )
         self.updateStats( )
+        self.updateKeys( )
 
 
 
@@ -108,27 +109,32 @@ class Ui:
                 if "p" in self.keys or "q" in self.keys:
                     self.keys = [ ]
             else:
-                key = chr( key )
+                if self.pool.children[0] != None:
+                    self.pool.children[0].logMsg( ''.join( [ "Keys: ", str( self.keys ) ] ) )
+                key = key 
                 # Flip between all our accepted keys
-                if key == "q" and not self.pool.stopped: 
+                if key == ord( "q" ) and not self.pool.stopped: 
                     self.pool.stop( )
                     curses.flash( )
                     self.keys = [ "q" ]
-                elif key == "p":
+                elif key == ord( "p" ):
                     print "P"
                     self.keys = [ "p" ]
                     # Pause
                 else:
                     # If we have more than 4 keys and this key isn't +/-, clear everything and return
-                    if len( self.keys ) >= 4 and key != "+" and key != "-":
+                    if len( self.keys ) >= 4 and key != ord( "+" ) and key != ord( "-" ):
                         self.keys = [ ]
 
-                    if key == "j" or key == "c":
+                    if key == ord( "j" ) or key == ord( "c" ):
                         # Check we have no other commands queued, else clear.
                         if "j" in self.keys or "c" in self.keys:
                             self.keys = [ ]
-                        self.keys.append( key )
-                    elif key == "+" or key == "-":
+
+                        self.keys.append( chr( key ) )
+                    elif key == ord( "+" ) or key == ord( "-" ):
+                        self.keys.append( chr( key ) )
+
                         # This key acts as an executor
                         if not "j" in self.keys and not "c" in self.keys:
                             self.keys = [ ]
@@ -141,7 +147,9 @@ class Ui:
                                 self.keys = [ ] # There were no digits included, command is void
                             # Command is now valid, so execute
                             #TODO: execute
-            time.sleep( 0.01 )
+                    elif key >= ord( "0" ) and key <= ord( "9" ):
+                        self.keys.append( chr( key ) )
+                time.sleep( 0.01 )
 
 
 
@@ -231,6 +239,20 @@ class Ui:
             self.stats.addstr( k, adj, st )
             adj += stl + 3
         self.stats.refresh( )
+
+
+
+    def updateKeys( self ):
+        k = 1
+        y = self.y( ) - self.STATS_HEIGHT-3
+        self.opts.addstr( y, k, " "*(self.OPTIONS_WIDTH-2) )
+
+        if len( self.keys ) > 0:
+            for c in self.keys:
+                self.opts.addstr( y, k, c )
+                k += 1
+        
+        self.opts.refresh( )
 
 
 
