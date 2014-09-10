@@ -221,6 +221,8 @@ class Child:
         # If this is fatal we ask to be killed
         if level == FATAL:
             self.cq.put( [ self.num, STATUS_FATAL ] )
+            if self.driver is not None:
+                self.driver.quit( )
 
         # Send error if appropriate
         if level >= ERROR:
@@ -350,6 +352,7 @@ class Child:
 
         # Kill our process
         if self.proc != None:
+            # Try to join first, but only for a bit
             self.proc.terminate( )
             self.proc.join( )
             self.proc = None
