@@ -22,10 +22,10 @@ class Pool:
     """
     def __init__( self, numChildren, numJobs, func, file, kwargs ):
         # Our children
-        self.children = [ None for x in range(numChildren) ]
+        self.children = [ ]
         
         # Statistics and data per child
-        self.data = [ [ 0, 0, STAT_LOAD, [ ] ] for x in range(numChildren) ]
+        self.data = [ ]
 
         # Our one way queue from our children
         self.childQueue = Queue( )
@@ -57,9 +57,6 @@ class Pool:
         # General log directory, shared by all children
         self.log = os.path.join( os.path.dirname( os.path.abspath( file ) ), "logs", self.timestamp ) 
 
-        #print( ''.join( [ "Preparing ", str( numChildren ), " ", ( "child" if numChildren == 1 else "children" ), \
-        #       " to do ", str( numJobs ), " job", ( "s" if numJobs != 1 else "" ), "." ] ) )
-
         # Marks our start time, set when first child sends starting
         self.started = None
 
@@ -70,7 +67,7 @@ class Pool:
         self.stopped = False
 
         # Children left
-        self.childrenLeft = self.numChildren
+        self.childrenLeft = numChildren
 
         # Next time we'll spawn a child
         self.nextSpawn = time.time( )
@@ -80,21 +77,26 @@ class Pool:
 
 
 
-    def newChild( self, i=None ):
-        """Creates a new :class:`child` which will in turn start itself. If i is none, it grabs the next available array
-        index, assuming it was initialized for this many children (will grab an index that doesn't exist if not).
+    def newChild( self ):
+        """Creates a new :class:`child` which will in turn start itself. 
 
-        :param None i: Index for child process within pool's data structure. 
         :returns: None
         """
-        if i == None:
-            for i,c in enumerate( self.children ):
-                if c == None:
-                    break # This gets us our first empty i
-        
-        self.children[i] = Child( self.childQueue, self.workQueue, i, self.log, self.options )
+        # Statistics and data per child
+        self.data.append( [ 0, 0, STAT_LOAD, [ ] ] )
+
+        self.children.append( Child( self.childQueue, self.workQueue, len( self.children ), self.log, self.options ) )
 
 
+
+    def endChild( self ):
+        """Removes the last created :class:`child`.
+
+        :returns: None
+        """
+        if len( self.children ) == 0:
+            return
+        self.children.pop( ).stop( )
 
     def successful( self ):
         """Reports the number of jobs successfully completed so far.
@@ -168,7 +170,7 @@ class Pool:
                 self.starting = False
         elif not self.stopped: 
             # Check that children are alive, restart
-            for i in range(self.numChildren):
+            for i in range(len(self.children)):
                 if not self.children[i].is_alive( ) and not self.workQueue.empty( ):
                     #FIXME: Check if we need more workers or if one is alive / without job to take this
                     self.children[i].restart( )

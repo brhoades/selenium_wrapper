@@ -1,4 +1,5 @@
 import time, curses
+from math import *
 from sw.formatting import *
 
 class Ui:
@@ -108,9 +109,9 @@ class Ui:
             if key == -1:
                 if "p" in self.keys or "q" in self.keys:
                     self.keys = [ ]
+            elif key == curses.KEY_ENTER:
+                self.keys = [ ]
             else:
-                if self.pool.children[0] != None:
-                    self.pool.children[0].logMsg( ''.join( [ "Keys: ", str( self.keys ) ] ) )
                 key = key 
                 # Flip between all our accepted keys
                 if key == ord( "q" ) and not self.pool.stopped: 
@@ -144,9 +145,39 @@ class Ui:
                                 if c.isdigit( ):
                                     break
                             else:
-                                self.keys = [ ] # There were no digits included, command is void
-                            # Command is now valid, so execute
-                            #TODO: execute
+                                self.keys.append( "1" ) #assume 1
+
+                            # Execute command
+                            ##Get the number we're increasing
+                            num = 0
+                            for c in self.keys:
+                                if c.isdigit( ):
+                                    adj = pow( 10, ceil( log( num + 1, 10 ) ) ) 
+                                    if adj == 1:
+                                        adj = 0
+                                    num += + int( c )
+
+                            if "j" in self.keys:
+                                if "+" in self.keys:
+                                    self.pool.numJobs += num
+                                    for i in range(num):
+                                        self.pool.workQueue.put( self.pool.func )
+                                if "-" in self.keys:
+                                    for i in range(num):
+                                        self.pool.workQueue.get( )
+                                        if self.pool.workQueue.empty( ):
+                                            break
+                            elif "c" in self.keys:
+                                if "+" in self.keys:
+                                    for i in range(num):
+                                        self.pool.newChild( )
+                                if "-" in self.keys:
+                                    for i in range(num):
+                                        self.pool.endChild( )
+
+                            # Clear keys for next command
+                            self.keys = [ ]
+
                     elif key >= ord( "0" ) and key <= ord( "9" ):
                         self.keys.append( chr( key ) )
                 time.sleep( 0.01 )
