@@ -9,10 +9,11 @@ def convert_keywords( file, filename )
   start = false     # Indicator for the start of our function
   startOps = false  # Indicator for the start of our $options header
   base_url = ""     # Stores our base url
-  i = 0
+  i = -1 
   func = [ ]
+  kwargs = [ ]
+  imports = [ ]
 
-  # Now find our "main" test method (should == file name) in a loop
   fn = File.basename filename, ".py"
   file.each do |l|
     i += 1
@@ -20,8 +21,9 @@ def convert_keywords( file, filename )
       start = true
       func << l
       next
-    elsif i == 0 and l =~ /^#$options/
+    elsif i == 0 and l =~ /^#OPTIONS/i
       startOps = true
+      print "OPTIONS DIRECTIVE\n"
       next
     end
 
@@ -115,8 +117,8 @@ def convert_keywords( file, filename )
       func << l
     end
   end
-
-  return func, base_url
+  
+  return func, kwargs, imports, base_url
 end
 
 def convert_func_swap( func, kwargs )
@@ -153,8 +155,6 @@ def convert_func_swap( func, kwargs )
       kwargs[kwargs.index( k )].gsub! /\-/, ""
     end
   end
-
-  return func
 end
 
 def convert_print_prep( func, kwargs, base_url, imports )
@@ -187,8 +187,8 @@ end
 def convert( filename, outputfn )
   file = []
   func = []
+  kwargs = [] 
   base_url = ""
-  kwargs = []       # Passed to our main function at the end
   imports = []      # Manually added imports later
 
   # Grab our $options and make sure keys exist
@@ -198,8 +198,11 @@ def convert( filename, outputfn )
 
   # Read in our input file  
   File.new( filename, "r:UTF-8" ).each_line { |l| file << l }
-  func, base_url = convert_keywords( file, filename )
-  func = convert_func_swap func, kwargs
+  print "Kwargs: ", kwargs, "\n"
+  func, kwargs, imports, base_url = convert_keywords file, filename
+  print "Kwargs: ", kwargs, "\n"
+  convert_func_swap func, kwargs
+  print "Kwargs: ", kwargs, "\n"
 
   ##################
   # Prep for printing
