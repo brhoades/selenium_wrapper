@@ -44,6 +44,9 @@ class Pool:
         # Number of children to start
         self.numChildren = numChildren
 
+        # Max children ever
+        self.maxChildren = numChildren
+
         # Our function
         self.func = func
 
@@ -82,10 +85,17 @@ class Pool:
 
         :returns: None
         """
-        # Statistics and data per child
+        # First see if there's another child that's stopped
+        for c in self.children:
+            if c.stopped:
+                c.start( )
+                return
+
         self.data.append( [ 0, 0, STAT_LOAD, [ ] ] )
 
         self.children.append( Child( self.childQueue, self.workQueue, len( self.children ), self.log, self.options ) )
+        
+        self.maxChildren += 1
 
 
 
@@ -96,7 +106,12 @@ class Pool:
         """
         if len( self.children ) == 0:
             return
-        self.children.pop( ).stop( )
+        lastc = None
+        for c in self.children:
+            if not c.stopped:
+                lastc = c
+        if lastc is not None:
+            lastc.stop( )
 
     def successful( self ):
         """Reports the number of jobs successfully completed so far.
@@ -170,12 +185,12 @@ class Pool:
                 self.starting = False
         elif not self.stopped: 
             # Check that children are alive, restart
-            for i in range(len(self.children)):
-                if not self.children[i].is_alive( ) and not self.workQueue.empty( ):
+            for i in range(self.numChildren):
+                if not self.children[i].is_alive( ) and not self.workQueue.empty( ) and not self.children[i].stopped:
                     #FIXME: Check if we need more workers or if one is alive / without job to take this
                     self.children[i].restart( )
                 elif not self.children[i].is_alive( ) \
-                     and not self.children[i].is_done( ) and self.workQueue.empty( ):
+                     and not self.children[i].is_done( ) and self.workQueue.empty( ) and not self.children[i].stopped:
                     self.children[i].stop( "DONE" )
 
 

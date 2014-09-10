@@ -60,6 +60,9 @@ class Child:
         # How long we sleep in loops
         self.sleepTime = 1
 
+        # Did we stop?
+        self.stopped = False
+
         self.cache = ElementCache( )
 
         self.start( )
@@ -152,6 +155,7 @@ class Child:
         # Quit after we have finished our work queue, this kills the phantomjs process.
         self.driver.quit( )
         self.status( STAT_DONE )
+        self.stopped = True
 
 
 
@@ -274,6 +278,9 @@ class Child:
            
            :return: None
         """
+        # Not stopped anymore
+        self.stopped = False
+
         # Move our run number up since we are starting
         self.run = str( int( self.run ) + 1 )
 
@@ -317,22 +324,25 @@ class Child:
         if self.proc == None:
             return
 
+        self.stopped = True
+
         if msg != "":
             self.logMsg( ''.join( [ "Stopping child process: \"", msg, "\"" ] ) )
         else:
             self.logMsg( "Stopping child process" )
-
-        # Inform the TUI that we're done.
-        self.status( STAT_DONE )
 
         # Kill our browser instance
         if self.driver is not None:
             self.driver.quit( )
 
         # Kill our process
-        self.proc.terminate( )
-        self.proc.join( )
-        self.proc = None
+        if self.proc is not None:
+            self.proc.terminate( )
+            self.proc.join( )
+            self.proc = None
+
+        # Inform the TUI that we're done.
+        self.status( STAT_DONE )
 
         # Close our log
         self.lh.close( )
