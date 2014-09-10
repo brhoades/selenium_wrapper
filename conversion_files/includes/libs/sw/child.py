@@ -217,6 +217,15 @@ class Child:
            :return: None
         """
         locals = kwargs.get( 'locals', None )
+
+        # If this is fatal we ask to be killed
+        if level == FATAL:
+            self.cq.put( [ self.num, STATUS_FATAL ] )
+
+        # Send error if appropriate
+        if level >= ERROR:
+            self.status( STAT_ERROR )
+
         # Determine if we're logging this low
         if level < self.level:
             return
@@ -226,10 +235,6 @@ class Child:
         
         # String
         w = ''.join( [ "[", timestamp, "] ", errorLevelToStr( level ), "\t", e, "\n" ] )
-
-        # Send error if appropriate
-        if level >= ERROR:
-            self.status( STAT_ERROR )
 
         # Locals if specified
         if locals != None:
@@ -273,9 +278,10 @@ class Child:
 
 
 
-    def start( self ):
+    def start( self, flag=STAT_LOAD ):
         """Starts our child process off properly, used after a restart typically.
            
+           :param STAT_LOAD flag:
            :return: None
         """
         # Not stopped anymore
@@ -295,7 +301,7 @@ class Child:
         self.lh = open( os.path.join( self.log, ''.join( [ 'log-', str( self.num + 1 ), '.txt' ] ) ), 'a+' )
 
         # Show loading
-        self.status( STAT_LOAD )
+        self.status( flag )
 
         # Our process 
         self.proc = Process( target=self.think, args=( ) )
@@ -303,22 +309,28 @@ class Child:
 
 
 
-    def restart( self, msg="restarting" ):
+    def restart( self, msg="restarting", flag=None ):
         """Restarts the child process and gets webdriver running again.
 
            :param "RESTARTING" msg: A message to print out in parenenthesis.
+           :param None flag: 
            :return: None
         """
-        self.stop( msg )
-        self.start( )
+        if flag is not None:
+            self.stop( msg, flag )
+            self.start( flag )
+        else:
+            self.stop( msg )
+            self.start( )
 
 
 
-    def stop( self, msg="" ):
+    def stop( self, msg="", flag=STAT_DONE ):
         """Stops a child process properly and sets its self.proc to None. Optionally takes a message
            to print out.
         
            :param "" msg: A message to show in parenthesis on the console next to ``Child #: STOPPING (msg)``.
+           :param STAT_DONE flag:
            :return: None
         """
         if self.proc == None:
@@ -343,7 +355,7 @@ class Child:
             self.proc = None
 
         # Inform the TUI that we're done.
-        self.status( STAT_DONE )
+        self.status( flag )
 
         # Close our log
         self.lh.close( )

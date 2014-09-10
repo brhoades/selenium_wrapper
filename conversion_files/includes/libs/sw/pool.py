@@ -1,7 +1,6 @@
 from multiprocessing import Process, Queue
 from sw.child import Child
-import time, os
-import datetime
+import time, os, datetime, curses
 from sw.const import * # Constants
 from sw.formatting import * 
 
@@ -173,6 +172,10 @@ class Pool:
 
             elif r[RESULT] == STATUS_UP:
                 self.data[i][STATUS] = r[TIME]
+
+            elif r[RESULT] == STATUS_FATAL:
+                curses.flash( )
+                self.children[i].restart( "Fatal error", STAT_ERROR )
 
         # Still spawning children, ignore their status until done.
         if self.starting and not self.stopped:
