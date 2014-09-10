@@ -159,14 +159,14 @@ class Ui:
 
                             if "j" in self.keys:
                                 if "+" in self.keys:
-                                    self.pool.numJobs += num
                                     for i in range(num):
+                                        self.pool.numJobs += 1
                                         self.pool.workQueue.put( self.pool.func )
                                 if "-" in self.keys:
                                     for i in range(num):
-                                        self.pool.workQueue.get( )
-                                        if self.pool.workQueue.empty( ):
-                                            break
+                                        if not self.pool.workQueue.empty( ):
+                                            self.pool.numJobs -= 1
+                                            self.pool.workQueue.get( False, False )
                             elif "c" in self.keys:
                                 if "+" in self.keys:
                                     for i in range(num):
