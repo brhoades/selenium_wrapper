@@ -42,11 +42,8 @@ class Child:
         # Our driver instance
         self.driver = None
 
-        # Our log folder, which is changed each time start is called (so see start)
+        # Our log folder which never changes
         self.log = ""
-
-        # The base log folder, which never changes.
-        self.baselog = log
 
         # Our log handle
         self.lh = "" 
@@ -288,9 +285,6 @@ class Child:
         # Move our run number up since we are starting
         self.run = str( int( self.run ) + 1 )
 
-        # Log directory, now just our top level folder.
-        self.log = self.baselog
-
         # Create our path
         if not os.path.isdir( self.log ):
             os.makedirs( self.log )
@@ -348,7 +342,6 @@ class Child:
 
         # Kill our process
         if self.proc != None:
-            # Try to join first, but only for a bit
             self.proc.terminate( )
             self.proc.join( )
             self.proc = None
