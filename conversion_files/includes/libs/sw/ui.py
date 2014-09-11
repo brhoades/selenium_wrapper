@@ -16,14 +16,13 @@ class Ui:
         # Key buffer
         self.keys = [ ]
 
-        # Last time stats were updated
-        self.nextStats = time.time( )
+        # Our last stats entry
+        self.last = [ None for i in range(3) ]
 
-        # Next time jobs per second are updated
-        self.nextJobTime = self.nextStats + 10 
+        # Next time we update the screen
+        self.nextUpdate = time.time( )
 
-        # Cached jobs per second string
-        self.jpstr = None
+        self.screenUpdateTime = 1
 
         # Dimensions and subwindow for statistics section
         self.STATS_HEIGHT  = 7
@@ -85,26 +84,25 @@ class Ui:
 
 
     def think( self ):
-        if self.nextStats > time.time( ):
-            self.nextStats = time.time( ) + 1
-
-        self.updateMain( )
-        self.updateStats( )
-        self.updateKeys( )
+        if time.time( ) >= self.nextUpdate:
+            self.nextUpdate = time.time( ) + self.screenUpdateTime
+            self.updateMain( )
+            self.updateStats( )
+            self.updateKeys( )
 
 
 
     def sleep( self, amount ):
-        """Handles sleeping while listening for button presses. The hardcoded subsleep (0.01s)
+        """Handles sleeping while listening for button presses. The hardcoded subsleep (0.05s)
            amount is an appropriate resolution that allows for seemingly instant button press responses
            without consuming an entire core (when constantly listening).
         
            :param amount: Float for amount of seconds to wait while listening to button presses.
-             This is accurately followed to a resolution of 0.01s.
+             This is accurately followed to a resolution of 0.05s.
            :returns: None
         """
         end = amount + time.time( )
-        while time.time( ) <= end:
+        while time.time( ) < end:
             key = self.scr.getch( )
             if key == -1:
                 if "p" in self.keys or "q" in self.keys:
@@ -112,7 +110,6 @@ class Ui:
             elif key == curses.KEY_ENTER:
                 self.keys = [ ]
             else:
-                key = key 
                 # Flip between all our accepted keys
                 if key == ord( "q" ) and not self.pool.stopped: 
                     self.pool.stop( )
@@ -178,7 +175,7 @@ class Ui:
 
                     elif key >= ord( "0" ) and key <= ord( "9" ):
                         self.keys.append( chr( key ) )
-                time.sleep( 0.01 )
+                time.sleep( 0.05 )
 
 
 
@@ -216,59 +213,65 @@ class Ui:
            :return: None
         """
         statstrs = [ ]
+        jpstr = None
         t = time.time( )
 
-        # Clear our window
-        self.stats.clear( )
+        this = [ len( self.pool.children ), self.pool.successful( ) + self.pool.failed( ) ]
+        if self.last[0] != this[0] or self.last[1] != this[1]: 
+            # Store this for next time
+            self.last = this
 
-        # Number of Children
-        statstrs.append( ''.join( [ "Children: ", str( len( self.pool.children ) ) ] ) )
+            # Clear our window
+            self.stats.clear( )
 
-        # Number of Active Children
-        numactive = 0
-        for c in self.pool.children:
-            if c is not None and c.is_alive and not c.is_done:
-                numactive += 1
-        statstrs.append( ''.join( [ "Act: ", str( numactive ) ] ) )
+            # Number of Children
+            statstrs.append( ''.join( [ "Children: ", str( len( self.pool.children ) ) ] ) )
 
-        # Number of Jobs Left
-        statstrs.append( ''.join( [ "Jobs Left: ", str( self.pool.numJobs - self.pool.successful( ) ) ] ) )
+            # Number of Active Children
+            numactive = 0
+            for c in self.pool.children:
+                if c is not None and c.is_alive and not c.is_done:
+                    numactive += 1
+            statstrs.append( ''.join( [ "Act: ", str( numactive ) ] ) )
 
-        # Number of Jobs Successful
-        statstrs.append( ''.join( [ "Successful: ", str( self.pool.successful( ) ) ] ) )
+            # Number of Jobs Left
+            statstrs.append( ''.join( [ "Jobs Left: ", str( self.pool.numJobs - self.pool.successful( ) ) ] ) )
 
-        # Number of Failed Jobs
-        statstrs.append( ''.join( [ "Failed: ", str( self.pool.failed( ) ) ] ) )
+            # Number of Jobs Successful
+            statstrs.append( ''.join( [ "Successful: ", str( self.pool.successful( ) ) ] ) )
 
-        # Average Job Time
-        times = self.pool.timeTaken( )
-        avgtime = avg( times )
-        statstrs.append( ''.join( [ "Avg Job: ", format( avgtime ), "s" ] ) )
+            # Number of Failed Jobs
+            statstrs.append( ''.join( [ "Failed: ", str( self.pool.failed( ) ) ] ) )
 
-        # Jobs per minute
-        if t > self.nextJobTime and len( times ) > 0:
-            jpm = ( 60 / avgtime )
+            # Average Job Time
+            times = self.pool.timeTaken( )
+            avgtime = avg( times )
+            statstrs.append( ''.join( [ "Avg Job: ", format( avgtime ), "s" ] ) )
 
-            if jpm > 1:
-                self.jpstr = ''.join( [ "Jobs/m: ", format( jpm ) ] )
-            else:
-                self.jpstr = ''.join( [ "Jobs/s: ", format( jpm / 60 ) ] )
+            # Jobs per minute
+            if len( times ) > 0:
+                jpm = ( 60 / avgtime )
+
+                if jpm > 1:
+                    jpstr = ''.join( [ "Jobs/m: ", format( jpm ) ] )
+                else:
+                    jpstr = ''.join( [ "Jobs/s: ", format( jpm / 60 ) ] )
+                
+                self.nextJobTime += 10 
             
-            self.nextJobTime += 10 
-        
-        if self.jpstr is not None:
-            statstrs.append( self.jpstr )
+            if jpstr is not None:
+                statstrs.append( self.jpstr )
 
-        adj = 2 # Amount we are shifting right in characters
-        k = 0   # Amount we are shifting vertically
-        for st in statstrs:
-            stl = len( st ) # String length
-            if ( adj + stl ) >= self.STATS_WIDTH:
-                k += 1
-                adj = 2
-            self.stats.addstr( k, adj, st )
-            adj += stl + 3
-        self.stats.refresh( )
+            adj = 2 # Amount we are shifting right in characters
+            k = 0   # Amount we are shifting vertically
+            for st in statstrs:
+                stl = len( st ) # String length
+                if ( adj + stl ) >= self.STATS_WIDTH:
+                    k += 1
+                    adj = 2
+                self.stats.addstr( k, adj, st )
+                adj += stl + 3
+            self.stats.refresh( )
 
 
 
