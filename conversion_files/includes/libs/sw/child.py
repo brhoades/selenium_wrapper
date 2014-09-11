@@ -148,9 +148,11 @@ class Child:
                 cq.put( [ self.num, FAILED, ( time.time( ) - start ), str( e ) ] )
                 break
             else:
+                self.status( STAT_FINISH )
                 t = time.time( ) - start
                 cq.put( [ self.num, DONE, ( time.time( ) - start ), "" ] )
                 self.logMsg( ''.join( [ "Successfully finished job (", format( t ), "s)" ] ) )
+                time.sleep( 0.5 )
 
         # Quit after we have finished our work queue, this kills the phantomjs process.
         self.driver.quit( )

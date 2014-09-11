@@ -52,6 +52,7 @@ class Ui:
         curses.init_pair( STAT_ERROR, curses.COLOR_BLACK, curses.COLOR_RED )
         curses.init_pair( STAT_WAIT,  curses.COLOR_WHITE, curses.COLOR_BLUE )
         curses.init_pair( STAT_DONE,  curses.COLOR_BLACK, curses.COLOR_WHITE )
+        curses.init_pair( STAT_FINISH,  curses.COLOR_BLACK, curses.COLOR_GREEN )
 
 
 
@@ -186,8 +187,8 @@ class Ui:
            :returns: None
         """
         # Draw each child with an appropriate background color / anim
-        y = 0 # Our cursor's y position
-        x = 0 # ^ but x
+        y = 1 # Our cursor's y position
+        x = 1 # ^ but x
         for c in self.pool.children:
             if c is None: # Children are None for a while, these are ignored
                 continue

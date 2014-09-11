@@ -56,6 +56,7 @@ STAT_GOOD      = 3
 STAT_ERROR     = 4
 STAT_WAIT      = 5
 STAT_DONE      = 6
+STAT_FINISH    = 7 # Finished a job
 #unused
-STAT_DEAD      = 7
+STAT_DEAD      = 10
 ####################################################################################################
