@@ -17,12 +17,12 @@ class Ui:
         self.keys = [ ]
 
         # Our last stats entry
-        self.last = [ None for i in range(3) ]
+        self.last = [ None for i in range(4) ]
 
         # Next time we update the screen
         self.nextUpdate = time.time( )
 
-        self.screenUpdateTime = 1
+        self.screenUpdateTime = 0.25 
 
         # Dimensions and subwindow for statistics section
         self.STATS_HEIGHT  = 7
@@ -104,7 +104,7 @@ class Ui:
         end = amount + time.time( )
         while time.time( ) < end:
             key = self.scr.getch( )
-            if key == -1:
+            if key == -1 and len( self.keys ) > 0:
                 if "p" in self.keys or "q" in self.keys:
                     self.keys = [ ]
             elif key == curses.KEY_ENTER:
@@ -175,7 +175,7 @@ class Ui:
 
                     elif key >= ord( "0" ) and key <= ord( "9" ):
                         self.keys.append( chr( key ) )
-                time.sleep( 0.05 )
+            time.sleep( 0.01 )
 
 
 
@@ -216,8 +216,8 @@ class Ui:
         jpstr = None
         t = time.time( )
 
-        this = [ len( self.pool.children ), self.pool.successful( ) + self.pool.failed( ) ]
-        if self.last[0] != this[0] or self.last[1] != this[1]: 
+        this = [ len( self.pool.children ), self.pool.successful( ) + self.pool.failed( ), self.pool.numJobs ]
+        if self.last[0] != this[0] or self.last[1] != this[1] or self.last[2] != this[2]: 
             # Store this for next time
             self.last = this
 
