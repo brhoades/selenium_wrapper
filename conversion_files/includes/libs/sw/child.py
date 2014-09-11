@@ -21,7 +21,7 @@ class Child:
     :param num: Number of the child relevant to :class:`sw.pool`'s self.data array. This index is used to 
         easily communicate results and relate them to the child in that array. `num` is also used when printing
         out a status message.
-    :param log: Base log directory which a child will create a `num`-`self.run` folder in to log to.
+    :param log: Base log directory which we spit logs and screenshots into.
     :param options: Dict from kwargs which contains directives to pass to GhostDriver.
 
     :return: Child (self)
@@ -36,9 +36,6 @@ class Child:
         # Our child number
         self.num = num
 
-        # Run number, used to have different logs and error screenshots after restarting
-        self.run = 0 
-        
         # Our driver instance
         self.driver = None
 
@@ -51,7 +48,7 @@ class Child:
         # Logging level
         self.level = INFO 
 
-        # Do we load images
+        # Do we load images and other options
         self.options = options
 
         # How long we sleep in loops
@@ -60,8 +57,11 @@ class Child:
         # Did we stop?
         self.stopped = False
 
+        # Our per page element cache.
         self.cache = ElementCache( )
-
+        
+        
+        # Now start
         self.start( )
 
 
@@ -177,7 +177,7 @@ class Child:
 
 
     def screenshot( self, level=NOTICE ):
-        """Saves a screenshot to `num`-`run`/error_#.png and prints a message into the log specifying the file logged to.
+        """Saves a screenshot to error_#.png and prints a message into the log specifying the file logged to.
            
            :param NOTICE level: This determines whether or not the error message will be logged according to the
                level set in self.level. The screenshot will print anyway. If this error is not greater or equal to the level specified in self.level,
@@ -281,9 +281,6 @@ class Child:
         """
         # Not stopped anymore
         self.stopped = False
-
-        # Move our run number up since we are starting
-        self.run = str( int( self.run ) + 1 )
 
         # Create our path
         if not os.path.isdir( self.log ):
