@@ -195,7 +195,7 @@ class Ui:
         for c in self.pool.children:
             if c is None: # Children are None for a while, these are ignored
                 continue
-            s = ''.join( [ "#", str( c.num ) ] )
+            s = ''.join( [ "#", str( c.num + 1 ) ] )
 
             self.main.addstr( y, x, s, curses.color_pair( self.pool.data[c.num][STATUS] ) )
 
