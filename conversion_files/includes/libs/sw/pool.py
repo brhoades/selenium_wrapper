@@ -117,7 +117,10 @@ class Pool:
 
         :returns: Integer for number of jobs successfully completed.
         """
-        return reduce( lambda x, y: x + y, map( lambda x: x[SUCCESSES], self.data ) )
+        if len( self.data ) > 0:
+            return reduce( lambda x, y: x + y, map( lambda x: x[SUCCESSES], self.data ) )
+        else:
+            return 0
 
 
 
@@ -126,7 +129,10 @@ class Pool:
 
         :returns: Integer for number of failed jobs.
         """
-        return reduce( lambda x, y: x + y, map( lambda x: x[FAILURES], self.data ) )
+        if len( self.data ) > 0:
+            return reduce( lambda x, y: x + y, map( lambda x: x[FAILURES], self.data ) )
+        else:
+            return 0
 
     
 
