@@ -4,7 +4,6 @@ from const import *
 
 
 
-
 def loadScript( driver, js ):
     """Creates a new script object and appends it to the header.
 
@@ -19,41 +18,6 @@ def loadScript( driver, js ):
         script.type = 'text/javascript'; \
         script.src = '" + js + "'; \
         document.getElementsByTagName('head')[0].appendChild( script );" )
-
-
-
-def jQCheck( driver, timeout=1 ):
-    """This function takes our webdriver object in and checks if the current loaded page has jQuery on it.
-       If it doesn't, it tries to load it. It will pause the script for up to `timeout` seconds after loading,
-       after that it just returns False so that the exists script will stop holding things up.
-
-       .. deprecated:: 0.1 
-          JavaScript is no longer used to check for elements before running webdriver checks.
-
-       :Parameters:
-         * :ref:`driver <common-params>`
-         * **timeout** (*1*) -- How long to wait for jQuery to load before continuing on. 
-       :return: Boolean, True if jQuery is loaded False if it did not load.
-    """
-
-    jqCheck = "return typeof jQuery != 'undefined'"          # Some StackOverflow post recommended this bit of code
-    loadScript( driver, "http://code.jquery.com/jquery-2.1.1.min.js" )
-
-    if not bool( driver.execute_script( jqCheck ) ):         #FIXME: Add a check that makes sure we haven't held up
-        driver.child.logMsg( "jQuery not loaded into browser, inserting manually.", INFO )
-        loadScript( driver, jq )
-
-        start = time.time( )
-        while not bool( driver.execute_script( jqCheck ) ) and time.time( ) - start < timeout:
-            time.sleep( driver.child.sleepTime )
-        if not bool( driver.execute_script( jqCheck ) ):
-            driver.child.logMsg( ''.join( [ "jQuery failed to load into browser after ", str( timeout ), "s." ] ), WARNING  )
-            return False                              # False, jQuery isn't loaded
-        else:
-            driver.child.logMsg( ''.join( [ "jQuery loaded into browser successfully after ", format( time.time( ) - start ), "s." ] ), INFO )
-            return True                               # True, it is
-    else:
-        return True
 
 
 
