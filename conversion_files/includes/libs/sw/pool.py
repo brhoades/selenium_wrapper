@@ -162,6 +162,8 @@ class Pool:
                 self.data[i][TIMES].append( r[TIME] )
 
             elif r[RESULT] == FAILED:
+                curses.flash( )
+                self.data[i][STATUS] = STAT_ERROR
                 self.data[i][FAILURES] += 1
 
                 # When we get a failure we put the job back on the queue
@@ -172,10 +174,6 @@ class Pool:
 
             elif r[RESULT] == STATUS_UP:
                 self.data[i][STATUS] = r[TIME]
-
-            elif r[RESULT] == STATUS_FATAL:
-                curses.flash( )
-                self.children[i].restart( "Fatal error", STAT_ERROR )
 
         # Still spawning children, ignore their status until done.
         if self.starting and not self.stopped:

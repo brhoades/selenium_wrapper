@@ -244,16 +244,17 @@ class Ui:
 
         # Average Job Time
         times = self.pool.timeTaken( )
-        statstrs.append( ''.join( [ "Avg Job: ", format( avg( times ) ), "s" ] ) )
+        avgtime = avg( times )
+        statstrs.append( ''.join( [ "Avg Job: ", format( avgtime ), "s" ] ) )
 
         # Jobs per minute
         if t > self.nextJobTime and len( times ) > 0:
-            jps = ( len( times ) / ( t - self.pool.started ) )
+            jpm = ( 60 / avgtime )
 
-            if jps > 1:
-                self.jpstr = ''.join( [ "Jobs/s: ", format( jps ) ] )
+            if jpm > 1:
+                self.jpstr = ''.join( [ "Jobs/m: ", format( jpm ) ] )
             else:
-                self.jpstr = ''.join( [ "Jobs/m: ", format( jps * 60 ) ] )
+                self.jpstr = ''.join( [ "Jobs/s: ", format( jpm / 60 ) ] )
             
             self.nextJobTime += 10 
         
