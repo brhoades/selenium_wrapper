@@ -263,7 +263,7 @@ class Ui:
         jpstr = None
         t = time.time( )
 
-        this = [ len( self.pool.children ), self.pool.successful( ) + self.pool.failed( ), self.pool.numJobs ]
+        this = [ len( self.pool.children ), self.pool.successful( ) + self.pool.failed( ), self.pool.workQueue.qsize( ) ]
         if self.last[0] != this[0] or self.last[1] != this[1] or self.last[2] != this[2]: 
             # Store this for next time
             self.last = this
@@ -277,12 +277,12 @@ class Ui:
             # Number of Active Children
             numactive = 0
             for c in self.pool.children:
-                if c is not None and c.is_alive and not c.is_done:
+                if c is not None and not c.stopped:
                     numactive += 1
             statstrs.append( ''.join( [ "Act: ", str( numactive ) ] ) )
 
             # Number of Jobs Left
-            statstrs.append( ''.join( [ "Jobs Left: ", str( self.pool.numJobs - self.pool.successful( ) ) ] ) )
+            statstrs.append( ''.join( [ "Jobs Left: ", str( self.pool.workQueue.qsize( ) ) ] ) )
 
             # Number of Jobs Successful
             statstrs.append( ''.join( [ "Successful: ", str( self.pool.successful( ) ) ] ) )
