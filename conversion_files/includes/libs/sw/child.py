@@ -104,7 +104,7 @@ class Child:
             self.driver = webdriver.PhantomJS( desired_capabilities=dcaps, service_log_path=os.path.join( self.log, "ghostdriver.log" ), \
                                                service_args=sargs )
         except Exception as e:
-            self.logMsg( ''.join( [ "Webdriver failed to load: ", str( e ), "\n", traceback.formatexc( ) ] ), CRITICAL )
+            self.logMsg( ''.join( [ "Webdriver failed to load: ", str( e ), "\n", traceback.format_exc( ) ] ), CRITICAL )
             try: 
                 self.driver.quit( )
             except:
