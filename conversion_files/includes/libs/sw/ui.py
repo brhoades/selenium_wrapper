@@ -16,13 +16,12 @@ class Ui:
         # Key buffer
         self.keys = [ ]
 
-        # Our last stats entry
         self.last = [ None for i in range(4) ]
 
         # Next time we update the screen
         self.nextUpdate = time.time( )
 
-        self.screenUpdateTime = 0.25 
+        self.screenUpdateTime = 0.1 
 
         # Dimensions and subwindow for statistics section
         self.STATS_HEIGHT  = 7
@@ -84,9 +83,9 @@ class Ui:
 
 
     def think( self ):
+        self.updateMain( )
         if time.time( ) >= self.nextUpdate:
             self.nextUpdate = time.time( ) + self.screenUpdateTime
-            self.updateMain( )
             self.updateStats( )
             self.updateKeys( )
 
@@ -257,10 +256,8 @@ class Ui:
                 else:
                     jpstr = ''.join( [ "Jobs/s: ", format( jpm / 60 ) ] )
                 
-                self.nextJobTime += 10 
-            
             if jpstr is not None:
-                statstrs.append( self.jpstr )
+                statstrs.append( jpstr )
 
             adj = 2 # Amount we are shifting right in characters
             k = 0   # Amount we are shifting vertically
