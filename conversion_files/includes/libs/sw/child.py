@@ -40,7 +40,7 @@ class Child:
         self.driver = None
 
         # Our log folder which never changes
-        self.log = ""
+        self.log = log
 
         # Our log handle
         self.lh = "" 
