@@ -149,13 +149,11 @@ class Ui:
 
                             # Execute command
                             ##Get the number we're increasing
-                            num = 0
+                            num = [ ] 
                             for c in self.keys:
                                 if c.isdigit( ):
-                                    adj = pow( 10, ceil( log( num + 1, 10 ) ) ) 
-                                    if adj == 1:
-                                        adj = 0
-                                    num += + int( c )
+                                   num.append( c ) 
+                            num = int( ''.join( num ) )
 
                             if "j" in self.keys:
                                 if "+" in self.keys:
