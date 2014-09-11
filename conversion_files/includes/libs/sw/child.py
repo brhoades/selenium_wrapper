@@ -218,12 +218,6 @@ class Child:
         """
         locals = kwargs.get( 'locals', None )
 
-        # If this is fatal we ask to be killed
-        if level == FATAL:
-            self.cq.put( [ self.num, STATUS_FATAL ] )
-            if self.driver is not None:
-                self.driver.quit( )
-
         # Send error if appropriate
         if level >= ERROR:
             self.status( STAT_ERROR )

@@ -1,5 +1,7 @@
 import os, time, traceback
+from selenium.common.exceptions import *
 from const import *
+
 
 
 
@@ -155,8 +157,8 @@ def sleepwait( driver, element, type, **kwargs ):
 
     if die:
         driver.child.logMsg( "Child will now terminate.", FATAL, locals=locals( ) )
+        raise TimeoutException( "Element didn't disappear within timeout." )
         # Wait to be killed
-        time.sleep( 25 )
     return False
 
 
@@ -245,8 +247,7 @@ def waitToDisappear( driver, element, **kwargs ):
                         CRITICAL, locals=locals( ) )
                 if die:
                     driver.child.logMsg( "Child will now terminate.", FATAL, locals=locals( ) )
-                    # Wait to be killed
-                    time.sleep( 25 )
+                    raise TimeoutException( "Element didn't disappear within timeout." ) 
 
                 break #this skips the else
             time.sleep( thinkTime )
