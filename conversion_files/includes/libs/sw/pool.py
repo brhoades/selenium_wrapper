@@ -231,3 +231,14 @@ class Pool:
             c.stop( )
 
         self.stopped = True
+
+    def start( self ):
+        """Restarts a pool after it's been stop( )ed.
+
+        :return: None
+        """
+        for c in self.children:
+            c.start( )
+            c.stopped = False
+
+        self.stopped = False

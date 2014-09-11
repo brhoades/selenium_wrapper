@@ -13,10 +13,24 @@ class Ui:
         # Options for buttons to press
         self.options = [ "c+- - Children", "j+- - Jobs", "p   - Pause", "h   - Help", "q   - Quit" ]
 
+        # Toggled options
+        self.altopts = [ "c+- - Children", "j+- - Jobs", "p   - Unpause", "h   - Help", "s   - Start" ]
+
+        # Options bits, true if alternate
+        self.optbits = [ False for i in range(len(self.options)) ]
+
+        self.bits = [ "c", "j", "p", "h", "q" ]
+
         # Key buffer
         self.keys = [ ]
 
         self.last = [ None for i in range(4) ]
+
+        # Are we paused?
+        self.paused = False
+
+        # Have we stopped?
+        self.stopped = False
 
         # Next time we update the screen
         self.nextUpdate = time.time( )
@@ -43,7 +57,7 @@ class Ui:
         
         self.main = self.scr.subwin( self.MAIN_HEIGHT, self.MAIN_WIDTH, 1, 1 )
 
-        self.drawMainScreen( )
+        self.drawMainScreen( True )
 
         # Colors
         curses.init_pair( STAT_LOAD,  curses.COLOR_BLACK, curses.COLOR_YELLOW )
@@ -56,28 +70,37 @@ class Ui:
 
 
 
-    def drawMainScreen( self ):
+    def drawMainScreen( self, first=False ):
         """Renders the initial screen and sets up options for curses. Draws
            the border around the screen and the separators for the various sections
            with the title.
 
+           :param False first: Whether this is the call by the UI initialization.
            :returns: None
         """
-        self.scr.nodelay( True ) # Don't wait on key presses
-        curses.curs_set( 0 )     # Invisible Cursor
-        self.scr.border( )       # Draws a pretty border around the window
-        self.scr.addstr( 0, 3, "Selenium Wrapper Console" ) # Puts a message up top
+        if first:
+            self.scr.nodelay( True ) # Don't wait on key presses
+            curses.curs_set( 0 )     # Invisible Cursor
+            self.scr.border( )       # Draws a pretty border around the window
+            self.scr.addstr( 0, 3, "Selenium Wrapper Console" ) # Puts a message up top
 
-        # Line for key window
-        self.scr.vline( 1, self.x( )-self.OPTIONS_WIDTH, 0, self.y( )-self.STATS_HEIGHT )
+            # Line for key window
+            self.scr.vline( 1, self.x( )-self.OPTIONS_WIDTH, 0, self.y( )-self.STATS_HEIGHT )
+
+            # Line for stats window
+            self.scr.hline( self.y( )-self.STATS_HEIGHT-1, 1, 0, self.STATS_WIDTH )
+        
+        # Draw spaces
+        for l in range(len(self.options)*2):
+            self.opts.addstr( l, 2,  ( self.OPTIONS_WIDTH-3 )*" " )
 
         i = 0
         for l in self.options:
-            self.opts.addstr( i, 2, l )
+            if not self.optbits[i/2]:
+                self.opts.addstr( i, 2, l )
+            else:
+                self.opts.addstr( i, 2, self.altopts[i/2] )
             i += 2
-
-        # Line for stats window
-        self.scr.hline( self.y( )-self.STATS_HEIGHT-1, 1, 0, self.STATS_WIDTH )
 
         self.scr.refresh( )
 
@@ -105,20 +128,44 @@ class Ui:
         while time.time( ) < end:
             key = self.scr.getch( )
             if key == -1 and len( self.keys ) > 0:
-                if "p" in self.keys or "q" in self.keys:
+                if "p" in self.keys or "q" in self.keys or "s" in self.keys:
                     self.keys = [ ]
             elif key == curses.KEY_ENTER:
                 self.keys = [ ]
             else:
                 # Flip between all our accepted keys
-                if key == ord( "q" ) and not self.pool.stopped: 
-                    self.pool.stop( )
+                if key == ord( "q" ) or key == ord( "s" ): 
                     curses.flash( )
-                    self.keys = [ "q" ]
-                elif key == ord( "p" ):
-                    print "P"
-                    self.keys = [ "p" ]
-                    # Pause
+
+                    if self.stopped:
+                        self.stopped = False
+                        self.pool.start( )
+                    else:
+                        self.stopped = True
+                        self.pool.stop( )
+
+                    self.keys = [ chr( key ) ]
+                    self.paused = False
+                    self.toggleKey( "q" )
+
+                elif key == ord( "p" ) and not self.stopped:
+                    self.keys = [ chr( key ) ]
+                    curses.flash( )
+                    self.toggleKey( chr( key ) )
+
+                    if self.paused: 
+                        # Unpause
+                        self.pool.start( )
+                        self.paused = False
+                    else:
+                        # Pause
+                        self.pool.stop( )
+                        self.paused = True
+                #####
+                # 
+                # Check and execute j/c commands
+                #
+                #####
                 else:
                     # If we have more than 4 keys and this key isn't +/-, clear everything and return
                     if len( self.keys ) >= 4 and key != ord( "+" ) and key != ord( "-" ):
@@ -287,6 +334,19 @@ class Ui:
 
 
 
+    def toggleKey( self, key ):
+        """Toggles a key display on the right hand side.
+
+           :param key: A key that's listed on the right hand pane to toggle to an alternate option.
+           :return None:
+        """
+        i = self.bits.index(key)
+        self.optbits[i] = not self.optbits[i] 
+        
+        self.drawMainScreen( )
+
+
+        
     def x( self ):
         return self.scr.getmaxyx( )[1]
 
