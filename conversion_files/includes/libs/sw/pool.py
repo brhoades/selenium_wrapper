@@ -32,32 +32,21 @@ class Pool:
         # Our work for children
         self.workQueue = Queue( )
 
-        # Populate our work queue
-        for x in range(numJobs):
-            self.workQueue.put( func )
-
         # Number of times each child runs, stored on the child statistics list
         #   as a countdown later
         self.numJobs = numJobs
 
-        # Number of children to start
-        self.numChildren = numChildren
-
-        # Max children ever
-        self.maxChildren = numChildren
+        # Starting children
+        self.startChildren = numChildren
 
         # Our function
         self.func = func
 
-        # Our timestamp
-        self.timestamp = datetime.datetime.now( ).strftime( "%Y-%m-%d_%H-%M-%S" )
-
+        # Options to be passed to children
         self.options = kwargs
 
-        staggered = kwargs.get( 'staggered', True )
-
         # General log directory, shared by all children
-        self.log = os.path.join( os.path.dirname( os.path.abspath( file ) ), "logs", self.timestamp ) 
+        self.log = os.path.join( os.path.dirname( os.path.abspath( file ) ), "logs", datetime.datetime.now( ).strftime( "%Y-%m-%d_%H-%M-%S" ) ) 
 
         # Marks our start time, set when first child sends starting
         self.started = None
@@ -68,14 +57,19 @@ class Pool:
         # Not stopped yet
         self.stopped = False
 
-        # Children left
-        self.childrenLeft = numChildren
-
-        # Next time we'll spawn a child
-        self.nextSpawn = time.time( )
+        ####### Settings ########
 
         # Time between children spawning
         self.staggeredTime = 5
+
+        ####### One Offs ########
+
+        # Populate our work queue
+        for x in range(numJobs):
+            self.workQueue.put( func )
+
+        # Next time we'll spawn a child
+        self.nextSpawn = time.time( )
 
 
 
@@ -93,8 +87,6 @@ class Pool:
         self.data.append( [ 0, 0, STAT_LOAD, [ ] ] )
 
         self.children.append( Child( self.childQueue, self.workQueue, len( self.children ), self.log, self.options ) )
-        
-        self.maxChildren += 1
 
 
 
@@ -111,6 +103,8 @@ class Pool:
                 lastc = c
         if lastc is not None:
             lastc.stop( )
+
+
 
     def successful( self ):
         """Reports the number of jobs successfully completed so far.
@@ -183,16 +177,19 @@ class Pool:
 
         # Still spawning children, ignore their status until done.
         if self.starting and not self.stopped:
-            if self.childrenLeft > 0 and time.time( ) > self.nextSpawn:
+            left = self.startChildren - len( self.children )
+            # We have children left to spawn, spawn one
+            if left > 0 and time.time( ) > self.nextSpawn:
                 self.newChild( )
                 if self.options['staggered']:
                     self.nextSpawn = time.time( ) + self.staggeredTime
-                self.childrenLeft -= 1
-            elif self.childrenLeft == 0:
+            # Done spawning children, so done starting
+            elif left == 0:
                 self.starting = False
+        # Constant check to see if children and running and to automatically restart them
         elif not self.stopped: 
             # Check that children are alive, restart
-            for i in range(self.numChildren):
+            for i in range(self.startChildren):
                 if not self.children[i].is_alive( ) and not self.workQueue.empty( ) and not self.children[i].stopped:
                     #FIXME: Check if we need more workers or if one is alive / without job to take this
                     self.children[i].restart( )
