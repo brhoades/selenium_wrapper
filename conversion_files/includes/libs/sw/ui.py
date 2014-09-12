@@ -26,12 +26,6 @@ class Ui:
 
         self.last = [ None for i in range(4) ]
 
-        # Are we paused?
-        self.paused = False
-
-        # Have we stopped?
-        self.stopped = False
-
         # Next time we update the screen
         self.nextUpdate = time.time( )
 
@@ -149,30 +143,25 @@ class Ui:
                 self.keys = [ chr( key ) ]
                 curses.flash( )
                 self.toggleKey( "q" )
-                self.paused = False
 
-                if self.stopped:
+                if self.pool.status >= STOPPED:
                     # Start
-                    self.stopped = False
                     self.pool.start( )
                 else:
                     # Quit
-                    self.stopped = True
                     self.pool.stop( )
 
-            elif key == ord( "p" ) and not self.stopped:
+            elif key == ord( "p" ) and not self.pool.status >= STOPPED:
                 self.keys = [ chr( key ) ]
                 curses.flash( )
                 self.toggleKey( chr( key ) )
 
-                if self.paused: 
+                if self.pool.status == PAUSED: 
                     # Unpause
                     self.pool.start( )
-                    self.paused = False
                 else:
                     # Pause
-                    self.pool.stop( )
-                    self.paused = True
+                    self.pool.stop( PAUSED )
             else: # This is either an unaccepted key, or a command key
                 self.handleCommandKeys( key )
 

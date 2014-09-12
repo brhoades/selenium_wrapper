@@ -26,6 +26,8 @@ class Pool:
         # Statistics and data per child
         self.data = [ ]
 
+        self.status = STARTING
+
         # Our one way queue from our children
         self.childQueue = Queue( )
 
@@ -46,12 +48,6 @@ class Pool:
 
         # Marks our start time, set when first child sends starting
         self.started = None
-
-        # Starting for now
-        self.starting = True
-
-        # Not stopped yet
-        self.stopped = False
 
         ####### Settings ########
 
@@ -172,7 +168,7 @@ class Pool:
                 self.data[i][DISPLAY] = r[TIME]
 
         # Still spawning children, ignore their status until done.
-        if self.starting and not self.stopped:
+        if self.status == STARTING:
             left = self.startChildren - len( self.children )
             # We have children left to spawn, spawn one
             if left > 0 and time.time( ) > self.nextSpawn:
@@ -181,9 +177,9 @@ class Pool:
                     self.nextSpawn = time.time( ) + self.staggeredTime
             # Done spawning children, so done starting
             elif left == 0:
-                self.starting = False
+                self.status = RUNNING
         # Constant check to see if children and running and to automatically restart them
-        elif not self.stopped: 
+        elif self.status == RUNNING: 
             # Check that children are alive, restart
             for i in range(self.startChildren):
                 if not self.children[i].is_alive( ) and not self.workQueue.empty( ) and not self.children[i].stopped:
@@ -201,7 +197,7 @@ class Pool:
 
         :return: Boolean for if there are children still running work.
         """
-        if self.stopped:
+        if self.status >= STOPPED: 
             return True
 
         if self.childQueue.empty( ) and self.workQueue.empty( ):
@@ -215,15 +211,17 @@ class Pool:
 
 
 
-    def stop( self ):
+    def stop( self, type=STOPPED ):
         """Stops the pool cleanly and terminates all the children in it.
+           Currently handles pausing too until I need special functionality.
         
+        :param STOPPED t: Type of stopping this is, either pausing or stopping.
         :return: None
         """
         for c in self.children:
             c.stop( )
 
-        self.stopped = True
+        self.status = type 
 
     def start( self ):
         """Restarts a pool after it's been stop( )ed.
@@ -234,4 +232,4 @@ class Pool:
             c.start( )
             c.stopped = False
 
-        self.stopped = False
+        self.status = RUNNING
