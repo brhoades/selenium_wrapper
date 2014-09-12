@@ -60,13 +60,13 @@ class Ui:
         self.drawMainScreen( True )
 
         # Colors
-        curses.init_pair( STAT_LOAD,  curses.COLOR_BLACK, curses.COLOR_YELLOW )
-        curses.init_pair( STAT_START, curses.COLOR_BLACK, curses.COLOR_YELLOW )
-        curses.init_pair( STAT_GOOD,  curses.COLOR_WHITE, curses.COLOR_BLACK )
-        curses.init_pair( STAT_ERROR, curses.COLOR_BLACK, curses.COLOR_RED )
-        curses.init_pair( STAT_WAIT,  curses.COLOR_WHITE, curses.COLOR_BLUE )
-        curses.init_pair( STAT_DONE,  curses.COLOR_BLACK, curses.COLOR_WHITE )
-        curses.init_pair( STAT_FINISH,  curses.COLOR_BLACK, curses.COLOR_GREEN )
+        curses.init_pair( DISP_LOAD,  curses.COLOR_BLACK, curses.COLOR_YELLOW )
+        curses.init_pair( DISP_START, curses.COLOR_BLACK, curses.COLOR_YELLOW )
+        curses.init_pair( DISP_GOOD,  curses.COLOR_WHITE, curses.COLOR_BLACK )
+        curses.init_pair( DISP_ERROR, curses.COLOR_BLACK, curses.COLOR_RED )
+        curses.init_pair( DISP_WAIT,  curses.COLOR_WHITE, curses.COLOR_BLUE )
+        curses.init_pair( DISP_DONE,  curses.COLOR_BLACK, curses.COLOR_WHITE )
+        curses.init_pair( DISP_FINISH,  curses.COLOR_BLACK, curses.COLOR_GREEN )
 
 
 
@@ -243,7 +243,7 @@ class Ui:
                 continue
             s = ''.join( [ "#", str( c.num + 1 ) ] )
 
-            self.main.addstr( y, x, s, curses.color_pair( self.pool.data[c.num][STATUS] ) )
+            self.main.addstr( y, x, s, curses.color_pair( self.pool.data[c.num][DISPLAY] ) )
 
             y += 2 # Scoot down two lines for each number
             if y > self.y( ) - self.STATS_HEIGHT - 4:

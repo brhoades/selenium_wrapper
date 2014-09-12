@@ -4,7 +4,8 @@
 FAILED         = 0
 DONE           = 1
 READY          = 2
-STATUS_UP      = 3
+DISPLAY        = 3
+STATUS         = 4
 ####################################################################################################
 
 
@@ -15,7 +16,7 @@ STATUS_UP      = 3
 #   while times is another array that stores all the time taken for each child.
 FAILURES       = 0
 SUCCESSES      = 1
-STATUS         = 2
+DISPLAY        = 2
 TIMES          = 3
 ####################################################################################################
 
@@ -48,15 +49,28 @@ NONE           = 5
 
 
 ####################################################################################################
-# Status Types
-#   Statuses for children which coordinate with colors.
-STAT_LOAD      = 1
-STAT_START     = 2
-STAT_GOOD      = 3
-STAT_ERROR     = 4
-STAT_WAIT      = 5
-STAT_DONE      = 6
-STAT_FINISH    = 7 # Finished a job
+# Universal Status Types
+# Statuses used program wide to more easily determine statuses.
+####################################################################################################
+STARTING       = 0  # Is currently starting up, not quite running yet
+RUNNING        = 1  # Running properly
+PAUSED         = 2  # In a paused state but ready to continue.
+STOPPED        = 3  # Shut down and will need to be fully restarted.
+FINISHED       = 4  # Stopped but automatically due to lack of work.
+####################################################################################################
+
+
+
+####################################################################################################
+# Display types
+#   Display options for children which coordinate with colors.
+DISP_LOAD      = 1
+DISP_START     = 2
+DISP_GOOD      = 3
+DISP_ERROR     = 4
+DISP_WAIT      = 5
+DISP_DONE      = 6
+DISP_FINISH    = 7 # Finished a job
 #unused
-STAT_DEAD      = 10
+DISP_DEAD      = 10
 ####################################################################################################

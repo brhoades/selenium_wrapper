@@ -32,10 +32,6 @@ class Pool:
         # Our work for children
         self.workQueue = Queue( )
 
-        # Number of times each child runs, stored on the child statistics list
-        #   as a countdown later
-        self.numJobs = numJobs
-
         # Starting children
         self.startChildren = numChildren
 
@@ -84,7 +80,7 @@ class Pool:
                 c.start( )
                 return
 
-        self.data.append( [ 0, 0, STAT_LOAD, [ ] ] )
+        self.data.append( [ 0, 0, DISP_LOAD, [ ] ] )
 
         self.children.append( Child( self.childQueue, self.workQueue, len( self.children ), self.log, self.options ) )
 
@@ -163,7 +159,7 @@ class Pool:
 
             elif r[RESULT] == FAILED:
                 curses.flash( )
-                self.data[i][STATUS] = STAT_ERROR
+                self.data[i][DISPLAY]
                 self.data[i][FAILURES] += 1
 
                 # When we get a failure we put the job back on the queue
@@ -172,8 +168,8 @@ class Pool:
             elif r[RESULT] == READY and self.started == None:
                 self.started = time.time( )
 
-            elif r[RESULT] == STATUS_UP:
-                self.data[i][STATUS] = r[TIME]
+            elif r[RESULT] == DISPLAY:
+                self.data[i][DISPLAY] = r[TIME]
 
         # Still spawning children, ignore their status until done.
         if self.starting and not self.stopped:

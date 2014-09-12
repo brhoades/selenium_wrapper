@@ -115,7 +115,7 @@ class Child:
         self.driver.implicitly_wait( 0 )
 
         # Push a STARTING message to our pool
-        self.status( STAT_START )
+        self.display( DISP_START )
         cq.put( [ self.num, READY, "" ] )
 
         # Write to our log another message indicating we are starting our runs
@@ -131,12 +131,12 @@ class Child:
             try:
                 self.cache.clear( )
                 start = time.time( )
-                self.status( STAT_GOOD )
+                self.display( DISP_GOOD )
                 func( self.driver )
             except TimeoutException as e:
                 self.logMsg( ''.join( [ "Stack trace: ", traceback.format_exc( ) ] ), CRITICAL )
                 
-                self.status( STAT_ERROR )
+                self.display( DISP_ERROR )
                 self.logMsg( "Timeout when finding element." )
             except Exception as e:
                 self.logError( str( e ) ) # Capture the exception and log it
@@ -145,7 +145,7 @@ class Child:
                 cq.put( [ self.num, FAILED, ( time.time( ) - start ), str( e ) ] )
                 break
             else:
-                self.status( STAT_FINISH )
+                self.display( DISP_FINISH )
                 t = time.time( ) - start
                 cq.put( [ self.num, DONE, ( time.time( ) - start ), "" ] )
                 self.logMsg( ''.join( [ "Successfully finished job (", format( t ), "s)" ] ) )
@@ -153,7 +153,7 @@ class Child:
 
         # Quit after we have finished our work queue, this kills the phantomjs process.
         self.driver.quit( )
-        self.status( STAT_DONE )
+        self.display( DISP_DONE )
         self.stopped = True
 
 
@@ -219,7 +219,7 @@ class Child:
 
         # Send error if appropriate
         if level >= ERROR:
-            self.status( STAT_ERROR )
+            self.display( DISP_ERROR )
 
         # Determine if we're logging this low
         if level < self.level:
@@ -244,9 +244,9 @@ class Child:
 
 
 
-    def status( self, t ):
-        """Sends a status error message to the main loop, which is then translated to the UI."""
-        self.cq.put( [ self.num, STATUS_UP, t ] )
+    def display( self, t ):
+        """Sends a display message to the main loop, which is then translated to the UI."""
+        self.cq.put( [ self.num, DISPLAY, t ] )
 
 
 
@@ -273,10 +273,10 @@ class Child:
 
 
 
-    def start( self, flag=STAT_LOAD ):
+    def start( self, flag=DISP_LOAD ):
         """Starts our child process off properly, used after a restart typically.
            
-           :param STAT_LOAD flag:
+           :param DISP_LOAD flag:
            :return: None
         """
         # Not stopped anymore
@@ -290,7 +290,7 @@ class Child:
         self.lh = open( os.path.join( self.log, ''.join( [ 'log-', str( self.num + 1 ), '.txt' ] ) ), 'a+' )
 
         # Show loading
-        self.status( flag )
+        self.display( flag )
 
         # Our process 
         self.proc = Process( target=self.think, args=( ) )
@@ -314,12 +314,12 @@ class Child:
 
 
 
-    def stop( self, msg="", flag=STAT_DONE ):
+    def stop( self, msg="", flag=DISP_DONE ):
         """Stops a child process properly and sets its self.proc to None. Optionally takes a message
            to print out.
         
            :param "" msg: A message to show in parenthesis on the console next to ``Child #: STOPPING (msg)``.
-           :param STAT_DONE flag:
+           :param DISP_DONE flag:
            :return: None
         """
         if self.proc == None:
@@ -344,7 +344,7 @@ class Child:
             self.proc = None
 
         # Inform the TUI that we're done.
-        self.status( flag )
+        self.display( flag )
 
         # Close our log
         self.lh.close( )

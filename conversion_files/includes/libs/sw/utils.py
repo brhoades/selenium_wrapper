@@ -97,7 +97,7 @@ def sleepwait( driver, element, type, **kwargs ):
     die          = kwargs.get( 'die', True )
     thinkTime = kwargs.get( 'thinkTime', driver.child.sleepTime )
 
-    driver.child.status( STAT_WAIT )
+    driver.child.display( DISP_WAIT )
     
     e = exists( driver, element, type, url=url, cache=cache, lightConfirm=lightConfirm )
     if not e:
@@ -110,10 +110,10 @@ def sleepwait( driver, element, type, **kwargs ):
 
             e = exists( driver, element, type, url=url, cache=cache, lightConfirm=lightConfirm )
         else:
-            driver.child.status( STAT_GOOD ) 
+            driver.child.display( DISP_GOOD ) 
             return e 
     else:
-        driver.child.status( STAT_GOOD )
+        driver.child.display( DISP_GOOD )
         return e
 
     driver.child.logMsg( ''.join( [ "Element will not be found on page \"", 
@@ -199,7 +199,7 @@ def waitToDisappear( driver, element, **kwargs ):
         else:
             if not recur:
                 driver.child.logMsg( ''.join( [ "Waiting for \"", element, "\"." ] ), INFO )
-            driver.child.status( STATI_WAIT )
+            driver.child.display( STATI_WAIT )
             time.sleep( thinkTime )
 
         kwargs['die'] = die
@@ -228,7 +228,7 @@ def waitToDisappear( driver, element, **kwargs ):
 
                         waitToDisappear( driver, element, **kwargs )
                     time.sleep( thinkTime )
-        driver.child.status( STAT_GOOD )
+        driver.child.display( DISP_GOOD )
 
 
 
