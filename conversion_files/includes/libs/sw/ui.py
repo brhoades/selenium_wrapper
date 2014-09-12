@@ -126,105 +126,107 @@ class Ui:
         """
         end = amount + time.time( )
         while time.time( ) < end:
+            time.sleep( 0.01 )
             key = self.scr.getch( )
+
+            # Catch keys which do nothing
             if key == -1 and len( self.keys ) > 0:
                 if "p" in self.keys or "q" in self.keys or "s" in self.keys:
                     self.keys = [ ]
+                continue
             elif key == curses.KEY_ENTER:
                 self.keys = [ ]
-            else:
-                # Flip between all our accepted keys
-                if key == ord( "q" ) or key == ord( "s" ): 
-                    curses.flash( )
+                continue
 
-                    if self.stopped:
-                        self.stopped = False
-                        self.pool.start( )
-                    else:
-                        self.stopped = True
-                        self.pool.stop( )
+            # Flip between all our accepted keys
+            if key == ord( "q" ) or key == ord( "s" ): 
+                self.keys = [ chr( key ) ]
+                curses.flash( )
+                self.toggleKey( "q" )
+                self.paused = False
 
-                    self.keys = [ chr( key ) ]
-                    self.paused = False
-                    self.toggleKey( "q" )
-
-                elif key == ord( "p" ) and not self.stopped:
-                    self.keys = [ chr( key ) ]
-                    curses.flash( )
-                    self.toggleKey( chr( key ) )
-
-                    if self.paused: 
-                        # Unpause
-                        self.pool.start( )
-                        self.paused = False
-                    else:
-                        # Pause
-                        self.pool.stop( )
-                        self.paused = True
-                #####
-                # 
-                # Check and execute j/c commands
-                #
-                #####
+                if self.stopped:
+                    # Start
+                    self.stopped = False
+                    self.pool.start( )
                 else:
-                    # If we have more than 4 keys and this key isn't +/-, clear everything and return
-                    if len( self.keys ) >= 4 and key != ord( "+" ) and key != ord( "-" ):
+                    # Quit
+                    self.stopped = True
+                    self.pool.stop( )
+
+            elif key == ord( "p" ) and not self.stopped:
+                self.keys = [ chr( key ) ]
+                curses.flash( )
+                self.toggleKey( chr( key ) )
+
+                if self.paused: 
+                    # Unpause
+                    self.pool.start( )
+                    self.paused = False
+                else:
+                    # Pause
+                    self.pool.stop( )
+                    self.paused = True
+            else: # This is either an unaccepted key, or a command key
+                self.handleCommandKeys( key )
+
+
+
+    def handleCommandKeys( self, key ):
+        # If we have more than 8 keys and this key isn't +/-, clear everything and return
+        if len( self.keys ) >= 8 and key != ord( "+" ) and key != ord( "-" ):
+            self.keys = [ ]
+            return
+
+        if key == ord( "j" ) or key == ord( "c" ):
+            # Check we have no other commands queued, else clear.
+            if "j" in self.keys or "c" in self.keys:
+                self.keys = [ ]
+
+            self.keys.append( chr( key ) )
+        elif key == ord( "+" ) or key == ord( "-" ):
+            self.keys.append( chr( key ) )
+
+            # This key acts as an executor
+            if not "j" in self.keys and not "c" in self.keys:
+                self.keys = [ ]
+            else:
+                # Look for numbers
+                for c in self.keys:
+                    if c.isdigit( ):
+                        break
+                else:
+                    self.keys.append( "1" ) #assume 1
+
+                # Execute command
+                ##Get the number we're increasing
+                num = [ ] 
+                for c in self.keys:
+                    if c.isdigit( ):
+                       num.append( c ) 
+                num = int( ''.join( num ) )
+
+                ##Now do operations specific to each command
+                if "j" in self.keys:
+                    if "+" in self.keys:
+                        for i in range(num):
+                            self.pool.workQueue.put( self.pool.func )
+                    if "-" in self.keys:
+                        for i in range(num):
+                            if not self.pool.workQueue.empty( ):
+                                self.pool.workQueue.get( False, False )
+                elif "c" in self.keys:
+                    if "+" in self.keys:
+                        for i in range(num):
+                            self.pool.newChild( )
+                    if "-" in self.keys:
+                        for i in range(num):
+                            self.pool.endChild( )
+
+                        # Clear keys for next command
                         self.keys = [ ]
-
-                    if key == ord( "j" ) or key == ord( "c" ):
-                        # Check we have no other commands queued, else clear.
-                        if "j" in self.keys or "c" in self.keys:
-                            self.keys = [ ]
-
-                        self.keys.append( chr( key ) )
-                    elif key == ord( "+" ) or key == ord( "-" ):
-                        self.keys.append( chr( key ) )
-
-                        # This key acts as an executor
-                        if not "j" in self.keys and not "c" in self.keys:
-                            self.keys = [ ]
-                        else:
-                            # Look for numbers
-                            for c in self.keys:
-                                if c.isdigit( ):
-                                    break
-                            else:
-                                self.keys.append( "1" ) #assume 1
-
-                            # Execute command
-                            ##Get the number we're increasing
-                            num = [ ] 
-                            for c in self.keys:
-                                if c.isdigit( ):
-                                   num.append( c ) 
-                            num = int( ''.join( num ) )
-
-                            if "j" in self.keys:
-                                if "+" in self.keys:
-                                    for i in range(num):
-                                        self.pool.numJobs += 1
-                                        self.pool.workQueue.put( self.pool.func )
-                                if "-" in self.keys:
-                                    for i in range(num):
-                                        if not self.pool.workQueue.empty( ):
-                                            self.pool.numJobs -= 1
-                                            self.pool.workQueue.get( False, False )
-                            elif "c" in self.keys:
-                                if "+" in self.keys:
-                                    for i in range(num):
-                                        self.pool.newChild( )
-                                if "-" in self.keys:
-                                    for i in range(num):
-                                        self.pool.endChild( )
-
-                            # Clear keys for next command
-                            self.keys = [ ]
-
-                    elif key >= ord( "0" ) and key <= ord( "9" ):
-                        self.keys.append( chr( key ) )
-            time.sleep( 0.01 )
-
-
+                elif key >= ord( "0" ) and key <= ord( "9" ):
+                    self.keys.append( chr( key ) )
 
     def updateMain( self ):
         """Prints out a number for each of our children with an appropriate color
