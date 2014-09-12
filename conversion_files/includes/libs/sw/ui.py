@@ -131,11 +131,17 @@ class Ui:
 
             # Catch keys which do nothing
             if key == -1 and len( self.keys ) > 0:
-                if "p" in self.keys or "q" in self.keys or "s" in self.keys:
-                    self.keys = [ ]
+                clear = [ "p", "q", "s", "+", "-" ]
+                for c in clear:
+                    if c in self.keys:
+                        del self.keys[:]
+                        break
                 continue
             elif key == curses.KEY_ENTER:
-                self.keys = [ ]
+                del self.keys[:]
+                continue
+            elif key == curses.KEY_BACKSPACE:
+                del self.keys[-1]
                 continue
 
             # Flip between all our accepted keys
@@ -225,8 +231,8 @@ class Ui:
 
                         # Clear keys for next command
                         self.keys = [ ]
-                elif key >= ord( "0" ) and key <= ord( "9" ):
-                    self.keys.append( chr( key ) )
+        elif key >= ord( "0" ) and key <= ord( "9" ):
+            self.keys.append( chr( key ) )
 
     def updateMain( self ):
         """Prints out a number for each of our children with an appropriate color
