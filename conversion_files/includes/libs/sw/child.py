@@ -54,11 +54,11 @@ class Child:
         # How long we sleep in loops
         self.sleepTime = 1
 
-        # Did we stop?
-        self.stopped = False
-
         # Our per page element cache.
         self.cache = ElementCache( )
+
+        # Our current status
+        self.status = STARTING
         
         
         # Now start
@@ -73,6 +73,9 @@ class Child:
 
            :return: None
         """
+
+        # Push a STARTING message to our pool
+        self.display( DISP_START )
 
         wq = self.wq
         cq = self.cq
@@ -114,8 +117,6 @@ class Child:
         # Change our implicit wait time
         self.driver.implicitly_wait( 0 )
 
-        # Push a STARTING message to our pool
-        self.display( DISP_START )
         cq.put( [ self.num, READY, "" ] )
 
         # Write to our log another message indicating we are starting our runs
@@ -126,6 +127,9 @@ class Child:
             func = wq.get( True, 5 )
             res = []
             start = 0
+
+            # Still running
+            self.status = RUNNING
             
             # Try, if an element isn't found an exception is thrown
             try:
@@ -154,7 +158,7 @@ class Child:
         # Quit after we have finished our work queue, this kills the phantomjs process.
         self.driver.quit( )
         self.display( DISP_DONE )
-        self.stopped = True
+        self.status = STOPPED
 
 
 
@@ -264,15 +268,6 @@ class Child:
 
 
 
-    def is_done( self ):
-        """Check if a child is done. When a child process is finished its self.proc is set to None.
-           
-           :return: Boolean for if Child is finished processing data. This is usually signal to kill the subprocess.
-        """
-        return self.proc == None
-
-
-
     def start( self, flag=DISP_LOAD ):
         """Starts our child process off properly, used after a restart typically.
            
@@ -280,7 +275,7 @@ class Child:
            :return: None
         """
         # Not stopped anymore
-        self.stopped = False
+        self.status = STARTING
 
         # Create our path
         if not os.path.isdir( self.log ):
@@ -314,18 +309,16 @@ class Child:
 
 
 
-    def stop( self, msg="", flag=DISP_DONE ):
+    def stop( self, msg="", flag=FINISHED ):
         """Stops a child process properly and sets its self.proc to None. Optionally takes a message
            to print out.
         
            :param "" msg: A message to show in parenthesis on the console next to ``Child #: STOPPING (msg)``.
-           :param DISP_DONE flag:
+           :param FINISHED flag:
            :return: None
         """
         if self.proc == None:
             return
-
-        self.stopped = True
 
         if msg != "":
             self.logMsg( ''.join( [ "Stopping child process: \"", msg, "\"" ] ) )
@@ -343,8 +336,10 @@ class Child:
             self.proc.join( )
             self.proc = None
 
+        
         # Inform the TUI that we're done.
-        self.display( flag )
+        self.status = flag
+        self.display( DISP_DONE )
 
         # Close our log
         self.lh.close( )

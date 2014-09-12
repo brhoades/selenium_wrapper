@@ -72,7 +72,7 @@ class Pool:
         """
         # First see if there's another child that's stopped
         for c in self.children:
-            if c.stopped:
+            if c.status >= STOPPED:
                 c.start( )
                 return
 
@@ -91,7 +91,7 @@ class Pool:
             return
         lastc = None
         for c in self.children:
-            if not c.stopped:
+            if c.status <= RUNNING:
                 lastc = c
         if lastc is not None:
             lastc.stop( )
@@ -181,13 +181,20 @@ class Pool:
         # Constant check to see if children and running and to automatically restart them
         elif self.status == RUNNING: 
             # Check that children are alive, restart
-            for i in range(self.startChildren):
-                if not self.children[i].is_alive( ) and not self.workQueue.empty( ) and not self.children[i].stopped:
-                    #FIXME: Check if we need more workers or if one is alive / without job to take this
-                    self.children[i].restart( )
-                elif not self.children[i].is_alive( ) \
-                     and not self.children[i].is_done( ) and self.workQueue.empty( ) and not self.children[i].stopped:
-                    self.children[i].stop( "DONE" )
+            for c in self.children:
+                #Check if we need more workers or if one is alive / without job to take this
+                if c.status >= FINISHED and not self.workQueue.empty( ):
+                    count = 0
+                    # Get a count of starting children which haven't grabbed a job yet.
+                    for d in self.children:
+                        if d.status < RUNNING:
+                            count += 1
+                    # If even after these children start we don't have enough workers for the job queue, start this one too
+                    if self.workQueue.qsize( ) - count > 0:
+                        c.restart( "Automatic restart as more work is available." )
+                # Clean up leftover children that have manually terminated but still have processes
+                elif c.status >= FINISHED  and self.workQueue.empty( ):
+                    c.stop( "DONE (cleanup of old processes)" )
 
 
 
@@ -202,7 +209,7 @@ class Pool:
 
         if self.childQueue.empty( ) and self.workQueue.empty( ):
             for c in self.children:
-                if c.is_alive( ):
+                if c.status <= PAUSED:
                     return False
         else:
             return False
@@ -223,6 +230,8 @@ class Pool:
 
         self.status = type 
 
+
+
     def start( self ):
         """Restarts a pool after it's been stop( )ed.
 
@@ -230,6 +239,5 @@ class Pool:
         """
         for c in self.children:
             c.start( )
-            c.stopped = False
 
         self.status = RUNNING
