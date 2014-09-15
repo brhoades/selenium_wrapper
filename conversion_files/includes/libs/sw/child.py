@@ -1,4 +1,4 @@
-from multiprocessing import Process, Queue
+from multiprocessing import Process, Queue, Value
 from selenium import webdriver
 from selenium.webdriver.phantomjs.service import Service as PhantomJSService
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
@@ -51,6 +51,9 @@ class Child:
         # Do we load images and other options
         self.options = options
 
+        # Storage for our function we get
+        self.func  = None
+
         # How long we sleep in loops
         self.sleepTime = 1
 
@@ -58,9 +61,9 @@ class Child:
         self.cache = ElementCache( )
 
         # Our current status
-        self.status = STARTING
+        self.status = Value( 'i', STARTING )
         
-        
+
         # Now start
         self.start( )
 
@@ -125,6 +128,7 @@ class Child:
         # While our work queue isn't empty...
         while not wq.empty( ):
             func = wq.get( True, 5 )
+            self.func = func
             res = []
             start = 0
 
@@ -319,26 +323,25 @@ class Child:
         """
         if self.proc == None:
             return
+        elif self.status == RUNNING and self.func is not None:
+            self.wq.put( self.func ) # Put our job back on the queue so one doesn't disappear
+
+        # Prevent the pool from trying to restart us
+        self.status = flag
 
         if msg != "":
             self.logMsg( ''.join( [ "Stopping child process: \"", msg, "\"" ] ) )
         else:
             self.logMsg( "Stopping child process" )
 
-        # Kill our browser instance
-        if self.driver != None:
-            self.logMsg( "Driver was started, stopping it." )
-            self.driver.quit( )
-
         # Kill our process
         if self.proc != None:
+            time.sleep( 1 )
             self.proc.terminate( )
             self.proc.join( )
             self.proc = None
 
-        
         # Inform the TUI that we're done.
-        self.status = flag
         self.display( DISP_DONE )
 
         # Close our log
