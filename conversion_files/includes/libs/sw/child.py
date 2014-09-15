@@ -5,7 +5,7 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from sw.const import * # Constants
 from sw.formatting import formatError, errorLevelToStr
 from sw.cache import ElementCache 
-import time, os, traceback
+import time, os, traceback, subprocess
 from pprint import pformat
 from datetime import datetime
 from selenium.common.exceptions import *
@@ -336,8 +336,10 @@ class Child:
 
         # Kill our process
         if self.proc != None:
-            time.sleep( 1 )
-            self.proc.terminate( )
+            if os.name != "posix":
+                subprocess.call( [ 'taskkill', '/F', '/T', '/PID', str( self.proc.pid ) ], stdout=open( os.devnull, 'wb' ) )
+            else:
+                subprocess.call( [ 'pkill', '-TERM', '-P', str( self.proc.pid ) ], stdout=open( os.devnull, 'wb' ) )
             self.proc.join( )
             self.proc = None
 
