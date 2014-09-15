@@ -162,7 +162,7 @@ class Child:
         # Quit after we have finished our work queue, this kills the phantomjs process.
         self.driver.quit( )
         self.display( DISP_DONE )
-        self.status = STOPPED
+        self.status = FINISHED
 
 
 
