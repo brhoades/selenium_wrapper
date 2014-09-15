@@ -120,7 +120,7 @@ def sleepwait( driver, element, type, **kwargs ):
         driver.current_url, "\"." ] ), CRITICAL, locals=locals( ) )
 
     if die:
-        driver.child.logMsg( "Child will now terminate.", FATAL, locals=locals( ) )
+        driver.child.logMsg( "Child will now terminate.", CRITICAL, locals=locals( ) )
         raise TimeoutException( "Element didn't disappear within timeout." )
         # Wait to be killed
     return False
@@ -210,7 +210,7 @@ def waitToDisappear( driver, element, **kwargs ):
                 driver.child.logMsg( ''.join( [ "Element did not disappear within ", str( timeout ), "s, timed out." ] ), 
                         CRITICAL, locals=locals( ) )
                 if die:
-                    driver.child.logMsg( "Child will now terminate.", FATAL, locals=locals( ) )
+                    driver.child.logMsg( "Child will now terminate.", CRITICAL, locals=locals( ) )
                     raise TimeoutException( "Element didn't disappear within timeout." ) 
 
                 break #this skips the else
