@@ -45,9 +45,16 @@ class Pool:
 
         # General log directory, shared by all children
         self.log = os.path.join( os.path.dirname( os.path.abspath( file ) ), "logs", datetime.datetime.now( ).strftime( "%Y-%m-%d_%H-%M-%S" ) ) 
+        os.mkdir( self.log )
 
         # Marks our start time, set when first child sends starting
         self.started = None
+
+        # Our pool log
+        self.lh = open( os.path.join( self.log, 'pool.txt' ), 'w+', 0 )
+
+        # Our log level
+        self.level = NOTICE
 
         ####### Settings ########
 
@@ -55,13 +62,14 @@ class Pool:
         self.staggeredTime = 5
 
         ####### One Offs ########
-
         # Populate our work queue
         for x in range(numJobs):
             self.workQueue.put( func )
 
         # Next time we'll spawn a child
         self.nextSpawn = time.time( )
+
+        self.logMsg( "Pool starting" )
 
 
 
@@ -74,11 +82,14 @@ class Pool:
         for c in self.children:
             if c.status >= STOPPED:
                 c.start( )
+                self.logMsg( ''.join( [ "Respawning old child (#", str( c.num + 1 ), ")" ] ) )
                 return
 
         self.data.append( [ 0, 0, DISP_LOAD, [ ] ] )
 
         self.children.append( Child( self.childQueue, self.workQueue, len( self.children ), self.log, self.options ) )
+
+        self.logMsg( ''.join( [ "Spawned new child (#", str( len( self.children ) ), ")" ] ) )
 
 
 
@@ -95,6 +106,7 @@ class Pool:
                 lastc = c
         if lastc is not None:
             lastc.stop( )
+            self.logMsg( ''.join( [ "Stopping child (#", str( lastc.num + 1 ), ")" ] ) )
 
 
 
@@ -192,9 +204,11 @@ class Pool:
                     # If even after these children start we don't have enough workers for the job queue, start this one too
                     if self.workQueue.qsize( ) - count > 0:
                         c.restart( "Automatic restart as more work is available." )
+                        self.logMsg( "Starting additional child as more work is available." )
                 # Clean up leftover children that have manually terminated but still have processes
                 elif c.status >= FINISHED  and self.workQueue.empty( ):
                     c.stop( "DONE (cleanup of old processes)" )
+                    self.logMsg( ''.join( [ "Stopping child as no more work is available (#", str( c.num + 1 ), ")" ] ) )
 
 
 
@@ -218,6 +232,17 @@ class Pool:
 
 
 
+    def logMsg( self, msg, level=NOTICE ):
+        # Get our timestamp
+        timestamp = datetime.datetime.now( ).strftime( "%H:%M:%S" )
+        
+        # String
+        w = ''.join( [ "[", timestamp, "] ", errorLevelToStr( level ), "\t", msg, "\n" ] )
+
+        self.lh.write( w )
+
+
+
     def stop( self, type=STOPPED ):
         """Stops the pool cleanly and terminates all the children in it.
            Currently handles pausing too until I need special functionality.
@@ -225,6 +250,8 @@ class Pool:
         :param STOPPED t: Type of stopping this is, either pausing or stopping.
         :return: None
         """
+        self.logMsg( "Pool stopped, stopping all children." )
+
         for c in self.children:
             c.stop( )
 
@@ -237,6 +264,7 @@ class Pool:
 
         :return: None
         """
+        self.logMsg( "Pool started, starting all children." )
         for c in self.children:
             c.start( )
 
