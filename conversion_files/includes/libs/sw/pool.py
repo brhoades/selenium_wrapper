@@ -93,7 +93,7 @@ class Pool:
 
 
 
-    def endChild( self ):
+    def endChild( self, i=None ):
         """Removes the last created :class:`child`, called by GUI.
 
         :returns: None
@@ -101,16 +101,25 @@ class Pool:
         if len( self.children ) == 0:
             return
 
-        for c in self.children[::-1]:
-            if c.status( ) <= RUNNING:
-                if c.status( ) == RUNNING:
-                    self.workQueue.put( self.func )
-                    self.logMsg( "Readding terminated child's job" )
-                else:
-                    self.logMsg( "Not running a job, status: " + str( c.status( ) ) )
-                c.stop( "Stopped by GUI", STOPPED )
-                self.logMsg( ''.join( [ "Stopping child (#", str( c.num + 1 ), ")" ] ) )
-                break
+        c = None
+
+        if i == None:
+            for c in self.children[::-1]:
+                if c.status( ) <= RUNNING:
+                    break
+        else:
+            c = self.children[i]
+
+        if c == None:
+            return
+
+        if c.status( ) == RUNNING:
+            self.workQueue.put( self.func )
+            self.logMsg( "Readding terminated child's job" )
+        else:
+            self.logMsg( "Not running a job, status: " + str( c.status( ) ) )
+        c.stop( "Stopped by GUI", STOPPED )
+        self.logMsg( ''.join( [ "Stopping child (#", str( c.num + 1 ), ")" ] ) )
 
 
 
@@ -257,7 +266,7 @@ class Pool:
         self.logMsg( "Pool stopped, stopping all children." )
 
         for c in self.children:
-            c.stop( )
+            self.endChild( c.num )
 
         self.status = type 
 
