@@ -94,7 +94,7 @@ class Pool:
 
 
     def endChild( self ):
-        """Removes the last created :class:`child`.
+        """Removes the last created :class:`child`, called by GUI.
 
         :returns: None
         """
@@ -105,7 +105,7 @@ class Pool:
             if c.status <= RUNNING:
                 lastc = c
         if lastc is not None:
-            lastc.stop( )
+            lastc.stop( "Stopped by GUI", STOPPED )
             self.logMsg( ''.join( [ "Stopping child (#", str( lastc.num + 1 ), ")" ] ) )
 
 
@@ -203,10 +203,10 @@ class Pool:
                             count += 1
                     # If even after these children start we don't have enough workers for the job queue, start this one too
                     if self.workQueue.qsize( ) - count > 0:
-                        c.restart( "Automatic restart as more work is available." )
+                        c.start( "Automatic start as more work is available." )
                         self.logMsg( "Starting additional child as more work is available." )
                 # Clean up leftover children that have manually terminated but still have processes
-                elif c.status >= FINISHED  and self.workQueue.empty( ):
+                elif c.status >= FINISHED and self.workQueue.empty( ):
                     c.stop( "DONE (cleanup of old processes)" )
                     self.logMsg( ''.join( [ "Stopping child as no more work is available (#", str( c.num + 1 ), ")" ] ) )
 
