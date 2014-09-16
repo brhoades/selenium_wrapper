@@ -274,7 +274,7 @@ class Ui:
             # Number of Active Children
             numactive = 0
             for c in self.pool.children:
-                if c is not None and c.status < PAUSED:
+                if c is not None and c.status( ) == RUNNING:
                     numactive += 1
             statstrs.append( ''.join( [ "Act: ", str( numactive ) ] ) )
 

@@ -60,8 +60,8 @@ class Child:
         # Our per page element cache.
         self.cache = ElementCache( )
 
-        # Our current status
-        self.status = Value( 'i', STARTING )
+        # Our current status, wrapped
+        self.statusVar = Value( 'i', STARTING )
         
 
         # Now start
@@ -127,20 +127,19 @@ class Child:
 
         # While our work queue isn't empty...
         while not wq.empty( ):
-            func = wq.get( True, 5 )
-            self.func = func
+            self.func = wq.get( True, 5 )
             res = []
             start = 0
 
             # Still running
-            self.status = RUNNING
+            self.status( RUNNING )
             
             # Try, if an element isn't found an exception is thrown
             try:
                 self.cache.clear( )
                 start = time.time( )
                 self.display( DISP_GOOD )
-                func( self.driver )
+                self.func( self.driver )
             except TimeoutException as e:
                 self.logMsg( ''.join( [ "Stack trace: ", traceback.format_exc( ) ] ), CRITICAL )
                 
@@ -162,7 +161,7 @@ class Child:
         # Quit after we have finished our work queue, this kills the phantomjs process.
         self.driver.quit( )
         self.display( DISP_DONE )
-        self.status = FINISHED
+        self.status( FINISHED )
 
 
 
@@ -272,6 +271,15 @@ class Child:
 
 
 
+    def status( self, type=None ):
+        if type is None:
+            return self.statusVar.value
+        else:
+            with self.statusVar.get_lock( ):
+                self.statusVar.value = type
+
+
+
     def start( self, flag=DISP_LOAD ):
         """Starts our child process off properly, used after a restart typically.
            
@@ -279,7 +287,7 @@ class Child:
            :return: None
         """
         # Not stopped anymore
-        self.status = STARTING
+        self.status( STARTING )
 
         # Create our path
         if not os.path.isdir( self.log ):
@@ -323,11 +331,9 @@ class Child:
         """
         if self.proc == None:
             return
-        elif self.status == RUNNING and self.func is not None:
-            self.wq.put( self.func ) # Put our job back on the queue so one doesn't disappear
 
         # Prevent the pool from trying to restart us
-        self.status = flag
+        self.status( flag )
 
         if msg != "":
             self.logMsg( ''.join( [ "Stopping child process: \"", msg, "\"" ] ) )
