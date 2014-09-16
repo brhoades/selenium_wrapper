@@ -11,15 +11,15 @@ class Ui:
         self.pool = pool
 
         # Options for buttons to press
-        self.options = [ "c+- - Children", "j+- - Jobs", "p   - Pause", "h   - Help", "q   - Quit" ]
+        self.options = [ "c+- - Children", "j+- - Jobs", "p   - Pause", "q   - Quit" ]
 
         # Toggled options
-        self.altopts = [ "c+- - Children", "j+- - Jobs", "p   - Unpause", "h   - Help", "s   - Start" ]
+        self.altopts = [ "c+- - Children", "j+- - Jobs", "p   - Unpause", "s   - Start" ]
 
         # Options bits, true if alternate
         self.optbits = [ False for i in range(len(self.options)) ]
 
-        self.bits = [ "c", "j", "p", "h", "q" ]
+        self.bits = [ "c", "j", "p", "q" ]
 
         # Key buffer
         self.keys = [ ]
