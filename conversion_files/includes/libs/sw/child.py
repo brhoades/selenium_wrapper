@@ -343,9 +343,9 @@ class Child:
         # Kill our process
         if self.proc != None:
             if os.name != "posix":
-                subprocess.call( [ 'taskkill', '/F', '/T', '/PID', str( self.proc.pid ) ], stdout=open( os.devnull, 'wb' ) )
+                subprocess.call( [ 'taskkill', '/F', '/T', '/PID', str( self.proc.pid ) ], stdout=open( os.devnull, 'wb' ), stderr=open( os.devnull, 'wb' ) )
             else:
-                subprocess.call( [ 'pkill', '-TERM', '-P', str( self.proc.pid ) ], stdout=open( os.devnull, 'wb' ) )
+                subprocess.call( [ 'pkill', '-TERM', '-P', str( self.proc.pid ) ], stdout=open( os.devnull, 'wb' ), stderr=open( os.devnull, 'wb' ) )
             self.proc.join( )
             self.proc = None
 
