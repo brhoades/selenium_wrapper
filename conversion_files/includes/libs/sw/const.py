@@ -57,6 +57,7 @@ RUNNING        = 1  # Running properly
 PAUSED         = 2  # In a paused state but ready to continue.
 STOPPED        = 3  # Shut down and will need to be fully restarted.
 FINISHED       = 4  # Stopped but automatically due to lack of work.
+ERRORED        = 5  # Stopped but due to a major error
 ####################################################################################################
 
 
@@ -73,4 +74,18 @@ DISP_DONE      = 6
 DISP_FINISH    = 7 # Finished a job
 #unused
 DISP_DEAD      = 10
+####################################################################################################
+
+
+
+####################################################################################################
+# Reporting Constants
+R_START             = 0
+R_JOB_START         = 1
+R_JOB_COMPLETE      = 2 
+R_JOB_FAIL          = 3 
+R_STOP              = 4
+R_ALIVE             = 5
+R_NEW_CHILD         = 6
+R_END_CHILD         = 7
 ####################################################################################################

@@ -3,6 +3,7 @@ from sw.child import Child
 import time, os, datetime, curses
 from sw.const import * # Constants
 from sw.formatting import * 
+from sw.reporting import 
 
 
 
@@ -55,6 +56,9 @@ class Pool:
 
         # Our log level
         self.level = NOTICE
+
+        # Our reporting object
+        self.reporting = Report( self )
 
         ####### Settings ########
 
@@ -155,6 +159,8 @@ class Pool:
 
         :returns: None
         """
+
+        self.reporting.think( )
 
         # Check our queues
         while not self.childQueue.empty( ):

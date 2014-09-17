@@ -196,7 +196,7 @@ class Child:
         i = 0
         # If we are writing several errors, number them appropriately
         if not os.path.exists( self.log ):
-            self.logMsg( ''.join( [ "Cannot write to a log directory that doesn't exist. ", self.log ] ), CRITICAL )
+            raise ValueError( ''.join( [ "Cannot write to a log directory that doesn't exist. ", self.log ] ), CRITICAL )
             return
 
         while True:
