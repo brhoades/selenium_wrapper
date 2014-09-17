@@ -55,7 +55,7 @@ class Pool:
         self.lh = open( os.path.join( self.log, 'pool.txt' ), 'w+', 0 )
 
         # Our log level
-        self.level = NOTICE
+        self.level = self.options.get( 'level', NOTICE )
 
         # Our reporting object
         self.reporting = Report( self )

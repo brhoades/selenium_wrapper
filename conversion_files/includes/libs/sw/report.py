@@ -42,6 +42,9 @@ class Report:
         payload['run']  = self.run
         payload['time'] = time.time( )
 
+        # Log payload
+        self.pool.logMsg( "Sending payload off: " + str( payload ), DEBUG )
+
         self.queue.put( payload )
 
 
@@ -70,15 +73,19 @@ class Report:
 
         if len( data ) > 0:
             payload = { "payload": data }
+            self.pool.logMsg( "Sending payload to server: " + str( json.dumps( payload ) ) )
             r = requests.post( self.site, data=json.dumps( payload ) )
 
             # There was a failure
             if r.status_code != requests.codes.ok:
+                self.pool.logMsg( ''.join( [ "Payload failed to send with HTTP status code: ", str( r.status_code ) ] ) )
                 # Put our data back in the send queue
                 for m in data:
                     self.queue.put( m )
                 # Wait 5 seconds before we try again
                 self.nextSend = t + 5
+            else:
+                self.pool.logMsg( ''.join( [ "Sent payload successfully with status ", str( r.status_code ) ] ) )
 
 
 

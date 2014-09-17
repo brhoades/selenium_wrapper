@@ -45,11 +45,11 @@ class Child:
         # Our log handle
         self.lh = "" 
 
-        # Logging level
-        self.level = INFO 
-
         # Do we load images and other options
         self.options = options
+
+        # Logging level
+        self.level = self.options.get( 'level', NOTICE )
 
         # Storage for our function we get
         self.func  = None

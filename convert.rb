@@ -29,11 +29,11 @@ def convert_keywords( file, filename )
     ################################################################################################
     # $options Parsing Section
     # If we found #$options at the top of the file, parse any following comment as $options.
-    # Anything starting with gd (ghostdriver) is passed directly as it'll be a ghostdriver arg.
+    # Anything that is prefixed with #p is assumed to be a function parameter
     #
     if startOps
-      if l =~ /^#(gd|ghostdriver) (.*)/i
-        kwargs << $2.strip
+      if l =~ /^#p (.*)/i
+        kwargs << $1.strip
       end
       
       if l =~ /^#(import.*)/
@@ -145,6 +145,7 @@ def convert_func_swap( func, kwargs )
   # Get our args sorted out
   if $options[:images] == true
     kwargs << "images=True"
+
   else
     kwargs << "images=False"
   end
@@ -168,6 +169,7 @@ def convert_print_prep( func, kwargs, base_url, imports )
   func.unshift "from selenium.webdriver.support.ui import Select\n"
   func.unshift "from sw.wrapper import main\n"
   func.unshift "from sw.utils import *\n"
+  func.unshift "from sw.const import *\n"
   func.unshift "sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '\\\\includes\\\\libs\\\\')\n"
   func.unshift "import sys, os, time\n"
   imports.each do |i|
@@ -252,7 +254,7 @@ def prepareDirectory( outputfn )
   end
 
   i = i.floor if i.is_a? Float
-  phasePrint "Copying Python to utput Folder", i+=1, max
+  phasePrint "Copying Python to Output Folder", i+=1, max
   print "  This will take some time\n"
   # Copy Python over to the directory
   if not Dir.exists? File.join( outputfn, "python27" ) and $options[:python]

@@ -39,6 +39,7 @@ ERROR          = 3
 #   Error log levels are used to mark a message as a certain category, then output it if that level
 #   of detail is requested.
 INFO           = -1
+DEBUG          = -1
 NOTICE         = 0
 WARNING        = 1
 ERR            = 2
