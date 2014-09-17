@@ -3,7 +3,7 @@ from sw.child import Child
 import time, os, datetime, curses
 from sw.const import * # Constants
 from sw.formatting import * 
-from sw.reporting import 
+from sw.report import *
 
 
 
@@ -82,6 +82,9 @@ class Pool:
 
         :returns: None
         """
+        # Rerport that we're adding another child
+        self.reporting.newChild( )
+
         # First see if there's another child that's stopped
         for c in self.children:
             if c.status( ) >= STOPPED:
@@ -122,6 +125,7 @@ class Pool:
             self.logMsg( "Readding terminated child's job" )
         else:
             self.logMsg( "Not running a job, status: " + str( c.status( ) ) )
+        self.reporting.endChild( ) # Report that we're ending a child
         c.stop( "Stopped by GUI", STOPPED )
         self.logMsg( ''.join( [ "Stopping child (#", str( c.num + 1 ), ")" ] ) )
 
@@ -183,11 +187,13 @@ class Pool:
             if r[RESULT] == DONE:
                 self.data[i][SUCCESSES] += 1
                 self.data[i][TIMES].append( r[TIME] )
+                self.reporting.jobFinish( r[TIME] )
 
             elif r[RESULT] == FAILED:
                 curses.flash( )
                 self.data[i][DISPLAY]
                 self.data[i][FAILURES] += 1
+                self.reporting.jobError( "" ) 
 
                 # When we get a failure we put the job back on the queue
                 self.workQueue.put( self.func )
@@ -223,10 +229,12 @@ class Pool:
                     # If even after these children start we don't have enough workers for the job queue, start this one too
                     if self.workQueue.qsize( ) - count > 0:
                         c.start( "Automatic start as more work is available." )
+                        self.reporting.startChild( )
                         self.logMsg( "Starting additional child as more work is available." )
                 # Clean up leftover children that have manually terminated but still have processes
                 elif c.status( ) >= FINISHED and self.workQueue.empty( ):
                     c.stop( "DONE (cleanup of old processes)" )
+                    self.reporting.endChild( )
                     self.logMsg( ''.join( [ "Stopping child as no more work is available (#", str( c.num + 1 ), ")" ] ) )
 
 
@@ -275,6 +283,8 @@ class Pool:
             self.endChild( c.num )
 
         self.status = type 
+        
+        self.reporting.stop( )
 
 
 
@@ -286,5 +296,7 @@ class Pool:
         self.logMsg( "Pool started, starting all children." )
         for c in self.children:
             c.start( )
-
+        
         self.status = RUNNING
+        
+        self.reporting.start( )
