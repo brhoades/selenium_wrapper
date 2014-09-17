@@ -84,7 +84,7 @@ class Pool:
         """
         # First see if there's another child that's stopped
         for c in self.children:
-            if c.status >= STOPPED:
+            if c.status( ) >= STOPPED:
                 c.start( )
                 self.logMsg( ''.join( [ "Respawning old child (#", str( c.num + 1 ), ")" ] ) )
                 return
@@ -97,20 +97,33 @@ class Pool:
 
 
 
-    def endChild( self ):
+    def endChild( self, i=None ):
         """Removes the last created :class:`child`, called by GUI.
 
         :returns: None
         """
         if len( self.children ) == 0:
             return
-        lastc = None
-        for c in self.children:
-            if c.status <= RUNNING:
-                lastc = c
-        if lastc is not None:
-            lastc.stop( "Stopped by GUI", STOPPED )
-            self.logMsg( ''.join( [ "Stopping child (#", str( lastc.num + 1 ), ")" ] ) )
+
+        c = None
+
+        if i == None:
+            for c in self.children[::-1]:
+                if c.status( ) <= RUNNING:
+                    break
+        else:
+            c = self.children[i]
+
+        if c == None:
+            return
+
+        if c.status( ) == RUNNING:
+            self.workQueue.put( self.func )
+            self.logMsg( "Readding terminated child's job" )
+        else:
+            self.logMsg( "Not running a job, status: " + str( c.status( ) ) )
+        c.stop( "Stopped by GUI", STOPPED )
+        self.logMsg( ''.join( [ "Stopping child (#", str( c.num + 1 ), ")" ] ) )
 
 
 
@@ -201,18 +214,18 @@ class Pool:
             # Check that children are alive, restart
             for c in self.children:
                 #Check if we need more workers or if one is alive / without job to take this
-                if c.status >= FINISHED and not self.workQueue.empty( ):
+                if c.status( ) >= FINISHED and not self.workQueue.empty( ):
                     count = 0
                     # Get a count of starting children which haven't grabbed a job yet.
                     for d in self.children:
-                        if d.status < RUNNING:
+                        if d.status( ) < RUNNING:
                             count += 1
                     # If even after these children start we don't have enough workers for the job queue, start this one too
                     if self.workQueue.qsize( ) - count > 0:
                         c.start( "Automatic start as more work is available." )
                         self.logMsg( "Starting additional child as more work is available." )
                 # Clean up leftover children that have manually terminated but still have processes
-                elif c.status >= FINISHED and self.workQueue.empty( ):
+                elif c.status( ) >= FINISHED and self.workQueue.empty( ):
                     c.stop( "DONE (cleanup of old processes)" )
                     self.logMsg( ''.join( [ "Stopping child as no more work is available (#", str( c.num + 1 ), ")" ] ) )
 
@@ -229,7 +242,7 @@ class Pool:
 
         if self.childQueue.empty( ) and self.workQueue.empty( ):
             for c in self.children:
-                if c.status <= PAUSED:
+                if c.status( ) <= PAUSED:
                     return False
         else:
             return False
@@ -259,7 +272,7 @@ class Pool:
         self.logMsg( "Pool stopped, stopping all children." )
 
         for c in self.children:
-            c.stop( )
+            self.endChild( c.num )
 
         self.status = type 
 
