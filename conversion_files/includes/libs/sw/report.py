@@ -1,5 +1,5 @@
 import json, requests, time, os, getpass, socket, base64
-from Queue import Queue
+from multiprocessing import Queue
 from sw.const import * 
 
 class Report:
