@@ -1,5 +1,5 @@
-import json, requests, time, os, getpass, socket, base64
-from multiprocessing import Queue
+import json, requests, time, os, getpass, socket, base64, traceback
+import Queue as Q
 from sw.const import * 
 
 class Report:
@@ -8,7 +8,7 @@ class Report:
         self.pool = pool
 
         # This machine's identifier
-        self.id = pool.options.get( 'id', None )
+        self.ID = pool.options.get( 'id', None )
         
         # The name for the current run, some sort of unique identifier
         self.run = pool.options.get( 'run', None )
@@ -22,14 +22,18 @@ class Report:
 
         self.pingFreq = 60
 
+        self.tries = 5
+
         # Ping Frequency
         self.nextPing = time.time( ) + self.pingFreq
 
         # Our queue of things to submit to our server
-        self.queue = Queue( )
+        self.queue = Q.Queue( )
 
         if not self.enabled:
             return
+
+        pool.logMsg( ''.join( [ "Reporting to URL: ", self.site ] ) )
 
 
 
@@ -43,7 +47,7 @@ class Report:
         payload['time'] = time.time( )
 
         # Log payload
-        self.pool.logMsg( "Sending payload off: " + str( payload ), DEBUG )
+        self.pool.logMsg( "Sending payload to queue: " + str( payload ), DEBUG )
 
         self.queue.put( payload )
 
@@ -52,11 +56,13 @@ class Report:
     # Thinking
     def think( self ):
         t = time.time( )
+        if not self.enabled:
+            return
         if t > self.nextPing:
             self.ping( ) 
         if self.nextSend != 0 and t < self.nextSend:
             return
-        if self.queue.qsize( ) == 0 or not self.enabled:
+        if self.queue.qsize( ) == 0:
             return
 
         # We try to smash all of our data into a single array, which is then in
@@ -67,14 +73,32 @@ class Report:
             m = None
             try:
                 m = self.queue.get( False )
-            except Empty:
+            except Q.Empty as e:
                 break
             data.append( m )
 
         if len( data ) > 0:
             payload = { "payload": data }
-            self.pool.logMsg( "Sending payload to server: " + str( json.dumps( payload ) ) )
-            r = requests.post( self.site, data=json.dumps( payload ) )
+            self.pool.logMsg( ' '.join( [ 'Sending', str( len( data ) ), 'payload(s) to server.' ] ) )
+            r = None
+            try:
+                r = requests.post( self.site, data=json.dumps( payload ), timeout=0.5 )
+            except Exception as e:
+                self.pool.logMsg( "Fatal error with reporting, probably failed to connect: ", CRITICAL )
+                self.pool.logMsg( traceback.format_exc( ), CRITICAL )
+                if self.tries > 0:
+                    self.pool.logMsg( ''.join( [ "Disabling reporting in ", str( self.tries ), " more tries." ] ), CRITICAL )
+                    self.tries -= 1
+                    self.nextSend = t + 60
+                else:
+                    self.pool.logMsg( "Disabling reporting.", CRITICAL )
+                    self.enabled = False
+                    return
+
+                # Put our data back in the send queue
+                for m in data:
+                    self.queue.put( m )
+                return
 
             # There was a failure
             if r.status_code != requests.codes.ok:
@@ -86,6 +110,7 @@ class Report:
                 self.nextSend = t + 5
             else:
                 self.pool.logMsg( ''.join( [ "Sent payload successfully with status ", str( r.status_code ) ] ) )
+                self.tries = 5
 
 
 
@@ -127,10 +152,10 @@ class Report:
     # Generators
     def id( self ):
         # If we have a prespecified id, use that
-        if not self.id:
+        if not self.ID:
             # Generate one, user@machinename
             user = getpass.getuser( )
             machine = socket.gethostname( )
-            self.id = ''.join( [ user, '@', machine ] )
+            self.ID = ''.join( [ user, '@', machine ] )
 
-        return self.id
+        return self.ID
