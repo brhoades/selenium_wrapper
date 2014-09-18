@@ -57,6 +57,9 @@ class Pool:
         # Our log level
         self.level = self.options.get( 'level', NOTICE )
 
+        if self.level != NOTICE and self.level != NONE:
+            self.logMsg( ''.join( [ "Internal log level overriden to: ", errorLevelToStr( self.level, False ) ] ) , NONE ) 
+
         # Our reporting object
         self.reporting = Report( self )
 
