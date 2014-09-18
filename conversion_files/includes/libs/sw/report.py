@@ -87,8 +87,8 @@ class Report:
                 self.pool.logMsg( "Fatal error with reporting, probably failed to connect: ", CRITICAL )
                 self.pool.logMsg( traceback.format_exc( ), CRITICAL )
                 if self.tries > 0:
-                    self.pool.logMsg( ''.join( [ "Disabling reporting in ", str( self.tries ), " more tries." ] ), CRITICAL )
                     self.tries -= 1
+                    self.pool.logMsg( ''.join( [ "Disabling reporting after ", str( self.tries ), " more tries." ] ), CRITICAL )
                     self.nextSend = t + 60
                 else:
                     self.pool.logMsg( "Disabling reporting.", CRITICAL )
