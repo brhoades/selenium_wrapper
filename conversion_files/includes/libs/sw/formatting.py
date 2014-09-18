@@ -108,8 +108,8 @@ def errorLevelToStr( level, parens=True ):
         r = "NOTICE"
     elif level == WARNING:
         r = "WARNING"
-    elif level == ERROR: 
-        r = "ERROR   "
+    elif level == ERR: 
+        r = "ERROR"
     elif level == CRITICAL:
         r = "CRITICAL"
     elif level == INFO:
