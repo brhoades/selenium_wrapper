@@ -45,6 +45,7 @@ class Report:
         payload['id']   = self.id( )
         payload['run']  = self.run
         payload['time'] = time.time( )
+        payload['type'] = type
 
         # Log payload
         self.pool.logMsg( "Sending payload to queue: " + str( payload ), DEBUG )
@@ -79,10 +80,10 @@ class Report:
 
         if len( data ) > 0:
             payload = { "payload": data }
-            self.pool.logMsg( ' '.join( [ 'Sending', str( len( data ) ), 'payload(s) to server.' ] ) )
+            self.pool.logMsg( ' '.join( [ 'Sending', str( len( data ) ), 'payload(s) to server.' ] ), NOTICE )
             r = None
             try:
-                r = requests.post( self.site, data=json.dumps( payload ), timeout=0.5 )
+                r = requests.post( self.site, data=json.dumps( payload ), timeout=0.5, headers={'content-type': 'application/json'} )
             except Exception as e:
                 self.pool.logMsg( "Fatal error with reporting, probably failed to connect: ", CRITICAL )
                 self.pool.logMsg( traceback.format_exc( ), CRITICAL )
@@ -102,14 +103,14 @@ class Report:
 
             # There was a failure
             if r.status_code != requests.codes.ok:
-                self.pool.logMsg( ''.join( [ "Payload failed to send with HTTP status code: ", str( r.status_code ) ] ) )
+                self.pool.logMsg( ''.join( [ "Payload failed to send with HTTP status code: ", str( r.status_code ) ] ), CRITICAL )
                 # Put our data back in the send queue
                 for m in data:
                     self.queue.put( m )
                 # Wait 5 seconds before we try again
                 self.nextSend = t + 5
             else:
-                self.pool.logMsg( ''.join( [ "Sent payload successfully with status ", str( r.status_code ) ] ) )
+                self.pool.logMsg( ''.join( [ "Sent payload successfully with status ", str( r.status_code ) ] , INFO )
                 self.tries = 5
 
 
