@@ -85,17 +85,17 @@ class Pool:
 
         :returns: None
         """
-        # Rerport that we're adding another child
-        self.reporting.newChild( )
-
         # First see if there's another child that's stopped
         for c in self.children:
             if c.status( ) >= STOPPED:
                 c.start( )
                 self.logMsg( ''.join( [ "Respawning old child (#", str( c.num + 1 ), ")" ] ) )
+                self.reporting.newChild( c.num )
                 return
 
         self.data.append( [ 0, 0, DISP_LOAD, [ ] ] )
+
+        self.reporting.newChild( len( self.children ) )
 
         self.children.append( Child( self.childQueue, self.workQueue, len( self.children ), self.log, self.options ) )
 
@@ -128,7 +128,7 @@ class Pool:
             self.logMsg( "Readding terminated child's job" )
         else:
             self.logMsg( "Not running a job, status: " + str( c.status( ) ) )
-        self.reporting.endChild( ) # Report that we're ending a child
+        self.reporting.endChild( c.num ) # Report that we're ending a child
         c.stop( "Stopped by GUI", STOPPED )
         self.logMsg( ''.join( [ "Stopping child (#", str( c.num + 1 ), ")" ] ) )
 
@@ -190,13 +190,13 @@ class Pool:
             if r[RESULT] == DONE:
                 self.data[i][SUCCESSES] += 1
                 self.data[i][TIMES].append( r[TIME] )
-                self.reporting.jobFinish( r[TIME] )
+                self.reporting.jobFinish( r[TIME], i )
 
             elif r[RESULT] == FAILED:
                 curses.flash( )
                 self.data[i][DISPLAY]
                 self.data[i][FAILURES] += 1
-                self.reporting.jobError( "" ) 
+                self.reporting.jobError( "", i ) 
 
                 # When we get a failure we put the job back on the queue
                 self.workQueue.put( self.func )
@@ -236,8 +236,8 @@ class Pool:
                         self.logMsg( "Starting additional child as more work is available." )
                 # Clean up leftover children that have manually terminated but still have processes
                 elif c.status( ) >= FINISHED and self.workQueue.empty( ):
+                    self.reporting.endChild( c.num )
                     c.stop( "DONE (cleanup of old processes)" )
-                    self.reporting.endChild( )
                     self.logMsg( ''.join( [ "Stopping child as no more work is available (#", str( c.num + 1 ), ")" ] ) )
 
 
