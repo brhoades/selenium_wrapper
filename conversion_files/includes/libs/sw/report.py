@@ -113,7 +113,7 @@ class Report:
                 # Wait 5 seconds before we try again
                 self.nextSend = t + 5
             else:
-                self.pool.logMsg( ''.join( [ "Sent payload successfully with status ", str( r.status_code ) ] , INFO ) )
+                self.pool.logMsg( ''.join( [ "Sent payload successfully with status ", str( r.status_code ) ] ) , INFO )
                 self.tries = 5
 
 
