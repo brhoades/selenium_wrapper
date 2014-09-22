@@ -21,13 +21,14 @@ get '/' do
 end
 
 post '/report' do
+  status 200
   # Incoming data is JSON
   payload =  JSON.parse( request.body.read.to_s )
   payload = payload['payload']
+  print "Payload received from '", payload.first['id'], "' with '", payload.size, "' elements.\n"
 
   payload.each do |p|
     id = db.get_first_value "SELECT id FROM clients WHERE name=?", p['id']
-    print "Got payload for '", p['id'], "' with type '", p['type'], "'.\n"
 
     case p['type']
       when R_START
@@ -39,34 +40,35 @@ post '/report' do
           db.execute "UPDATE clients SET active=? WHERE id=?", [ 1, id ]
           print "Client '", p['id'], "' initialized\n"  
         end
-        status 200
       when R_JOB_START
         next if id == nil
-        status 200
+        print "Job start notification.\n"
 
       when R_JOB_COMPLETE
         next if id == nil
-        status 200
+        print "Job completed notification.\n"
 
       when R_JOB_FAIL
         next if id == nil
-        status 200
+        print "Job failed notification.\n"
 
       when R_STOP
         next if id == nil
-        status 200
+        print "Client stop notification.\n"
 
       when R_ALIVE
         next if id == nil
-        status 200
+        print "Client still alive.\n"
 
       when R_NEW_CHILD
         next if id == nil 
-        status 200
+        print "New child notification.\n"
       
       when R_END_CHILD
         next if id == nil
-        status 200
+        print "End child notification.\n"
     end
   end
+
+  "Hello"
 end
