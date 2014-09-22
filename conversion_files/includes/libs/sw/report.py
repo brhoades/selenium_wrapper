@@ -33,6 +33,8 @@ class Report:
         if not self.enabled:
             return
 
+        self.func = self.pool.func.__name__
+
         pool.logMsg( ''.join( [ "Reporting to URL: ", self.site ] ) )
 
 
@@ -44,6 +46,7 @@ class Report:
         # Encode identifying information and the time
         payload['id']   = self.id( )
         payload['run']  = self.run
+        payload['func'] = self.func
         payload['time'] = time.time( )
         payload['type'] = type
 
@@ -110,7 +113,7 @@ class Report:
                 # Wait 5 seconds before we try again
                 self.nextSend = t + 5
             else:
-                self.pool.logMsg( ''.join( [ "Sent payload successfully with status ", str( r.status_code ) ] , INFO )
+                self.pool.logMsg( ''.join( [ "Sent payload successfully with status ", str( r.status_code ) ] , INFO ) )
                 self.tries = 5
 
 
@@ -123,28 +126,28 @@ class Report:
     def stop( self ):
         self.send( { }, R_STOP )
 
-    def jobStart( self ):
-        self.send( { }, R_JOB_START )
+    def jobStart( self, child ):
+        self.send( { "childID": child }, R_JOB_START )
 
-    def jobFinish( self, timetaken ):
-        data = { 'timetaken': timetaken }
+    def jobFinish( self, timetaken, child ):
+        data = { 'timetaken': timetaken, 'childID': child }
 
         self.send( data, R_JOB_COMPLETE )
 
-    def jobFail( self, error, screenshot=None ):
-        data = { }
-        data['error'] = error
+    def jobFail( self, error, child, screenshot=None ):
+        data = { 'error': error, 'childID': child }
+
         if screenshot is not None:
             with open( screenshot, "rb") as img:
                 data['screenshot'] = base64.b64encode( img.read( ) ) 
         
         self.send( data, R_JOB_FAIL )
 
-    def newChild( self ):
-        self.send( { }, R_NEW_CHILD )
+    def newChild( self, child ):
+        self.send( { 'childID': child }, R_NEW_CHILD )
 
-    def endChild( self ):
-        self.send( { }, R_END_CHILD )
+    def endChild( self, child ):
+        self.send( { 'childID': child }, R_END_CHILD )
 
     def ping( self ):
         self.nextPing = time.time( ) + self.pingFreq

@@ -238,7 +238,10 @@ class Ui:
                 continue
             s = ''.join( [ "#", str( c.num + 1 ) ] )
 
-            self.main.addstr( y, x, s, curses.color_pair( self.pool.data[c.num][DISPLAY] ) )
+            if self.pool.data[c.num][DISPLAY] is not None:
+                self.main.addstr( y, x, s, curses.color_pair( self.pool.data[c.num][DISPLAY] ) )
+            else:
+                self.main.addstr( y, x ,s )
 
             y += 2 # Scoot down two lines for each number
             if y > self.y( ) - self.STATS_HEIGHT - 4:
