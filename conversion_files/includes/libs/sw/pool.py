@@ -46,7 +46,7 @@ class Pool:
 
         # General log directory, shared by all children
         self.log = os.path.join( os.path.dirname( os.path.abspath( file ) ), "logs", datetime.datetime.now( ).strftime( "%Y-%m-%d_%H-%M-%S" ) ) 
-        os.mkdir( self.log )
+        os.makedirs( self.log )
 
         # Marks our start time, set when first child sends starting
         self.started = None
