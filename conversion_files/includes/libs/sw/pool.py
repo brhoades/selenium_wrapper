@@ -63,6 +63,9 @@ class Pool:
         # Our reporting object
         self.reporting = Report( self )
 
+        # Tell our server we're starting
+        self.reporting.start( )
+
         ####### Settings ########
 
         # Time between children spawning
