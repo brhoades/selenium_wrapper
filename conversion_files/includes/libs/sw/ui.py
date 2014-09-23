@@ -238,7 +238,7 @@ class Ui:
                 continue
             s = ''.join( [ "#", str( c.num + 1 ) ] )
 
-            if self.pool.data[c.num][DISPLAY] is not None:
+            if type( self.pool.data[c.num][DISPLAY] ) == int:
                 self.main.addstr( y, x, s, curses.color_pair( self.pool.data[c.num][DISPLAY] ) )
             else:
                 self.main.addstr( y, x ,s )
