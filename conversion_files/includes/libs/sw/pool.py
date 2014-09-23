@@ -238,7 +238,7 @@ class Pool:
                         self.reporting.startChild( )
                         self.logMsg( "Starting additional child as more work is available." )
                 # Clean up leftover children that have manually terminated but still have processes
-                elif c.status( ) >= FINISHED and self.workQueue.empty( ):
+                elif c.status( ) >= FINISHED and c.proc is not None and self.workQueue.empty( ):
                     self.reporting.endChild( c.num )
                     c.stop( "DONE (cleanup of old processes)" )
                     self.logMsg( ''.join( [ "Stopping child as no more work is available (#", str( c.num + 1 ), ")" ] ) )
