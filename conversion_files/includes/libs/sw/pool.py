@@ -197,9 +197,9 @@ class Pool:
 
             elif r[RESULT] == FAILED:
                 curses.flash( )
-                self.data[i][DISPLAY]
+
                 self.data[i][FAILURES] += 1
-                self.reporting.jobError( "", i ) 
+                self.reporting.jobFail( r[ERROR], i )
 
                 # When we get a failure we put the job back on the queue
                 self.workQueue.put( self.func )
