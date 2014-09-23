@@ -65,7 +65,8 @@ post '/report' do
         #      must be using the same function.
         #   2) If the above can't be satisfied, create a new run with our function name.
         if p['run'] == nil
-          rid = db.get_first_value "SELECT id FROM runs WHERE function_name=? AND endtime=NULL AND ?-starttime<=?", [ p['func'], p['time'], RUN_TIMEOUT ]
+          rid = db.get_first_value "SELECT id FROM runs WHERE function_name=? AND endtime='-1' AND ?-starttime<=?", [ p['func'], Time.now.to_i, RUN_TIMEOUT ]
+          print "Func: ", p['func'], "\tTime now: ", Time.now.to_i.to_s, "\tTimeout: ", RUN_TIMEOUT.to_s, "\n\n"
           if rid != nil
             p['run'] = db.get_first_value "SELECT name FROM runs WHERE id=?", rid
             print "Joining prior run '", p['run'], "' (", rid, ")\n"
