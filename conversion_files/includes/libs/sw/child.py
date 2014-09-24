@@ -147,12 +147,14 @@ class Child:
                 
                 cq.put( [ self.num, FAILED, ( time.time( ) - start ), str( e ) ] )
                 self.logMsg( "Timeout when finding element." )
+                time.sleep( 1 )
             except Exception as e:
                 self.display( DISP_ERROR )
                 self.logError( str( e ) ) # Capture the exception and log it
                 self.logMsg( ''.join( [ "Stack trace: ", traceback.format_exc( ) ] ), CRITICAL )
 
                 cq.put( [ self.num, FAILED, ( time.time( ) - start ), str( e ) ] )
+                time.sleep( 1 )
                 break
             else:
                 self.display( DISP_FINISH )
