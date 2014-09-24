@@ -142,6 +142,7 @@ class Child:
                 self.func( self.driver )
             except TimeoutException as e:
                 self.display( DISP_ERROR )
+                self.logError( str( e ) )
                 self.logMsg( ''.join( [ "Stack trace: ", traceback.format_exc( ) ] ), CRITICAL )
                 
                 cq.put( [ self.num, FAILED, ( time.time( ) - start ), str( e ) ] )
