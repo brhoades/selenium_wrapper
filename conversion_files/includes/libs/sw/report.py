@@ -93,7 +93,7 @@ class Report:
                 if self.tries > 0:
                     self.tries -= 1
                     self.pool.logMsg( ''.join( [ "Disabling reporting after ", str( self.tries ), " more tries." ] ), CRITICAL )
-                    self.nextSend = t + 60
+                    self.nextSend = t + 5
                 else:
                     self.pool.logMsg( "Disabling reporting.", CRITICAL )
                     self.enabled = False
