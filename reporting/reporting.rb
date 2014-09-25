@@ -17,12 +17,30 @@ R_END_CHILD         = 7
 # with no recent jobs completed or clients used is terminated.
 RUN_TIMEOUT         = 600
 
+# Timeout for how long after we don't hear from a client, that they
+# are deactivated.
+CLIENT_TIMEOUT      = 180
+
 db = SQLite3::Database.new "reports.db"
 
 set :bind, '0.0.0.0'
 
 get '/' do
   print "Got some weird get request on /", "\n\n"
+end
+
+before do
+  # Look at active runs
+  db.execute( "SELECT id,starttime FROM runs WHERE endtime=-1" ) do |rid, runstarttime|
+    db.execute( "SELECT L.id,L.lastping,L.name FROM children AS C, clients as L WHERE C.rid=? AND C.endtime=-1 AND l.id=C.cid", rid ) do |cid, lastping, name|
+      next if Time.now.to_i - lastping < CLIENT_TIMEOUT # Likely in progress
+
+      db.execute "UPDATE children SET endtime=? WHERE rid=? AND cid=?", [ Time.now.to_i, rid, cid ]
+      db.execute "UPDATE runs SET endtime=? WHERE id=?", [ Time.now.to_i, rid ]
+
+      print name, ": TIMEOUT\n"
+    end
+  end
 end
 
 post '/report' do
@@ -36,7 +54,8 @@ post '/report' do
 
   payload.each do |p|
     if id == nil
-      id  = db.get_first_value "SELECT id FROM clients WHERE name=?", p['id']
+      id = db.get_first_value "SELECT id FROM clients WHERE name=?", p['id']
+      db.execute( "UPDATE clients SET lastping=? WHERE id=?", [ Time.now.to_i, id ] ) if id != nil
     end
     if rid == nil and id != nil
       if p['run'] != p['run'].to_i.to_s 
@@ -54,7 +73,7 @@ post '/report' do
       when R_START
         # They aren't in our database, look.
         if id == nil
-          db.execute "INSERT INTO clients (name,active,lastping) VALUES (?,?,?)", [ p['id'], 1, p['time'] ]
+          db.execute "INSERT INTO clients (name,active,lastping) VALUES (?,?,?)", [ p['id'], 1, Time.now.to_i ]
           id = db.get_first_value "SELECT id FROM clients WHERE name=?", p['id']
           print p['id'], ": NEW CLIENT\n"
         else
@@ -115,7 +134,7 @@ post '/report' do
 
       when R_ALIVE
         next if id == nil
-        db.execute "UPDATE clients set lastping=? WHERE id=?", [ p['time'], id ]
+        db.execute "UPDATE clients set lastping=? WHERE id=?", [ Time.now.to_i, id ]
 
         print p['id'], ": PING\n"
 
