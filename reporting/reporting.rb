@@ -33,7 +33,6 @@ post '/report' do
   id = nil
   rid = nil
   chid = nil
-  print "Payload received from '", payload.first['id'], "' with '", payload.size, "' elements.\n"
 
   payload.each do |p|
     if id == nil
@@ -48,7 +47,6 @@ post '/report' do
     end
     if ( p['type'] >= R_JOB_START and p['type'] <= R_JOB_FAIL ) or p['type'] >= R_NEW_CHILD \
       and p.has_key? 'childID'
-      print local_variables, "\n\n and p: ", p, "\n\n"
       chid = db.get_first_value "SELECT id FROM children WHERE cid=? AND rid=? AND \"index\"=?", [ id, rid, p['childID'] ]
     end
 
@@ -58,13 +56,11 @@ post '/report' do
         if id == nil
           db.execute "INSERT INTO clients (name,active,lastping) VALUES (?,?,?)", [ p['id'], 1, p['time'] ]
           id = db.get_first_value "SELECT id FROM clients WHERE name=?", p['id']
-          print "New client '", p['id'], "'\n"
+          print p['id'], ": NEW CLIENT\n"
         else
           db.execute "UPDATE clients SET active=? AND lastping=? WHERE id=?", [ 1, p['time'], id ]
-          print "Client '", p['id'], "' initialized\n"  
+          print p['id'], ": ACTIVATED\n"  
         end
-
-        print "Run: '", p['run'], "'\n"
 
         # Were we given a run? If not do one of two things:
         #   1) Look for a run which was created in the past RUN_TIMEOUT seconds. If we find one, put ourselves into it. They
@@ -72,10 +68,9 @@ post '/report' do
         #   2) If the above can't be satisfied, create a new run with our function name.
         if p['run'] == nil
           rid = db.get_first_value "SELECT id FROM runs WHERE function_name=? AND endtime='-1' AND ?-starttime<=?", [ p['func'], Time.now.to_i, RUN_TIMEOUT ]
-          print "Func: ", p['func'], "\tTime now: ", Time.now.to_i.to_s, "\tTimeout: ", RUN_TIMEOUT.to_s, "\n\n"
           if rid != nil
             p['run'] = db.get_first_value "SELECT name FROM runs WHERE id=?", rid
-            print "Joining prior run '", p['run'], "' (", rid, ")\n"
+            print p['id'], ": JOINING RUN ", p['run'], "\n"
           end
           if p['run'] == nil
             # Generate a run
@@ -83,20 +78,21 @@ post '/report' do
             db.execute "INSERT INTO runs (name, starttime, function_name) VALUES (?,?,?)", [ p['run'], p['time'], p['func'] ]
             rid = db.get_first_value "SELECT id FROM runs WHERE name=?", p['run']
             db.get_first_value "UPDATE clients SET rid=? WHERE id=?", [ rid, id ]
-            print "Autocreated new run '", p['run'], "' (", rid, ")\n" 
+            print p['id'], ": NEW RUN ", p['run'], "\n"
           end
         end
 
 
       when R_JOB_START
         next if id == nil
-        print "Job start notification.\n"
+
+        print p['id'], ": JOB START (#", p['childID']+1, ")\n"
 
       when R_JOB_COMPLETE
         next if id == nil
         db.execute "INSERT INTO jobs (chid,time) VALUES (?,?)", [ chid, p['timetaken'] ]
         
-        print "Job completed notification.\n"
+        print p['id'], ": JOB COMPLETE (#", p['childID']+1, ")\n"
 
       when R_JOB_FAIL
         next if id == nil
@@ -109,34 +105,35 @@ post '/report' do
             [ chid, p['error'] ]
         end
 
-        print "Job failed notification.\n"
+        print p['id'], ": JOB FAILED (#", p['childID']+1, ")\n"
 
       when R_STOP
         next if id == nil
         db.execute "UPDATE clients SET active=0 WHERE id=?", id
 
-        print "Client stop notification.\n"
+        print p['id'], ": STOP\n"
 
       when R_ALIVE
         next if id == nil
         db.execute "UPDATE clients set lastping=? WHERE id=?", [ p['time'], id ]
-        print "Client ", p['id'], " is still alive.\n"
+
+        print p['id'], ": PING\n"
 
       when R_NEW_CHILD
         next if id == nil 
 
-        print local_variables, "\n\n and p: ", p, "\n\n"
         if chid == nil
           db.execute "INSERT INTO children (cid,rid,\"index\",starttime,endtime) VALUES (?,?,?,?,?)", [ id, rid, p['childID'], p['time'], -1 ] 
         end 
 
-        print "New child notification.\n"
+        print p['id'], ": NEW CHILD (#", p['childID']+1, ")\n"
       
       when R_END_CHILD
         next if id == nil
 
         db.execute "UPDATE children SET endtime=? WHERE id=?", [ p['time'], chid ]
-        print "End child notification.\n"
+
+        print p['id'], ": END CHILD (#", p['childID']+1, ")\n"
     end
   end
 
