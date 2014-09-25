@@ -32,6 +32,7 @@ post '/report' do
   payload = payload['payload']
   id = nil
   rid = nil
+  chid = nil
   print "Payload received from '", payload.first['id'], "' with '", payload.size, "' elements.\n"
 
   payload.each do |p|
@@ -44,6 +45,11 @@ post '/report' do
       else
         rid = p['run']
       end
+    end
+    if ( p['type'] >= R_JOB_START and p['type'] <= R_JOB_FAIL ) or p['type'] >= R_NEW_CHILD \
+      and p.has_key? 'childID'
+      print local_variables, "\n\n and p: ", p, "\n\n"
+      chid = db.get_first_value "SELECT id FROM children WHERE cid=? AND rid=? AND \"index\"=?", [ id, rid, p['childID'] ]
     end
 
     case p['type']
@@ -88,27 +94,48 @@ post '/report' do
 
       when R_JOB_COMPLETE
         next if id == nil
+        db.execute "INSERT INTO jobs (chid,time) VALUES (?,?)", [ chid, p['timetaken'] ]
+        
         print "Job completed notification.\n"
 
       when R_JOB_FAIL
         next if id == nil
+        # First find out which child this is
+        if p.has_key? 'screenshot'
+          db.execute "INSERT INTO errors (chid,screenshot,text) VALUES (?,?,?)",
+            [ chid, p['screenshot'], p['error'] ]
+        else
+          db.execute "INSERT INTO errors (chid,text) VALUES (?,?)",
+            [ chid, p['error'] ]
+        end
+
         print "Job failed notification.\n"
 
       when R_STOP
         next if id == nil
+        db.execute "UPDATE clients SET active=0 WHERE id=?", id
+
         print "Client stop notification.\n"
 
       when R_ALIVE
         next if id == nil
-        db.execute "UPDATE CLIENTS set lastping=? WHERE id=?", [ p['time'], id ]
+        db.execute "UPDATE clients set lastping=? WHERE id=?", [ p['time'], id ]
         print "Client ", p['id'], " is still alive.\n"
 
       when R_NEW_CHILD
         next if id == nil 
+
+        print local_variables, "\n\n and p: ", p, "\n\n"
+        if chid == nil
+          db.execute "INSERT INTO children (cid,rid,\"index\",starttime,endtime) VALUES (?,?,?,?,?)", [ id, rid, p['childID'], p['time'], -1 ] 
+        end 
+
         print "New child notification.\n"
       
       when R_END_CHILD
         next if id == nil
+
+        db.execute "UPDATE children SET endtime=? WHERE id=?", [ p['time'], chid ]
         print "End child notification.\n"
     end
   end
