@@ -33,7 +33,7 @@ before do
   # Look at active runs
   db.execute( "SELECT id,starttime FROM runs WHERE endtime=-1" ) do |rid, runstarttime|
     db.execute( "SELECT L.id,L.lastping,L.name FROM children AS C, clients as L WHERE C.rid=? AND C.endtime=-1 AND l.id=C.cid", rid ) do |cid, lastping, name|
-      next if Time.now.to_i - lastping < CLIENT_TIMEOUT # Likely in progress
+      next if Time.now.to_i - lastping > CLIENT_TIMEOUT # Likely in progress
 
       db.execute "UPDATE children SET endtime=? WHERE rid=? AND cid=?", [ Time.now.to_i, rid, cid ]
       db.execute "UPDATE runs SET endtime=? WHERE id=?", [ Time.now.to_i, rid ]
@@ -128,7 +128,18 @@ post '/report' do
 
       when R_STOP
         next if id == nil
-        db.execute "UPDATE clients SET active=0 WHERE id=?", id
+
+        # End all children
+        db.execute "UPDATE children SET endtime=? WHERE rid=?", [ p['time'], rid ]
+
+        # Check if the run has any more clients
+        res = db.get_first_value "SELECT 1 FROM runs, children WHERE runs.id=? AND runs.id=children.rid AND children.endtime=-1", rid
+        if res == nil
+          # We only automatically end a run that's automatically generated
+          if db.get_first_value( "SELECT auto FROM runs WHERE rid=?", rid ) == 1
+            db.execute "UPDATE runs SET endtime=?", p['time'] 
+          end
+        end
 
         print p['id'], ": STOP\n"
 
