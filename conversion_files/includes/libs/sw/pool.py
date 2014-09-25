@@ -235,7 +235,7 @@ class Pool:
                     # If even after these children start we don't have enough workers for the job queue, start this one too
                     if self.workQueue.qsize( ) - count > 0:
                         c.start( "Automatic start as more work is available." )
-                        self.reporting.startChild( )
+                        self.reporting.newChild( c.num )
                         self.logMsg( "Starting additional child as more work is available." )
                 # Clean up leftover children that have manually terminated but still have processes
                 elif c.status( ) >= FINISHED and c.proc is not None and self.workQueue.empty( ):
@@ -302,6 +302,7 @@ class Pool:
         self.logMsg( "Pool started, starting all children." )
         for c in self.children:
             c.start( )
+            self.reporting.newChild( c.num )
         
         self.status = RUNNING
         
