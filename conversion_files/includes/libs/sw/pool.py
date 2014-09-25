@@ -46,7 +46,7 @@ class Pool:
 
         # General log directory, shared by all children
         self.log = os.path.join( os.path.dirname( os.path.abspath( file ) ), "logs", datetime.datetime.now( ).strftime( "%Y-%m-%d_%H-%M-%S" ) ) 
-        os.mkdir( self.log )
+        os.makedirs( self.log )
 
         # Marks our start time, set when first child sends starting
         self.started = None
@@ -197,9 +197,9 @@ class Pool:
 
             elif r[RESULT] == FAILED:
                 curses.flash( )
-                self.data[i][DISPLAY]
+
                 self.data[i][FAILURES] += 1
-                self.reporting.jobError( "", i ) 
+                self.reporting.jobFail( r[ERROR], i )
 
                 # When we get a failure we put the job back on the queue
                 self.workQueue.put( self.func )
