@@ -1,3 +1,5 @@
+require 'json'
+
 def process_report( ) 
   status 200
   # Incoming data is JSON

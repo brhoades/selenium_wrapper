@@ -1,0 +1,22 @@
+<%= header "Home"  %>
+<div class="row">
+  <div class="col-lg-12">
+    <h1>Dashboard</h1>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-8">
+    <div class="panel panel-primary">
+      <div class="panel-heading">
+        <h3 class="panel-title"><i class="fa fa-bar-chart-o"></i>Recent Runs</h3>
+      </div>
+      <div class="panel-body">
+        <%= 
+          $db.execute( "SELECT id FROM runs SORT BY starttime DESC LIMIT 10" ).each do |rid|
+          end
+      </div>
+    </div>
+  </div>
+<div>
+<%= footer %>
