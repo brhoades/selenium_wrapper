@@ -41,7 +41,7 @@ def process_report( )
         #      must be using the same function.
         #   2) If the above can't be satisfied, create a new run with our function name.
         if p['run'] == nil
-          rid = $db.get_first_value "SELECT id FROM runs WHERE function_name=? AND endtime='-1' AND ?-starttime<=?", [ p['func'], Time.now.to_i, RUN_TIMEOUT ]
+          rid = $db.get_first_value "SELECT id FROM runs WHERE function_name=? AND endtime='-1' AND ?-starttime<=? AND auto=1", [ p['func'], Time.now.to_i, RUN_TIMEOUT ]
           if rid != nil
             p['run'] = $db.get_first_value "SELECT name FROM runs WHERE id=?", rid
             print p['id'], ": JOINING RUN ", p['run'], "\n"
@@ -49,7 +49,7 @@ def process_report( )
           if p['run'] == nil
             # Generate a run
             p['run'] = p['func'] + "_" + Time.now.strftime( '%Y-%m-%d_%H:%M:%S' )
-            $db.execute "INSERT INTO runs (name, starttime, function_name) VALUES (?,?,?)", [ p['run'], p['time'], p['func'] ]
+            $db.execute "INSERT INTO runs (name, starttime, endtime, function_name, auto) VALUES (?,?,1,?,?)", [ p['run'], p['time'], p['func'], 1 ]
             rid = $db.get_first_value "SELECT id FROM runs WHERE name=?", p['run']
             $db.get_first_value "UPDATE clients SET rid=? WHERE id=?", [ rid, id ]
             print p['id'], ": NEW RUN ", p['run'], "\n"

@@ -1,6 +1,7 @@
 require 'rufus-scheduler'
 
 $sched = Rufus::Scheduler.new
+
 $sched.every '15s' do
   # Look at active runs
   $db.execute( "SELECT id,starttime FROM runs WHERE endtime=-1" ) do |rid, runstarttime|
