@@ -28,11 +28,11 @@ def process_report( )
       when R_START
         # They aren't in our database, look.
         if id == nil
-          $db.execute "INSERT INTO clients (name,active,lastping) VALUES (?,?,?)", [ p['id'], 1, Time.now.to_i ]
+          $db.execute "INSERT INTO clients (name,lastping) VALUES (?,?)", [ p['id'], Time.now.to_i ]
           id = $db.get_first_value "SELECT id FROM clients WHERE name=?", p['id']
           print p['id'], ": NEW CLIENT\n"
         else
-          $db.execute "UPDATE clients SET active=? AND lastping=? WHERE id=?", [ 1, p['time'], id ]
+          $db.execute "UPDATE clients SET lastping=? WHERE id=?", [ Time.now.to_i, id ]
           print p['id'], ": ACTIVATED\n"  
         end
 
