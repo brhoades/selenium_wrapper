@@ -1,7 +1,7 @@
 require 'rufus-scheduler'
 
 $sched = Rufus::Scheduler.new
-$sched.every '5m' do
+$sched.every '15s' do
   # Look at active runs
   $db.execute( "SELECT id,starttime FROM runs WHERE endtime=-1" ) do |rid, runstarttime|
     $db.execute( "SELECT L.id,L.lastping,L.name FROM children AS C, clients as L WHERE C.rid=? AND C.endtime=-1 AND l.id=C.cid", rid ) do |cid, lastping, name|
@@ -13,8 +13,4 @@ $sched.every '5m' do
       print name, ": TIMEOUT\n"
     end
   end
-end
-
-$sched.every '15s' do
-  print "hello!\n"
 end
