@@ -1,7 +1,6 @@
 require 'json'
 
 def process_report( ) 
-  status 200
   # Incoming data is JSON
   payload =  JSON.parse( request.body.read.to_s )
   payload = payload['payload']
@@ -51,7 +50,7 @@ def process_report( )
           if p['run'] == nil
             # Generate a run
             p['run'] = p['func'] + "_" + Time.now.strftime( '%Y-%m-%d_%H:%M:%S' )
-            $db.execute "INSERT INTO runs (name, starttime, endtime, function_name, auto) VALUES (?,?,1,?,?)", [ p['run'], p['time'], p['func'], 1 ]
+            $db.execute "INSERT INTO runs (name, starttime, endtime, function_name, auto) VALUES (?,?,-1,?,?)", [ p['run'], p['time'], p['func'], 1 ]
             rid = $db.get_first_value "SELECT id FROM runs WHERE name=?", p['run']
             $db.get_first_value "UPDATE clients SET rid=? WHERE id=?", [ rid, id ]
             print p['id'], ": NEW RUN ", p['run'], "\n"

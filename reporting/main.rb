@@ -32,6 +32,7 @@ set :bind, '0.0.0.0'
 
   post '/report' do
     process_report
+    status 200
   end
 
   get /([^\.]*)/ do
