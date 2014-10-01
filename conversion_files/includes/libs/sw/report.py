@@ -86,7 +86,7 @@ class Report:
             self.pool.logMsg( ' '.join( [ 'Sending', str( len( data ) ), 'payload(s) to server.' ] ), NOTICE )
             r = None
             try:
-                r = requests.post( self.site, data=json.dumps( payload ), timeout=0.5, headers={'content-type': 'application/json'} )
+                r = requests.post( self.site, data=json.dumps( payload ), timeout=1, headers={'content-type': 'application/json'} )
             except Exception as e:
                 self.pool.logMsg( "Fatal error with reporting, probably failed to connect: ", CRITICAL )
                 self.pool.logMsg( traceback.format_exc( ), CRITICAL )
