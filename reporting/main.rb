@@ -25,6 +25,7 @@ class Reporting < Sinatra::Base
     serve '/font-awesome',  from: 'assets/font-awesome'
     serve '/js',            from: 'js'
     serve '/css',           from: 'css'
+    serve '/data',          from: 'assets/'
   end
 
 set :bind, '0.0.0.0'

@@ -12,9 +12,21 @@
         <h3 class="panel-title"><i class="fa fa-bar-chart-o"></i>Recent Runs</h3>
       </div>
       <div class="panel-body">
-        <%= 
-          $db.execute( "SELECT id FROM runs SORT BY starttime DESC LIMIT 10" ).each do |rid|
-          end
+        <table data-toggle="table" data-url="data/recent-runs.json" data-cache="false">
+          <thead>
+            <tr>
+              <th data-field="name">Name</th>
+              <th data-field="clients">Clients</th>
+              <th data-field="peak-concurrent">Peak Sessions</th>
+              <th data-field="avg-concurrent">Avg Sessions</th>
+              <th data-field="jobs">Jobs</th>
+              <th data-field="peak-jpm">Peak Jobs/m</th>
+              <th data-field="avg-jpm">Avg Jobs/m</th>
+              <th data-field="start">Start</th>
+              <th data-field="end">End</th>
+            </tr>
+          </thead>
+        </table>
       </div>
     </div>
   </div>
