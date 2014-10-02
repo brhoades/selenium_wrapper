@@ -131,7 +131,9 @@ class Pool:
             self.logMsg( "Readding terminated child's job" )
         else:
             self.logMsg( "Not running a job, status: " + str( c.status( ) ) )
-        self.reporting.endChild( c.num ) # Report that we're ending a child
+        if c.status( ) <= RUNNING:  
+            self.reporting.endChild( c.num ) # Report that we're ending a child
+
         c.stop( "Stopped by GUI", STOPPED )
         self.logMsg( ''.join( [ "Stopping child (#", str( c.num + 1 ), ")" ] ) )
 
