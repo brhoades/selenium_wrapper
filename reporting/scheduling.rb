@@ -1,6 +1,8 @@
 require 'rufus-scheduler'
 require 'json'
 
+require_relative 'functions/range_overlap.rb'
+
 $sched = Rufus::Scheduler.new
 
 ######################
@@ -18,6 +20,7 @@ $sched.every '15s' do
     end
 
     # Check if there are other clients in this run, if there aren't it's done
+    # FIXME: Currently this just times out a run after 600 w/ no clients 
     if RUN_TIMEOUT + runstarttime < Time.now.to_i \
         and $db.get_first_value( "SELECT count(*) FROM clients WHERE rid=?", rid ) <= 0
       $db.execute "UPDATE runs SET endtime=? WHERE id=?", [ Time.now.to_i, rid ]
@@ -73,10 +76,13 @@ $sched.every '1m', :first_in => 1 do
       mavgjob = avgjob/4
       clienttimes = Array.new
       $db.execute( "SELECT starttime,endtime FROM children WHERE rid=? AND endtime-starttime>?", [ rid, mavgjob ] ) do |start,endt| 
-        clienttimes << Range.new( start, endt ) 
+        clienttimes << Range.new( start.to_i, endt.to_i ) 
       end
-      print "\n\n", "RID: ", rid, "\nClients: ", col['clients'], "\nJobs: ", col['jobs'], "\nStart: ", col['start'], "\nEnd: ", col['end']
-      print "\nTime: ", clienttimes, "\n\n"
+      print "\nRID: ", rid, "\nClients: ", col['clients'], "\nJobs: ", col['jobs'], "\nStart: ", col['start'], "\nEnd: ", col['end']
+      print "\nTime: ", clienttimes, "\n"
+
+      tallied = tally_range clienttimes 
+      print "\nTallied: ", tallied, "\n"
     end
   end
 
