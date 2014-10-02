@@ -86,8 +86,8 @@ def process_report( )
       when R_STOP
         next if id == nil
 
-        # End all children
-        $db.execute "UPDATE children SET endtime=? WHERE rid=?", [ p['time'], rid ]
+        # End all children which haven't ended already
+        $db.execute "UPDATE children SET endtime=? WHERE rid=? and endtime=-1", [ p['time'], rid ]
 
         # Check if the run has any more clients
         res = $db.get_first_value "SELECT 1 FROM runs, children WHERE runs.id=? AND runs.id=children.rid AND children.endtime=-1", rid
