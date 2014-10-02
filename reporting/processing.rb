@@ -22,7 +22,8 @@ def process_report( )
     end
     if ( p['type'] >= R_JOB_START and p['type'] <= R_JOB_FAIL ) or p['type'] >= R_NEW_CHILD \
       and p.has_key? 'childID'
-      chid = $db.get_first_value "SELECT id FROM children WHERE cid=? AND rid=? AND \"index\"=?", [ id, rid, p['childID'] ]
+      # This will be the last child with our index
+      chid = $db.get_first_value "SELECT id FROM children WHERE cid=? AND rid=? AND \"index\"=? ORDER BY id DESC LIMIT 1", [ id, rid, p['childID'] ]
     end
 
     case p['type']
@@ -92,7 +93,7 @@ def process_report( )
         res = $db.get_first_value "SELECT 1 FROM runs, children WHERE runs.id=? AND runs.id=children.rid AND children.endtime=-1", rid
         if res == nil
           # We only automatically end a run that's automatically generated
-          if $db.get_first_value( "SELECT auto FROM runs WHERE rid=?", rid ) == 1
+          if $db.get_first_value( "SELECT auto FROM runs WHERE id=?", rid ) == 1
             $db.execute "UPDATE runs SET endtime=?", p['time'] 
           end
         end
@@ -108,9 +109,14 @@ def process_report( )
       when R_NEW_CHILD
         next if id == nil 
 
-        if chid == nil
-          $db.execute "INSERT INTO children (cid,rid,\"index\",starttime,endtime) VALUES (?,?,?,?,?)", [ id, rid, p['childID'], p['time'], -1 ] 
-        end 
+        # Are there other children with this index/cid/rid?
+        oid = $db.get_first_value( "SELECT id FROM children WHERE rid=? AND cid=? and 'index'=?", [ rid, id, p['childID'] ] )
+        if oid != nil
+          print p['id'], ": OLD CHILD (#", p['childID']+1,") TIMED OUT\n"
+          $db.execute "UPDATE children SET endtime=? WHERE id=?", [ p['time'], oid ]
+        end
+
+        $db.execute "INSERT INTO children (cid,rid,\"index\",starttime,endtime) VALUES (?,?,?,?,?)", [ id, rid, p['childID'], p['time'], -1 ] 
 
         print p['id'], ": NEW CHILD (#", p['childID']+1, ")\n"
       
