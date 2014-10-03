@@ -2,6 +2,7 @@ require 'rufus-scheduler'
 require 'json'
 
 require_relative 'functions/range_overlap.rb'
+require_relative 'functions/checksum.rb'
 
 $sched = Rufus::Scheduler.new
 
@@ -33,21 +34,26 @@ end
 $sched.every '1m', :first_in => 1 do
   rids = [] 
   jobs = []
-  old  = nil 
+  children = []
+  checksum = nil
   datafile = "assets/recent-runs.json"
+
   # Grab the top five runs
   $db.execute( "SELECT id FROM runs ORDER BY id DESC LIMIT 5" ).each do |rid|
     jobs << ( $db.get_first_value "SELECT count(*) FROM jobs AS J, children AS C WHERE J.chid=C.id AND C.rid=?", rid ) 
+    children << ( $db.get_first_value "SELECT count(*) FROM children WHERE rid=?", rid )
     rids << rid 
   end
-  
+
+  checksum = get_checksum( rids.zip( jobs, children ) ) 
+
   # If we already have cached data, open it and check using cached data
   if File.exists? datafile
     File.open( datafile ) do |f|
       old = JSON.load f
       
       # Nothing has changed, same runs
-      return if ( old['rids'] & rids ).empty? and ( old['total-jobs'] & jobs ).empty?
+      return if old[0]['checksum'] == checksum
     end
   end
 
@@ -55,8 +61,9 @@ $sched.every '1m', :first_in => 1 do
   # Our output json blob. It's an array of hashes where each individual hash contains
   # information for a row in a table, seen in views/index.erb
   out = Array.new
+  out << { "checksum" => checksum }
   
-  print "#"*40, "DEBUGGING: \n"
+  print "\n\n", "#"*40, "\nDEBUGGING:\n"
   # Cycle through the runs
   rids.each do |rid|
     col = Hash.new
@@ -91,8 +98,12 @@ $sched.every '1m', :first_in => 1 do
 
       print "\nPeak Concur: ", col['peak-concurrent'], "\nAvg Concur: ", col['avg-concurrent']
       print "\nAvg JPM: ", col['avg-jpm'], "\nPeak JPM: ", col['peak-jpm'], "\n\n"
+
+      out << col
     end
   end
+
+  # Calculate a hash of the data in this table for identifying updates
   print "#"*40, "\n\n"
 
 end
