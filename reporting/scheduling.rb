@@ -55,13 +55,12 @@ $sched.every '1m', :first_in => 1 do
     end
   end
 
-  # We don't continue if our checksums aren't different
-  if $old_checksum != checksum
+  # We don't continue if our checksums aren't different and the file is still there
+  if $old_checksum != checksum and File.exists? datafile
     print "Aggregating and calculating recent runs data.\n\tThis can take a while."
     # Our output json blob. It's an array of hashes where each individual hash contains
     # information for a row in a table, seen in views/index.erb
     out = Array.new
-    out << { "checksum" => checksum }
     
     print "\n\n", "#"*40, "\nDEBUGGING:\n"
     # Cycle through the runs
@@ -123,6 +122,12 @@ $sched.every '1m', :first_in => 1 do
 
         out << col
       end
+    end
+    
+    if out.size > 0
+      out[0]['checksum'] = checksum
+    else
+      out << { "checksum" => checksum }
     end
 
     print "#"*40, "\n\n"
