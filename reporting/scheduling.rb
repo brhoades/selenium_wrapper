@@ -48,62 +48,67 @@ $sched.every '1m', :first_in => 1 do
   checksum = get_checksum( rids.zip( jobs, children ) ) 
 
   # If we already have cached data, open it and check using cached data
-  if File.exists? datafile
+  if File.exists? datafile and $old_checksum == nil
     File.open( datafile ) do |f|
       old = JSON.load f
-      
-      # Nothing has changed, same runs
-      return if old[0]['checksum'] == checksum
+      $old_checksum = old[0]['checksum']
     end
   end
 
-  print "Aggregating and calculating recent runs data.\n\tThis can take a while."
-  # Our output json blob. It's an array of hashes where each individual hash contains
-  # information for a row in a table, seen in views/index.erb
-  out = Array.new
-  out << { "checksum" => checksum }
-  
-  print "\n\n", "#"*40, "\nDEBUGGING:\n"
-  # Cycle through the runs
-  rids.each do |rid|
-    col = Hash.new
-    $db.execute( "SELECT name,starttime,endtime from runs WHERE id=?", rid ) do |run_name,starttime,endtime|
-      # Straight copy overs first
-      col['name'] = run_name
-      col['clients'] = $db.get_first_value "SELECT count(id) FROM clients WHERE rid=?", rid
-      # Jobs are bound to a child (who completed them)
-      col['jobs'] = $db.get_first_value "SELECT count(J.id) FROM jobs AS J, children AS C WHERE C.id=J.chid AND C.rid=?", rid
-      col['start'] = Time.at( starttime )
-      col['end'] = Time.at( endtime )
+  # We don't continue if our checksums aren't different
+  if $old_checksum != checksum
+    print "Aggregating and calculating recent runs data.\n\tThis can take a while."
+    # Our output json blob. It's an array of hashes where each individual hash contains
+    # information for a row in a table, seen in views/index.erb
+    out = Array.new
+    out << { "checksum" => checksum }
+    
+    print "\n\n", "#"*40, "\nDEBUGGING:\n"
+    # Cycle through the runs
+    rids.each do |rid|
+      col = Hash.new
+      $db.execute( "SELECT name,starttime,endtime from runs WHERE id=?", rid ) do |run_name,starttime,endtime|
+        # Straight copy overs first
+        col['name'] = run_name
+        col['clients'] = $db.get_first_value "SELECT count(id) FROM clients WHERE rid=?", rid
+        # Jobs are bound to a child (who completed them)
+        col['jobs'] = $db.get_first_value "SELECT count(J.id) FROM jobs AS J, children AS C WHERE C.id=J.chid AND C.rid=?", rid
+        col['start'] = Time.at( starttime )
+        col['end'] = Time.at( endtime )
 
-      #####################################
-      # Get our concurrent sessions formatted. This returns a tally of the amount of concurrent sessions
-      # from the start of the run to the end in the form of a hash. We discard children which ran for no less than
-      # half the time of the average job.
-      avgjob = $db.get_first_value "SELECT sum(time)/count(time) FROM jobs as J, children AS C WHERE C.id=J.chid AND C.rid=?", rid
-      mavgjob = avgjob/4
-      clienttimes = Array.new
-      $db.execute( "SELECT starttime,endtime FROM children WHERE rid=? AND endtime-starttime>?", [ rid, mavgjob ] ) do |start,endt| 
-        clienttimes << Range.new( start.to_i, endt.to_i ) 
+        #####################################
+        # Get our concurrent sessions formatted. This returns a tally of the amount of concurrent sessions
+        # from the start of the run to the end in the form of a hash. We discard children which ran for no less than
+        # half the time of the average job.
+        avgjob = $db.get_first_value "SELECT sum(time)/count(time) FROM jobs as J, children AS C WHERE C.id=J.chid AND C.rid=?", rid
+        mavgjob = avgjob/4
+        clienttimes = Array.new
+        $db.execute( "SELECT starttime,endtime FROM children WHERE rid=? AND endtime-starttime>?", [ rid, mavgjob ] ) do |start,endt| 
+          clienttimes << Range.new( start.to_i, endt.to_i ) 
+        end
+        print "\nRID: ", rid, "\nClients: ", col['clients'], "\nJobs: ", col['jobs'], "\nStart: ", col['start'], "\nEnd: ", col['end']
+        print "\nTime: ", clienttimes
+
+        tallied = tally_range clienttimes 
+        col['peak-concurrent'] = tallied.values.max
+        col['avg-concurrent']  = ( tallied.values.reduce( :+ ) / tallied.size.to_f ).round 3
+
+        col['avg-jpm'] = col['jobs'] / ( endtime - starttime )
+        col['peak-jpm'] = "TBD"
+
+        print "\nPeak Concur: ", col['peak-concurrent'], "\nAvg Concur: ", col['avg-concurrent']
+        print "\nAvg JPM: ", col['avg-jpm'], "\nPeak JPM: ", col['peak-jpm'], "\n\n"
+
+        out << col
       end
-      print "\nRID: ", rid, "\nClients: ", col['clients'], "\nJobs: ", col['jobs'], "\nStart: ", col['start'], "\nEnd: ", col['end']
-      print "\nTime: ", clienttimes
+    end
 
-      tallied = tally_range clienttimes 
-      col['peak-concurrent'] = tallied.values.max
-      col['avg-concurrent']  = ( tallied.values.reduce( :+ ) / tallied.size.to_f ).round 3
+    print "#"*40, "\n\n"
 
-      col['avg-jpm'] = col['jobs'] / ( endtime - starttime )
-      col['peak-jpm'] = "TBD"
-
-      print "\nPeak Concur: ", col['peak-concurrent'], "\nAvg Concur: ", col['avg-concurrent']
-      print "\nAvg JPM: ", col['avg-jpm'], "\nPeak JPM: ", col['peak-jpm'], "\n\n"
-
-      out << col
+    # Write to data file
+    File.open( datafile, "w" ) do |f|
+      f.write out.to_json
+      $old_checksum = out[0]['checksum']
     end
   end
-
-  # Calculate a hash of the data in this table for identifying updates
-  print "#"*40, "\n\n"
-
 end
