@@ -66,8 +66,8 @@ $sched.every '1m', :first_in => 1 do
       col['clients'] = $db.get_first_value "SELECT count(id) FROM clients WHERE rid=?", rid
       # Jobs are bound to a child (who completed them)
       col['jobs'] = $db.get_first_value "SELECT count(J.id) FROM jobs AS J, children AS C WHERE C.id=J.chid AND C.rid=?", rid
-      col['start'] = Time.at( Time.new( starttime ) )
-      col['end'] = Time.at( Time.new( endtime ) )
+      col['start'] = Time.at( starttime )
+      col['end'] = Time.at( endtime )
 
       #####################################
       # Get our concurrent sessions formatted. This returns a tally of the amount of concurrent sessions
