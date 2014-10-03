@@ -56,6 +56,7 @@ $sched.every '1m', :first_in => 1 do
   # information for a row in a table, seen in views/index.erb
   out = Array.new
   
+  print "#"*40, "DEBUGGING: \n"
   # Cycle through the runs
   rids.each do |rid|
     col = Hash.new
@@ -79,11 +80,19 @@ $sched.every '1m', :first_in => 1 do
         clienttimes << Range.new( start.to_i, endt.to_i ) 
       end
       print "\nRID: ", rid, "\nClients: ", col['clients'], "\nJobs: ", col['jobs'], "\nStart: ", col['start'], "\nEnd: ", col['end']
-      print "\nTime: ", clienttimes, "\n"
+      print "\nTime: ", clienttimes
 
       tallied = tally_range clienttimes 
-      print "\nTallied: ", tallied, "\n"
+      col['peak-concurrent'] = tallied.values.max
+      col['avg-concurrent']  = ( tallied.values.reduce( :+ ) / tallied.size.to_f ).round 3
+
+      col['avg-jpm'] = col['jobs'] / ( endtime - starttime )
+      col['peak-jpm'] = "TBD"
+
+      print "\nPeak Concur: ", col['peak-concurrent'], "\nAvg Concur: ", col['avg-concurrent']
+      print "\nAvg JPM: ", col['avg-jpm'], "\nPeak JPM: ", col['peak-jpm'], "\n\n"
     end
   end
+  print "#"*40, "\n\n"
 
 end
