@@ -73,8 +73,30 @@ $sched.every '1m', :first_in => 1 do
         col['clients'] = $db.get_first_value "SELECT count(id) FROM clients WHERE rid=?", rid
         # Jobs are bound to a child (who completed them)
         col['jobs'] = $db.get_first_value "SELECT count(J.id) FROM jobs AS J, children AS C WHERE C.id=J.chid AND C.rid=?", rid
-        col['start'] = Time.at( starttime )
-        col['end'] = Time.at( endtime )
+
+        # Choose an appropriate format for time time
+        format = ""
+        if endtime == -1
+          col['elapsed'] = Time.at( Time.now.to_i - starttime ).utc
+        else
+          col['elapsed'] = Time.at( endtime - starttime ).utc
+        end
+
+        if col['elapsed'].to_i > 3600
+          format += "%Hh"
+        end
+        if col['elapsed'].to_i > 60
+          format += "%Mm"
+        end
+        if col['elapsed'].to_i % 60 != 0
+          format += "%Ss"
+        end 
+        
+        if format == ""
+          col['elapsed'] = "0s"
+        else
+          col['elapsed'] = col['elapsed'].strftime format
+        end
 
         #####################################
         # Get our concurrent sessions formatted. This returns a tally of the amount of concurrent sessions
@@ -93,7 +115,7 @@ $sched.every '1m', :first_in => 1 do
         col['peak-concurrent'] = tallied.values.max
         col['avg-concurrent']  = ( tallied.values.reduce( :+ ) / tallied.size.to_f ).round 3
 
-        col['avg-jpm'] = col['jobs'] / ( endtime - starttime )
+        col['avg-jpm'] = ( col['jobs'] / ( endtime - starttime ) ).round 2
         col['peak-jpm'] = "TBD"
 
         print "\nPeak Concur: ", col['peak-concurrent'], "\nAvg Concur: ", col['avg-concurrent']
