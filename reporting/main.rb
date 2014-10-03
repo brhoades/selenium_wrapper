@@ -17,6 +17,8 @@ def footer
   erb :footer
 end
 
+set :public_folder, "assets"
+
 class Reporting < Sinatra::Base
   register Sinatra::AssetPack
 
@@ -25,7 +27,7 @@ class Reporting < Sinatra::Base
     serve '/font-awesome',  from: 'assets/font-awesome'
     serve '/js',            from: 'js'
     serve '/css',           from: 'css'
-    serve '/data',          from: 'assets/'
+    serve '/data',          from: 'assets'
   end
 
 set :bind, '0.0.0.0'
@@ -35,7 +37,13 @@ set :bind, '0.0.0.0'
     status 200
   end
 
-  get /([^\.]*)/ do
+  get /recentruns/ do
+    if File.exists? "assets/recent-runs.json"
+      File.open "assets/recent-runs.json"
+    end
+  end
+
+  get /^([^\.]*)$/ do
     m = $1
     m = :index if $1 == nil
     erb m, :locals => { :header => method(:header), :footer => method(:footer) }
