@@ -44,7 +44,7 @@ $sched.every '15s', :first_in => 3 do
   # Grab the top five runs
   $db.execute( "SELECT id FROM runs ORDER BY id DESC LIMIT 5" ).each do |rid|
     jobs << ( $db.get_first_value "SELECT count(*) FROM jobs AS J, children AS C WHERE J.chid=C.id AND C.rid=?", rid ) 
-    children << ( $db.get_first_value "SELECT count(*) FROM children WHERE rid=?", rid )
+    children << ( $db.execute "SELECT count(*), starttime, endtime FROM children WHERE rid=?", rid ).flatten
     rids << rid 
   end
 
@@ -111,7 +111,7 @@ $sched.every '15s', :first_in => 3 do
           mavgjob = avgjob/4
         end
         clienttimes = Array.new
-        $db.execute( "SELECT starttime,endtime FROM children WHERE rid=? AND endtime-starttime>?", [ rid, mavgjob ] ) do |start,endt| 
+        $db.execute( "SELECT starttime,endtime FROM children WHERE rid=? AND ( endtime-starttime>? OR ( endtime=-1 AND ?-starttime>? ) )", [ rid, mavgjob, Time.now.to_i, mavgjob ] ) do |start,endt| 
           if endt == "-1"
             endt = Time.now.to_i
           end
