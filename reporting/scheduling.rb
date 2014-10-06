@@ -111,10 +111,18 @@ $sched.every '1m', :first_in => 1 do
         print "\nTime: ", clienttimes
 
         tallied = tally_range clienttimes 
-        col['peak-concurrent'] = tallied.values.max
-        col['avg-concurrent']  = ( tallied.values.reduce( :+ ) / tallied.size.to_f ).round 3
+        if tallied != nil and tallied.size > 0
+          col['peak-concurrent'] = tallied.values.max
+          col['avg-concurrent']  = ( tallied.values.reduce( :+ ) / tallied.size.to_f ).round 3
+        else
+          col['peak-concurrent'] = "-"
+          col['avg-concurrent']  = "-"
+        end
 
-        col['avg-jpm'] = ( col['jobs'] / ( endtime - starttime ) * 60 ).round 2
+        if endtime - starttime > 0
+          col['avg-jpm'] = ( col['jobs'] / ( endtime - starttime ) * 60 ).round 2
+        else
+          col['avg-jpm'] = "-"
 
         print "\nPeak Concur: ", col['peak-concurrent'], "\nAvg Concur: ", col['avg-concurrent']
         print "\nAvg JPM: ", col['avg-jpm'], "\n\n"
