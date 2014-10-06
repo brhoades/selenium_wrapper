@@ -104,7 +104,7 @@ $sched.every '15s', :first_in => 3 do
         # Get our concurrent sessions formatted. This returns a tally of the amount of concurrent sessions
         # from the start of the run to the end in the form of a hash. We discard children which ran for no less than
         # half the time of the average job.
-        avgjob = $db.get_first_value "SELECT sum(timetaken)/count(timetaken) FROM jobs as J, children AS C WHERE C.id=J.chid AND C.rid=?", rid
+        avgjob = $db.get_first_value "SELECT sum(J.timetaken)/count(J.timetaken) FROM jobs as J, children AS C WHERE C.id=J.chid AND C.rid=?", rid
         if avgjob == nil
           mavgjob = 0
         else
@@ -112,7 +112,7 @@ $sched.every '15s', :first_in => 3 do
         end
         clienttimes = Array.new
         $db.execute( "SELECT starttime,endtime FROM children WHERE rid=? AND ( endtime-starttime>? OR ( endtime=-1 AND ?-starttime>? ) )", [ rid, mavgjob, Time.now.to_i, mavgjob ] ) do |start,endt| 
-          if endt == "-1"
+          if endt == -1
             endt = Time.now.to_i
           end
 
@@ -122,6 +122,7 @@ $sched.every '15s', :first_in => 3 do
         print "\nTime: ", clienttimes
 
         tallied = tally_range clienttimes 
+        print "TALLIED: ", tallied, "\n"
         if tallied != nil and tallied.size > 0
           col['peak-concurrent'] = tallied.values.max
           col['avg-concurrent']  = ( tallied.values.reduce( :+ ) / tallied.size.to_f ).round 3
