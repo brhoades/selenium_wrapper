@@ -34,7 +34,7 @@ $sched.every '15s' do
   end
 end
 
-$sched.every '1m', :first_in => 201 do
+$sched.every '1m', :first_in => 3 do
   rids = [] 
   jobs = []
   children = []
@@ -76,7 +76,7 @@ $sched.every '1m', :first_in => 201 do
         # Jobs are bound to a child (who completed them)
         col['jobs'] = $db.get_first_value "SELECT count(J.id) FROM jobs AS J, children AS C WHERE C.id=J.chid AND C.rid=?", rid
 
-        # Choose an appropriate format for time time
+        # Choose an appropriate format for time 
         format = ""
         if endtime == -1
           col['elapsed'] = Time.at( Time.now.to_i - starttime ).utc
@@ -104,7 +104,7 @@ $sched.every '1m', :first_in => 201 do
         # Get our concurrent sessions formatted. This returns a tally of the amount of concurrent sessions
         # from the start of the run to the end in the form of a hash. We discard children which ran for no less than
         # half the time of the average job.
-        avgjob = $db.get_first_value "SELECT sum(time)/count(time) FROM jobs as J, children AS C WHERE C.id=J.chid AND C.rid=?", rid
+        avgjob = $db.get_first_value "SELECT sum(timetaken)/count(timetaken) FROM jobs as J, children AS C WHERE C.id=J.chid AND C.rid=?", rid
         if avgjob == nil
           mavgjob = 0
         else
