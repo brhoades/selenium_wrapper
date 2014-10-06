@@ -102,7 +102,11 @@ $sched.every '1m', :first_in => 1 do
         # from the start of the run to the end in the form of a hash. We discard children which ran for no less than
         # half the time of the average job.
         avgjob = $db.get_first_value "SELECT sum(time)/count(time) FROM jobs as J, children AS C WHERE C.id=J.chid AND C.rid=?", rid
-        mavgjob = avgjob/4
+        if avgjob == nil
+          mavgjob = 0
+        else
+          mavgjob = avgjob/4
+        end
         clienttimes = Array.new
         $db.execute( "SELECT starttime,endtime FROM children WHERE rid=? AND endtime-starttime>?", [ rid, mavgjob ] ) do |start,endt| 
           if endt == "-1"
@@ -139,7 +143,7 @@ $sched.every '1m', :first_in => 1 do
     if out.size > 0
       out[0]['checksum'] = checksum
     else
-      out << { "checksum" => checksum }
+      out << { :checksum => checksum }
     end
 
     print "#"*40, "\n\n"
