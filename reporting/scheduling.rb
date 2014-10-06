@@ -34,7 +34,7 @@ $sched.every '15s' do
   end
 end
 
-$sched.every '1m', :first_in => 3 do
+$sched.every '15s', :first_in => 3 do
   rids = [] 
   jobs = []
   children = []
@@ -118,7 +118,7 @@ $sched.every '1m', :first_in => 3 do
 
           clienttimes << Range.new( start.to_i, endt.to_i ) 
         end
-        print "\nRID: ", rid, "\nClients: ", col['clients'], "\nJobs: ", col['jobs'], "\nStart: ", col['start'], "\nEnd: ", col['end']
+        print "\nRID: ", rid, "\nClients: ", col['clients'], "\nJobs: ", col['jobs'], "\nStart: ", starttime, "\nEnd: ", endtime
         print "\nTime: ", clienttimes
 
         tallied = tally_range clienttimes 
@@ -130,7 +130,8 @@ $sched.every '1m', :first_in => 3 do
           col['avg-concurrent']  = "-"
         end
 
-        if endtime - starttime > 0
+        if endtime - starttime > 0 or ( endtime == -1 and Time.now.to_i - starttime != 0 )
+          endtime = Time.now.to_i if endtime == -1
           col['avg-jpm'] = ( col['jobs'] / ( endtime - starttime ) * 60 ).round 2
         else
           col['avg-jpm'] = "-"
