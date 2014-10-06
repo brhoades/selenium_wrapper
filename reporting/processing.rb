@@ -12,6 +12,9 @@ def process_report( )
 
   if req.has_key? 'cid'
     cid = req['cid']
+    if cid != nil
+      $db.execute( "INSERT INTO messages (cid,time) VALUES (?,?)", [ cid, Time.now.to_i ] )
+    end
   end
 
   if req.has_key? 'rid'
@@ -73,7 +76,7 @@ def process_report( )
 
       when R_JOB_COMPLETE
         next if cid == nil
-        $db.execute "INSERT INTO jobs (chid,time) VALUES (?,?)", [ chid, p['timetaken'] ]
+        $db.execute "INSERT INTO jobs (chid,timetaken,endtime) VALUES (?,?,?)", [ chid, p['timetaken'], p['time'] ]
         print p['id'], ": JOB COMPLETE (#", p['childID']+1, ")\n"
 
 
@@ -109,14 +112,6 @@ def process_report( )
         end
 
         print p['id'], ": STOP\n"
-
-
-
-      when R_ALIVE
-        next if cid == nil
-        $db.execute "UPDATE clients set lastping=? WHERE id=?", [ Time.now.to_i, cid ]
-
-        print p['id'], ": PING\n"
 
 
 
