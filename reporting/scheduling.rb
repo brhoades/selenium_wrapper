@@ -115,10 +115,9 @@ $sched.every '1m', :first_in => 1 do
         col['avg-concurrent']  = ( tallied.values.reduce( :+ ) / tallied.size.to_f ).round 3
 
         col['avg-jpm'] = ( col['jobs'] / ( endtime - starttime ) * 60 ).round 2
-        col['peak-jpm'] = "TBD"
 
         print "\nPeak Concur: ", col['peak-concurrent'], "\nAvg Concur: ", col['avg-concurrent']
-        print "\nAvg JPM: ", col['avg-jpm'], "\nPeak JPM: ", col['peak-jpm'], "\n\n"
+        print "\nAvg JPM: ", col['avg-jpm'], "\n\n"
 
         out << col
       end
