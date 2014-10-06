@@ -12,26 +12,28 @@ $sched = Rufus::Scheduler.new
 $sched.every '15s' do
   # Look at active runs
   $db.execute( "SELECT id,name,starttime FROM runs WHERE endtime=-1" ) do |rid, run_name, runstarttime|
-    $db.execute( "SELECT L.id,L.lastping,L.name FROM children AS C, clients as L WHERE C.rid=? AND C.endtime=-1 AND l.id=C.cid", rid ) do |cid, lastping, name|
-      next if Time.now.to_i - lastping < CLIENT_TIMEOUT # Likely in progress
+    $db.execute( "SELECT L.id,L.name FROM children AS C, clients as L WHERE C.rid=? AND C.endtime=-1 AND L.id=C.cid", rid ) do |cid, name|
+      $db.execute( "SELECT time FROM messages WHERE cid=? ORDER BY id DESC LIMIT 1", cid ) do |lastping|
+        next if Time.now.to_i - lastping < CLIENT_TIMEOUT # Likely in progress
 
-      $db.execute "UPDATE children SET endtime=? WHERE rid=? AND cid=? AND endtime=-1", [ Time.now.to_i, rid, cid ]
+        $db.execute "UPDATE children SET endtime=? WHERE rid=? AND cid=? AND endtime=-1", [ Time.now.to_i, rid, cid ]
 
-      print name, ": TIMEOUT\n"
-    end
+        print name, ": TIMEOUT\n"
+      end
 
-    # Check if there are other clients in this run, if there aren't it's done
-    # FIXME: Currently this just times out a run after 600 w/ no clients 
-    if RUN_TIMEOUT + runstarttime < Time.now.to_i \
-        and $db.get_first_value( "SELECT count(*) FROM clients WHERE rid=?", rid ) <= 0
-      $db.execute "UPDATE runs SET endtime=? WHERE id=?", [ Time.now.to_i, rid ]
+      # Check if there are other clients in this run, if there aren't it's done
+      # FIXME: Currently this just times out a run after 600 w/ no clients 
+      if RUN_TIMEOUT + runstarttime < Time.now.to_i \
+          and $db.get_first_value( "SELECT count(*) FROM clients WHERE rid=?", rid ) <= 0
+        $db.execute "UPDATE runs SET endtime=? WHERE id=?", [ Time.now.to_i, rid ]
 
-      print run_name, ": RUN TIMEOUT\n"
+        print run_name, ": RUN TIMEOUT\n"
+      end
     end
   end
 end
 
-$sched.every '1m', :first_in => 1 do
+$sched.every '1m', :first_in => 201 do
   rids = [] 
   jobs = []
   children = []
