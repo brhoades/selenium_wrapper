@@ -94,7 +94,7 @@ def process_report( )
         if res == nil
           # We only automatically end a run that's automatically generated
           if $db.get_first_value( "SELECT auto FROM runs WHERE id=?", rid ) == 1
-            $db.execute "UPDATE runs SET endtime=?", p['time'] 
+            $db.execute "UPDATE runs SET endtime=? WHERE rid=?", [ p['time'], rid ] 
           end
         end
 

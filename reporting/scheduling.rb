@@ -105,6 +105,10 @@ $sched.every '1m', :first_in => 1 do
         mavgjob = avgjob/4
         clienttimes = Array.new
         $db.execute( "SELECT starttime,endtime FROM children WHERE rid=? AND endtime-starttime>?", [ rid, mavgjob ] ) do |start,endt| 
+          if endt == "-1"
+            endt = Time.now.to_i
+          end
+
           clienttimes << Range.new( start.to_i, endt.to_i ) 
         end
         print "\nRID: ", rid, "\nClients: ", col['clients'], "\nJobs: ", col['jobs'], "\nStart: ", col['start'], "\nEnd: ", col['end']
@@ -123,6 +127,7 @@ $sched.every '1m', :first_in => 1 do
           col['avg-jpm'] = ( col['jobs'] / ( endtime - starttime ) * 60 ).round 2
         else
           col['avg-jpm'] = "-"
+        end
 
         print "\nPeak Concur: ", col['peak-concurrent'], "\nAvg Concur: ", col['avg-concurrent']
         print "\nAvg JPM: ", col['avg-jpm'], "\n\n"
