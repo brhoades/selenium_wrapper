@@ -86,11 +86,11 @@ def process_report( )
         next if cid == nil
         # First find out which child this is
         if p.has_key? 'screenshot'
-          $db.execute "INSERT INTO errors (chid,screenshot,text) VALUES (?,?,?)",
-            [ chid, p['screenshot'], p['error'] ]
+          $db.execute "INSERT INTO errors (chid,screenshot,text,time) VALUES (?,?,?,?)",
+            [ chid, p['screenshot'], p['error'], p['time'] ]
         else
-          $db.execute "INSERT INTO errors (chid,text) VALUES (?,?)",
-            [ chid, p['error'] ]
+          $db.execute "INSERT INTO errors (chid,text,time) VALUES (?,?,?)",
+            [ chid, p['error'], p['time'] ]
         end
 
         print p['id'], ": JOB FAILED (#", p['childID']+1, ")\n"
