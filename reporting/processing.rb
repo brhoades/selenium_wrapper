@@ -35,14 +35,6 @@ def process_report( )
 
 
       when R_START
-        # They aren't in our database, look.
-        if cid == nil
-          $db.execute "INSERT INTO clients (name) VALUES (?)", p['id']
-          cid = $db.get_first_value " SELECT MAX(id) FROM clients"
-
-          print p['id'], ": NEW CLIENT (", cid, ")\n"
-        end
-
         # Were we given a run? If not do one of two things:
         #   1) Look for a run which was created in the past RUN_TIMEOUT seconds. If we find one, put ourselves into it. They
         #      must be using the same function.
@@ -58,13 +50,22 @@ def process_report( )
           if p['run'] == nil
             # Generate a run
             p['run'] = p['func'] + "_" + Time.now.strftime( '%Y-%m-%d_%H:%M:%S' )
-            rid = $db.get_first_value "INSERT INTO runs (name, starttime, endtime, function_name, auto) VALUES (?,?,-1,?,?); SELECT MAX(id) FROM runs", [ p['run'], p['time'], p['func'], 1 ]
+            $db.execute "INSERT INTO runs (name, starttime, endtime, function_name, auto) VALUES (?,?,-1,?,?)", [ p['run'], p['time'], p['func'], 1 ]
+            rid = $db.get_first_value "SELECT MAX(id) FROM runs"
+
             print p['id'], ": NEW RUN ", p['run'], " (", rid, ")\n"
           end
+        end
+
+        if cid == nil
+          $db.execute "INSERT INTO clients (name,rid) VALUES (?,?)", [ p['id'], rid ]
+          cid = $db.get_first_value " SELECT MAX(id) FROM clients"
+
+          print p['id'], ": NEW CLIENT (", cid, ")\n"
+        end
 
           response['rid'] = rid
           response['cid'] = cid
-        end
 
 
 

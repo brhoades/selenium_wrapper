@@ -14,6 +14,7 @@ $sched.every '15s' do
   $db.execute( "SELECT id,name,starttime FROM runs WHERE endtime=-1" ) do |rid, run_name, runstarttime|
     $db.execute( "SELECT L.id,L.name FROM children AS C, clients as L WHERE C.rid=? AND C.endtime=-1 AND L.id=C.cid", rid ) do |cid, name|
       $db.execute( "SELECT time FROM messages WHERE cid=? ORDER BY id DESC LIMIT 1", cid ) do |lastping|
+        lastping = lastping.first
         next if Time.now.to_i - lastping < CLIENT_TIMEOUT # Likely in progress
 
         $db.execute "UPDATE children SET endtime=? WHERE rid=? AND cid=? AND endtime=-1", [ Time.now.to_i, rid, cid ]
@@ -24,7 +25,7 @@ $sched.every '15s' do
       # Check if there are other clients in this run, if there aren't it's done
       # FIXME: Currently this just times out a run after 600 w/ no clients 
       if RUN_TIMEOUT + runstarttime < Time.now.to_i \
-          and $db.get_first_value( "SELECT count(*) FROM clients WHERE rid=?", rid ) <= 0
+        and $db.get_first_value( "SELECT count(C.id) FROM clients AS L, children as C WHERE L.id=? AND L.rid=? AND C.cid=L.id AND C.endtime=-1", [ cid, rid ] ) <= 0
         $db.execute "UPDATE runs SET endtime=? WHERE id=?", [ Time.now.to_i, rid ]
 
         print run_name, ": RUN TIMEOUT\n"
