@@ -129,5 +129,5 @@ def process_report( )
     end
   end
 
-  "Hello"
+  { response: "success" }.to_json
 end

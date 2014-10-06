@@ -33,8 +33,8 @@ class Reporting < Sinatra::Base
 set :bind, '0.0.0.0'
 
   post '/report' do
-    process_report
     status 200
+    process_report
   end
 
   get /recentruns/ do
