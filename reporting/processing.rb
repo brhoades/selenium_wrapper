@@ -34,7 +34,9 @@ def process_report( )
       when R_START
         # They aren't in our database, look.
         if cid == nil
-          cid = $db.execute "INSERT INTO clients (name,lastping) VALUES (?,?); SELECT MAX(id) FROM clients", [ p['id'], Time.now.to_i ]
+          $db.execute "INSERT INTO clients (name) VALUES (?)", p['id']
+          cid = $db.get_first_value " SELECT MAX(id) FROM clients"
+
           print p['id'], ": NEW CLIENT (", cid, ")\n"
         end
 
