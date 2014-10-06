@@ -2,24 +2,21 @@ require 'json'
 
 def process_report( ) 
   # Incoming data is JSON
-  payload =  JSON.parse( request.body.read.to_s )
-  payload = payload['payload']
+  req =  JSON.parse( request.body.read.to_s )
+  payload = req['payload']
   cid = nil
   rid = nil
   response = { }
 
   ### Handle keys if we have them already
-  #
-  info = payload.shift!
 
-  if info.has_key? 'cid'
-    cid = p['cid']
+  if req.has_key? 'cid'
+    cid = req['cid']
   end
 
-  if info.has_key? 'rid'
-    rid = p['rid']
+  if req.has_key? 'rid'
+    rid = req['rid']
   end
-
 
   payload.each do |p|
     if ( p['type'] >= R_JOB_START and p['type'] <= R_JOB_FAIL ) or p['type'] >= R_NEW_CHILD \
@@ -37,8 +34,8 @@ def process_report( )
       when R_START
         # They aren't in our database, look.
         if cid == nil
-          cid = $db.get_first_value "INSERT INTO clients (name,lastping) VALUES (?,?); SELECT last_insert_rowid( )", [ p['id'], Time.now.to_i ]
-          print p['id'], ": NEW CLIENT\n"
+          cid = $db.execute "INSERT INTO clients (name,lastping) VALUES (?,?); SELECT MAX(id) FROM clients", [ p['id'], Time.now.to_i ]
+          print p['id'], ": NEW CLIENT (", cid, ")\n"
         end
 
         # Were we given a run? If not do one of two things:
@@ -51,12 +48,13 @@ def process_report( )
             p['run'] = $db.get_first_value "SELECT name FROM runs WHERE id=?", rid
             print p['id'], ": JOINING RUN ", p['run'], "\n"
           end
+
           # If we still don't have a run
           if p['run'] == nil
             # Generate a run
             p['run'] = p['func'] + "_" + Time.now.strftime( '%Y-%m-%d_%H:%M:%S' )
-            rid = $db.get_first_value "INSERT INTO runs (name, starttime, endtime, function_name, auto) VALUES (?,?,-1,?,?); SELECT last_insert_rowid( )", [ p['run'], p['time'], p['func'], 1 ]
-            print p['id'], ": NEW RUN ", p['run'], "\n"
+            rid = $db.get_first_value "INSERT INTO runs (name, starttime, endtime, function_name, auto) VALUES (?,?,-1,?,?); SELECT MAX(id) FROM runs", [ p['run'], p['time'], p['func'], 1 ]
+            print p['id'], ": NEW RUN ", p['run'], " (", rid, ")\n"
           end
 
           response['rid'] = rid
@@ -146,4 +144,5 @@ def process_report( )
   end
   
   response['response'] = 'success' if( not response.has_key? 'response' )
+  response.to_json
 end
