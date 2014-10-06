@@ -56,7 +56,7 @@ $sched.every '1m', :first_in => 1 do
   end
 
   # We don't continue if our checksums aren't different and the file is still there
-  if $old_checksum != checksum and File.exists? datafile
+  if $old_checksum != checksum or not File.exists? datafile
     print "Aggregating and calculating recent runs data.\n\tThis can take a while."
     # Our output json blob. It's an array of hashes where each individual hash contains
     # information for a row in a table, seen in views/index.erb
@@ -114,7 +114,7 @@ $sched.every '1m', :first_in => 1 do
         col['peak-concurrent'] = tallied.values.max
         col['avg-concurrent']  = ( tallied.values.reduce( :+ ) / tallied.size.to_f ).round 3
 
-        col['avg-jpm'] = ( col['jobs'] / ( endtime - starttime ) ).round 2
+        col['avg-jpm'] = ( col['jobs'] / ( endtime - starttime ) * 60 ).round 2
         col['peak-jpm'] = "TBD"
 
         print "\nPeak Concur: ", col['peak-concurrent'], "\nAvg Concur: ", col['avg-concurrent']
