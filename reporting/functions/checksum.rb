@@ -10,7 +10,7 @@ def get_checksum( data )
   largest = 1
 
   # Find the largest number and buffer the others with zeros to avoid possible collisions
-  data.flatten.map { |i| next if i < 1; largest = Math.log10(i).ceil if( Math.log10(i).ceil > largest ) }
+  data.flatten.map { |i| next if i == nil or i < 1; largest = Math.log10(i).ceil if( Math.log10(i).ceil > largest ) }
 
   # Now smash our data together while making sure all the numbers are padded equal to the max
   c = data.map{ |p| p.map { |i| i.to_s.ljust largest } }.flatten.join "!"
