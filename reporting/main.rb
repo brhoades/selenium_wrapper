@@ -1,13 +1,17 @@
 require 'sinatra/base'
 require 'sinatra/assetpack'
 
-require 'sqlite3'
-
+require_relative 'modules/Settings.rb'
+require_relative 'modules/Database.rb'
 require_relative 'processing.rb'
 require_relative 'const.rb'
 require_relative 'scheduling.rb'
 
-$db = SQLite3::Database.new "reports.db"
+# read settings
+$cfg = Settings.new 
+
+# load database
+$db = Database.new $cfg 
 
 def header( title )
   erb :header, :locals => { :title => title }
