@@ -55,6 +55,14 @@ def process_report( )
 
             print p['id'], ": NEW RUN ", p['run'], " (", rid, ")\n"
           end
+        else
+          # Find run and sap ourselves in it
+          rid = $db.get_first_value "SELECT id FROM runs WHERE name=?", p['run']
+          if rid == nil
+            # first ones in
+            $db.execute "INSERT INTO runs (name, starttime, endtime, function_name, auto ) VALUES (?,?,-1,?,0)", [ p['run'], p['time'], p['func'] ]
+            rid = $db.get_first_value "SELECT id FROM runs WHERE name=?", p['run']
+          end
         end
 
         if cid == nil
