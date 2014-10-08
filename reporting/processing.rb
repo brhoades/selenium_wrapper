@@ -25,7 +25,7 @@ def process_report( )
     if ( p['type'] >= R_JOB_START and p['type'] <= R_JOB_FAIL ) or p['type'] >= R_NEW_CHILD \
       and p.has_key? 'childID'
       # This will be the last child with our index
-      chid = $db.get_first_value "SELECT id FROM children WHERE cid=? AND rid=? AND \"index\"=? ORDER BY id DESC LIMIT 1", [ cid, rid, p['childID'] ]
+      chid = $db.get_first_value "SELECT id FROM children WHERE cid=? AND rid=? AND `index`=? ORDER BY id DESC LIMIT 1", [ cid, rid, p['childID'] ]
     end
 
 
@@ -134,7 +134,7 @@ def process_report( )
           $db.execute "UPDATE children SET endtime=? WHERE id=?", [ p['time'], oid ]
         end
 
-        $db.execute "INSERT INTO children (cid,rid,\"index\",starttime,endtime) VALUES (?,?,?,?,?)", [ cid, rid, p['childID'], p['time'], -1 ] 
+        $db.execute "INSERT INTO children (cid,rid,`index`,starttime,endtime) VALUES (?,?,?,?,?)", [ cid, rid, p['childID'], p['time'], -1 ] 
 
         print p['id'], ": NEW CHILD (#", p['childID']+1, ")\n"
       

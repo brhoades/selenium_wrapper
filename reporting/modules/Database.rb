@@ -16,10 +16,19 @@ class Database
       opts[:as] = :array
     end
 
+    print "EXEC: Pre query: ", query, "\nPREARGS: ", args, "\n"
+
     # Substite values into query securely
     query.gsub!(/\?/) do |s|
-      @db.escape args.shift.to_s
+      inp = args.shift
+      if inp.is_a? String
+        '"' + @db.escape( inp ) + '"'
+      else
+        @db.escape inp.to_s
+      end
     end
+
+    print "POST QUERY: ", query, "\n"
 
     if args.size > 0
       print "ERROR: More args than ?'s (", args.size, ")\n"
@@ -36,11 +45,13 @@ class Database
       end
     end
 
+    print "RET: ", r, "\n\n" 
     r
   end
 
   def get_first_value( query, args=[], opts={} )
     r = self.execute( query, args, opts )
+    print "GFV: QUERY: ", query, "\nARGS: ", args, "\nRET: ", r, "\n\n"
 
     if r.is_a? Array
       r.first
