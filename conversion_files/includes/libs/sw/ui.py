@@ -3,6 +3,15 @@ from math import *
 from sw.formatting import *
 
 class Ui:
+    """The UI class houses the curses instance which in turn enables all user-requested actions while displaying
+    relevant information. Only one instance of UI should ever be initialized.
+
+    :param screen: Used with the wrapping function provided by curses. This is a curses screen that has
+        just been created.
+    :param pool: Reference to our owning pool. This pool will be monitored and displayed on the main status window.
+
+    :return: Child (self)
+    """
     def __init__( self, screen, pool ):
         # The curses screen
         self.scr = screen
@@ -101,6 +110,13 @@ class Ui:
 
 
     def think( self ):
+        """Calls several other functions which need to be checked constantly. Includes
+           :func:`updateStats`, :func:`updateKeys`, and :func:`updateMain`. The last one is
+           called every time think is, while the other two are called every self.nextUpdate 
+           seconds.
+
+           :returns: None
+        """
         self.updateMain( )
         if time.time( ) >= self.nextUpdate:
             self.nextUpdate = time.time( ) + self.screenUpdateTime
@@ -110,12 +126,12 @@ class Ui:
 
 
     def sleep( self, amount ):
-        """Handles sleeping while listening for button presses. The hardcoded subsleep (0.05s)
+        """Handles sleeping while listening for button presses. The hardcoded subsleep (0.01s)
            amount is an appropriate resolution that allows for seemingly instant button press responses
            without consuming an entire core (when constantly listening).
         
            :param amount: Float for amount of seconds to wait while listening to button presses.
-             This is accurately followed to a resolution of 0.05s.
+             This is accurately followed to a resolution of 0.01s.
            :returns: None
         """
         end = amount + time.time( )
