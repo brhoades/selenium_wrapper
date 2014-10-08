@@ -17,6 +17,13 @@ class Report:
 
         self.enabled = self.site is not None
 
+        if not self.enabled:
+            return
+
+        # Set these, these are initialized when we get a response from the server
+        self.rid = None
+        self.cid = None
+
         # Set on an error transmitting
         self.nextSend = 0
 
@@ -29,9 +36,6 @@ class Report:
 
         # Our queue of things to submit to our server
         self.queue = Q.Queue( )
-
-        if not self.enabled:
-            return
 
         self.func = self.pool.func.__name__
 
@@ -83,6 +87,11 @@ class Report:
 
         if len( data ) > 0:
             payload = { "payload": data }
+
+            # Preparing header for payload
+            payload['cid'] = self.cid
+            payload['rid'] = self.rid
+
             self.pool.logMsg( ' '.join( [ 'Sending', str( len( data ) ), 'payload(s) to server.' ] ), NOTICE )
             r = None
             try:
@@ -114,6 +123,14 @@ class Report:
                 self.nextSend = t + 5
             else:
                 self.pool.logMsg( ''.join( [ "Sent payload successfully with status ", str( r.status_code ) ] ) , INFO )
+                self.pool.logMsg( ''.join( [ "Response from server: ", str( r.text ) ] ) )
+        
+                response = r.json( )
+
+                if 'cid' in response:
+                    self.cid = response['cid']
+                if 'rid' in response:
+                    self.rid = response['rid']
                 self.tries = 5
 
 
