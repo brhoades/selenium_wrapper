@@ -109,6 +109,8 @@ class Pool:
     def endChild( self, i=None ):
         """Removes the last created :class:`child`, called by GUI.
 
+        :param None i: The index of the child process to kill. If not specified, it chooses
+           the last child in the pool.children array that is alive.
         :returns: None
         """
         if len( self.children ) == 0:
@@ -268,13 +270,22 @@ class Pool:
 
 
     def logMsg( self, msg, level=NOTICE ):
+        """Logs a message to our log file in a consistent format. Depends on pool.lh 
+           already being initialized and ready for writing. Does not flush the handle.
+            
+           :param msg: The message to be logged.
+           :param NOTICE level: The level of the message included. If the level is not
+             greater than or equal to the user-specified level, the message is discarded.
+           :returns: None
+        """
         # Get our timestamp
         timestamp = datetime.datetime.now( ).strftime( "%H:%M:%S" )
         
         # String
         w = ''.join( [ "[", timestamp, "] ", errorLevelToStr( level ), "\t", msg, "\n" ] )
 
-        self.lh.write( w )
+        if level >= self.level:
+            self.lh.write( w )
 
 
 
@@ -282,7 +293,7 @@ class Pool:
         """Stops the pool cleanly and terminates all the children in it.
            Currently handles pausing too until I need special functionality.
         
-        :param STOPPED t: Type of stopping this is, either pausing or stopping.
+        :param STOPPED type: Type of stopping this is, either pausing or stopping.
         :return: None
         """
         self.logMsg( "Pool stopped, stopping all children." )
