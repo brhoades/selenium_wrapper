@@ -4,14 +4,14 @@ from sw.formatting import *
 
 class Ui:
     """The UI class houses the curses instance which in turn enables all user-requested actions while displaying
-    relevant information. Only one instance of UI should ever be initialized. Initialization handles all the color 
-    constants generation along with defining all subwindows statically.
+       relevant information. Only one instance of UI should ever be initialized. Initialization handles all the color 
+       constants generation along with defining all subwindows statically.
 
-    :param screen: Used with the wrapping function provided by curses. This is a curses screen that has
-        just been created.
-    :param pool: Reference to our owning pool. This pool will be monitored and displayed on the main status window.
+       :param screen: Used with the wrapping function provided by curses. This is a curses screen that has
+           just been created.
+       :param pool: Reference to our owning pool. This pool will be monitored and displayed on the main status window.
 
-    :return: UI (self)
+       :return: UI (self)
     """
     def __init__( self, screen, pool ):
         # The curses screen
