@@ -125,13 +125,13 @@ class Report:
 
              }
 
-            The JSON above is arranged and then attempts to open a HTTP request to the provided server. If it fails,
-            it tries 5 more times every 5 seconds with a timeout of 1 second. It attemps to send the JSON up via post
-            and then waits for an HTTP 200 or similar before considering it a success. If R_START was included in the 
-            payload, the server will respond with a cid and a rid for the client which it then stores internally for 
-            future reports.
+          The JSON above is arranged and then attempts to open a HTTP request to the provided server. If it fails,
+          it tries 5 more times every 5 seconds with a timeout of 1 second. It attemps to send the JSON up via post
+          and then waits for an HTTP 200 or similar before considering it a success. If R_START was included in the 
+          payload, the server will respond with a cid and a rid for the client which it then stores internally for 
+          future reports.
 
-            :returns: None
+          :returns: None
         """
         t = time.time( )
         if not self.enabled:
