@@ -4,13 +4,14 @@ from sw.formatting import *
 
 class Ui:
     """The UI class houses the curses instance which in turn enables all user-requested actions while displaying
-    relevant information. Only one instance of UI should ever be initialized.
+    relevant information. Only one instance of UI should ever be initialized. Initialization handles all the color 
+    constants generation along with defining all subwindows statically.
 
     :param screen: Used with the wrapping function provided by curses. This is a curses screen that has
         just been created.
     :param pool: Reference to our owning pool. This pool will be monitored and displayed on the main status window.
 
-    :return: Child (self)
+    :return: UI (self)
     """
     def __init__( self, screen, pool ):
         # The curses screen
@@ -111,9 +112,9 @@ class Ui:
 
     def think( self ):
         """Calls several other functions which need to be checked constantly. Includes
-           :func:`updateStats`, :func:`updateKeys`, and :func:`updateMain`. The last one is
-           called every time think is, while the other two are called every self.nextUpdate 
-           seconds.
+           :func:`sw.ui.updateStats`, :func:`sw.ui.updateKeys`, and :func:`sw.ui.updateMain`. 
+           The last one is called every time think is, while the other two are called every 
+           self.nextUpdate seconds.
 
            :returns: None
         """
@@ -184,6 +185,15 @@ class Ui:
 
 
     def handleCommandKeys( self, key ):
+        """Part of our :func:`sw.ui.sleep` function which checks if any of our accepted keys
+        are pressed. It handles the logic for interpreting presses while recording and
+        discarding them. The render of keys in the bottom right of the screen is done by
+        :func:`sw.ui.updateKeys`.
+
+        :param key: The key to process / store. If it's +/-, the all recorded keys that are
+         relevant are executed.
+        :returns: None
+        """
         # If we have more than 8 keys and this key isn't +/-, clear everything and return
         if len( self.keys ) >= 8 and key != ord( "+" ) and key != ord( "-" ):
             self.keys = [ ]
@@ -244,7 +254,7 @@ class Ui:
            for each corresponding with the last status message they reported. Refreshes
            the screen when done.
             
-           :returns: None
+           :return: None
         """
         # Draw each child with an appropriate background color / anim
         y = 1 # Our cursor's y position
@@ -337,6 +347,11 @@ class Ui:
 
 
     def updateKeys( self ):
+        """Handles rendering any relevant keys recorded from user input. It reads
+           from self.keys to do this.
+
+           :return: None
+        """
         k = 1
         y = self.y( ) - self.STATS_HEIGHT-3
         self.opts.addstr( y, k, " "*(self.OPTIONS_WIDTH-2) )
@@ -354,7 +369,7 @@ class Ui:
         """Toggles a key display on the right hand side.
 
            :param key: A key that's listed on the right hand pane to toggle to an alternate option.
-           :return None:
+           :return: None
         """
         i = self.bits.index(key)
         self.optbits[i] = not self.optbits[i] 
@@ -364,9 +379,17 @@ class Ui:
 
         
     def x( self ):
+        """Accessor for returning the x size of the curses screen.
+
+           :return: Integer of the number of characters along the x axis of the screen.
+        """
         return self.scr.getmaxyx( )[1]
 
 
 
     def y( self ):
+        """Accessor for returning the y size of the curses screen.
+
+           :return: Integer of the number of characters along the y axis of the screen.
+        """
         return self.scr.getmaxyx( )[0]
