@@ -257,18 +257,22 @@ class Child:
 
 
     def display( self, t ):
-        """Sends a display message to the main loop, which is then translated to the UI."""
+        """Sends a display message to the main loop, which is then translated to the UI.
+           
+           :param t: The status this child will now show, a constant starting with DISP_ in const.py.
+
+           :returns: None
+        """
         self.cq.put( [ self.num, DISPLAY, t ] )
 
 
 
     def is_alive( self ):
-        """
-           Checks if the child's process is still running, if it is then it returns True, otherwise False.
+        """Checks if the child's process is still running, if it is then it returns True, otherwise False.
            There's a check for if the process is None, which is set when a child terminates.
 
            :return: Boolean for if Child process is still active (different from if a child is processing data).
-           """
+        """
         if self.proc != None:
             return self.proc.is_alive( )
         else:  
@@ -277,6 +281,17 @@ class Child:
 
 
     def status( self, type=None ):
+        """Uses a multiprocess-safe variable to transmit our status upstream. These values are listed under
+           universal status types in const.py. The status types allow better logging and, for example, prevent
+           children that were already terminated from being terminated again (and throwing an exception).
+
+           When called with a type it will set this child's status on both the main process and the child's 
+           process. When called without it, it reads from the status variable.
+
+           :param None type: The new value of our status.
+
+           :returns: If type isn't specified, our status. If it is, it sets our type and returns None.
+        """
         if type is None:
             return self.statusVar.value
         else:
@@ -288,7 +303,7 @@ class Child:
     def start( self, flag=DISP_LOAD ):
         """Starts our child process off properly, used after a restart typically.
            
-           :param DISP_LOAD flag:
+           :param DISP_LOAD flag: A custom flag to change the display color of the child, if desired.
            :return: None
         """
         # Not stopped anymore
@@ -314,7 +329,8 @@ class Child:
         """Restarts the child process and gets webdriver running again.
 
            :param "RESTARTING" msg: A message to print out in parenenthesis.
-           :param None flag: 
+           :param None flag: A custom flag to change the display color of the child, if desired.
+
            :return: None
         """
         if flag is not None:
@@ -326,12 +342,14 @@ class Child:
 
 
 
-    def stop( self, msg="", flag=FINISHED ):
+    def stop( self, msg="", flag=FINISHED, disp_flag=DISP_DONE ):
         """Stops a child process properly and sets its self.proc to None. Optionally takes a message
            to print out.
         
            :param "" msg: A message to show in parenthesis on the console next to ``Child #: STOPPING (msg)``.
-           :param FINISHED flag:
+           :param FINISHED flag: A custom status flag for if the child is finished, paused, stopped, or whatever is desired.
+           :param DISP_DONE disp_flag: A custom display flag for the status of the child after stopping.
+
            :return: None
         """
         if self.proc == None:
@@ -355,7 +373,7 @@ class Child:
             self.proc = None
 
         # Inform the TUI that we're done.
-        self.display( DISP_DONE )
+        self.display( disp_flag )
 
         # Close our log
         self.lh.close( )

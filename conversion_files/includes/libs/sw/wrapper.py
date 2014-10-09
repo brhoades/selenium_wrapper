@@ -38,7 +38,7 @@ def mainLoop( stdscr, pool ):
     """Takes the pool created previously and just loops around it. Currently it just calls the pool's
         think function repeatedly.
 
-        :param stdscr: Our standard screen from curses.
+        :param stdscr: Our screen from curses.
         :param pool: Our created child pool in :func:`main`.
         :returns: None
     """
