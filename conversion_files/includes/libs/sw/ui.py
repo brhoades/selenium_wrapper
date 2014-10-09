@@ -112,7 +112,7 @@ class Ui:
 
     def think( self ):
         """Calls several other functions which need to be checked constantly. Includes
-           :func:`sw.ui.updateStats`, :func:`sw.ui.updateKeys`, and :func:`sw.ui.updateMain`. 
+           :func:`updateStats`, :func:`updateKeys`, and :func:`updateMain`. 
            The last one is called every time think is, while the other two are called every 
            self.nextUpdate seconds.
 
@@ -185,10 +185,10 @@ class Ui:
 
 
     def handleCommandKeys( self, key ):
-        """Part of our :func:`sw.ui.sleep` function which checks if any of our accepted keys
+        """Part of our :func:`sleep` function which checks if any of our accepted keys
         are pressed. It handles the logic for interpreting presses while recording and
         discarding them. The render of keys in the bottom right of the screen is done by
-        :func:`sw.ui.updateKeys`.
+        :func:`updateKeys`.
 
         :param key: The key to process / store. If it's +/-, the all recorded keys that are
          relevant are executed.
@@ -281,7 +281,7 @@ class Ui:
     def updateStats( self ):
         """Updates the statistics field within our window. Completely clears all of it initally
            then slowly goes through and reads from each individual pool value to rebuild it.
-           This is called from :func:`sw.ui.think` and refreshes several times per second.
+           This is called from :func:`think` and refreshes several times per second.
 
            :return: None
         """

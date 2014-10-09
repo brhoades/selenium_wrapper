@@ -5,9 +5,9 @@ from sw.const import *
 class Report:
     """Report handles all the reporting events sent from the Pool, currently it exclusively sends these upstream to a
        server which then does further handling. The events are sent from the pool via calls to this instance's functions
-       that in turn call :func:`sw.report.send`.
+       that in turn call :func:`send`.
 
-       Reporting can be disabled by excluding the report option from the kwargs of :func:`sw.wrapper.main`. This has the
+       Reporting can be disabled by excluding the report option from the kwargs of :func:`main`. This has the
        same effect as not including the #report="url" option within the options header of a script before conversion. This URL
        should point to the included sinatra server in reporting/ like so: "http://reporting-server.com:4567/report". 
 
@@ -62,7 +62,7 @@ class Report:
     def send( self, payload, type ):
         """Send enables a payload to be parsed and added into our local queue for transmission
            reporting server, where applicable. It is called as a sort of wrapper function from all
-           of the individual reporting functions (such as :func:`sw.report.endchild`) to facilitate
+           of the individual reporting functions (such as :func:`endchild`) to facilitate
            standard transmission of the data upstream.
 
            Currently (to be fixed) it encodes repeat information in every single payload including
