@@ -513,3 +513,8 @@ def getInput( stdscr, kwargs ):
         ebox.clear( )
         entry.edit( ) 
         res = entry.gather( ).rstrip( )
+
+    # Make sure kwargs has everything set, we set the defaults here
+    for key in kwmap:
+        if key not in kwargs:
+            kwargs[key] = kwmap[key][1]
