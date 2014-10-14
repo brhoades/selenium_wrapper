@@ -436,6 +436,7 @@ def getInput( stdscr, kwargs ):
     i = 0 
     off = 0
     tab = 15
+    KWARGS_MAX = 50
     for key in kwarray:
         y = i + 1
         x = 2
@@ -482,7 +483,31 @@ def getInput( stdscr, kwargs ):
         if not res in kwcharmap:
             stdscr.addstr( maxy-4, 1, "Invalid Selection '" + res + "'" )
         else:
-            stdscr.addstr( maxy-4, 1, " "*25 )
+            stdscr.addstr( maxy-4, 1, " " * KWARGS_MAX )
+            win = kwmap[kwcharmap[res]][2]
+            ewin = curses.textpad.Textbox( win, insert_mode=True )
+            ewin.stripspaces = 1
+            ewin.edit( )
+            out = ewin.gather( ).rstrip( )
+            if out != "" and out is not None:
+                key = kwcharmap[res]
+                default = kwmap[key][1]
+                try:
+                    if type( default ) is int:
+                        kwargs[key] = int( out )
+                    elif type( default ) is float:
+                        kwargs[key] = float( out )
+                    elif type( default ) is long:
+                        kwargs[key] = long( out )
+                    elif type( default ) is string:
+                        kwargs[key] = str( out )
+                    else:
+                        kwargs[key] = out
+                except Exception as e:
+                    win.clear( )
+                    win.addstr( str( kwargs.get( key, default ) ) )
+                    win.refresh( )
+                    stdscr.addstr( maxy-4, 1, "Error '" + str( e ) + "'" )
 
         stdscr.refresh( )
         ebox.clear( )
