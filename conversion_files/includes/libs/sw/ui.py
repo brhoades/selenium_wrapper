@@ -61,8 +61,6 @@ class Ui:
         
         self.main = self.scr.subwin( self.MAIN_HEIGHT, self.MAIN_WIDTH, 1, 1 )
 
-        self.drawMainScreen( True )
-
         # Colors
         curses.init_pair( DISP_LOAD,  curses.COLOR_BLACK, curses.COLOR_YELLOW )
         curses.init_pair( DISP_START, curses.COLOR_BLACK, curses.COLOR_YELLOW )
@@ -71,6 +69,12 @@ class Ui:
         curses.init_pair( DISP_WAIT,  curses.COLOR_WHITE, curses.COLOR_BLUE )
         curses.init_pair( DISP_DONE,  curses.COLOR_BLACK, curses.COLOR_WHITE )
         curses.init_pair( DISP_FINISH,  curses.COLOR_BLACK, curses.COLOR_GREEN )
+
+        self.scr.nodelay( True ) # Don't wait on key presses
+        curses.curs_set( 0 )     # Invisible Cursor
+        self.scr.border( )       # Draws a pretty border around the window
+
+        self.scr.refresh( )
 
 
 
@@ -83,12 +87,7 @@ class Ui:
            :returns: None
         """
         if first:
-            self.scr.nodelay( True ) # Don't wait on key presses
-            curses.curs_set( 0 )     # Invisible Cursor
-            self.scr.border( )       # Draws a pretty border around the window
             self.scr.addstr( 0, 3, "Selenium Wrapper Console" ) # Puts a message up top
-
-            # Line for key window
             self.scr.vline( 1, self.x( )-self.OPTIONS_WIDTH, 0, self.y( )-self.STATS_HEIGHT )
 
             # Line for stats window
@@ -377,6 +376,7 @@ class Ui:
         self.drawMainScreen( )
 
 
+
         
     def x( self ):
         """Accessor for returning the x size of the curses screen.
@@ -393,3 +393,72 @@ class Ui:
            :return: Integer of the number of characters along the y axis of the screen.
         """
         return self.scr.getmaxyx( )[0]
+
+
+
+def getInput( stdscr, kwargs ):
+    """Gets our prerun information. It first displays all information it's already loaded in, and 
+       asks if the user wishes to change anything.
+    """
+    stdscr.nodelay( True )   # Don't wait on key presses
+    curses.curs_set( 0 )     # Invisible Cursor
+    stdscr.refresh( )
+    kwarray = [ ]
+    kwcharmap = { }
+    kwmap = { }
+
+    kwarray.append( "Run Settings" )
+    kwarray.append( 'children' )
+    kwmap['children'] = [ "# Children", 1 ]
+    kwmap['stagger']  = [ "Stagged Spawn", False ]
+    kwarray.append( 'stagger' )
+    kwmap['jobs']     = [ "# Jobs", 1 ]
+    kwarray.append( 'jobs' )
+    
+    kwarray.append( "" )
+    kwarray.append( "Pool Settings" )
+    kwmap['level']    = [ "Log Lvl (0-5)", 1 ]
+    kwarray.append( 'level' )
+    kwmap['images']   = [ "Get Images", False ]
+    kwarray.append( 'images' )
+    kwarray.append( "" )
+
+    kwarray.append( "Reporting Settings" )
+    kwmap['report']   = [ "Server", None ]
+    kwarray.append( 'report' )
+    kwmap['run']      = [ "Run Name", "auto" ]
+    kwarray.append( 'run' )
+    kwmap['project']  = [ "Project Name", "auto" ]
+    kwarray.append( 'project' )
+    kwmap['id']       = [ "Client Name", "auto" ]
+    kwarray.append( 'id' )
+
+    i = 0 
+    off = 0
+    tab = 15
+    for key in kwarray:
+        if key in kwmap:
+            default = str( kwmap[key][1] )
+            size = len( kwmap[key][0] )
+            char = chr( ord('a') + i - off ) 
+            kwcharmap[char] = key
+
+            s = ''.join( [ char, ") ",
+                kwmap[key][0],
+                ":",
+                ( " "*( tab-size ) ),
+                str( kwargs.get( key, default ) )
+                ] )
+            stdscr.addstr( i+1, 2, s ) # Puts a message up top
+        else:
+            stdscr.addstr( i+1, 2, key )
+            off += 1
+        
+        i += 1
+
+    stdscr.refresh( )
+
+    while True:
+
+        time.sleep( 0.01 )
+

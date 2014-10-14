@@ -1,5 +1,5 @@
 from sw.pool import Pool
-from sw.ui import Ui
+from sw.ui import Ui, getInput
 import sys, time, curses
 
 
@@ -26,6 +26,8 @@ def main( func, file, **kwargs ):
      
     kwargs['staggered'] = staggered
 
+    curses.wrapper( getInput, kwargs )
+
     pool = Pool( children, numTimes, func, file, kwargs )
 
     curses.wrapper( mainLoop, pool )
@@ -44,6 +46,8 @@ def mainLoop( stdscr, pool ):
     """
 
     pool.ui = Ui( stdscr, pool )
+
+    pool.ui.drawMainScreen( True )
 
     while True:
         pool.think( )
