@@ -11,24 +11,10 @@ def main( func, file, **kwargs ):
         :param file: Usually __file__, the name of a script in the directory that log/ will be in.
         :returns: None
     """
-    numTimes = 1
-    children = 3 
-    images = False
-    staggered = False
-
-    if len( sys.argv ) > 1:
-        numTimes = int( sys.argv[1] )
-    if len( sys.argv ) > 2:
-        children = int( sys.argv[2] )
-    if len( sys.argv ) > 3:
-        if sys.argv[3] == "y":
-            staggered = True
-     
-    kwargs['staggered'] = staggered
-
+    # Get options and defaults 
     curses.wrapper( getInput, kwargs )
 
-    pool = Pool( children, numTimes, func, file, kwargs )
+    pool = Pool( func, file, kwargs )
 
     curses.wrapper( mainLoop, pool )
 

@@ -12,15 +12,13 @@ class Pool:
         records start times, and pops `numJobs` functions into a Queue. Abstracts and makes it easier to
         manage scores of child processes. Also has a :func:`think` process to continuously manage them.
 
-        :param numChildren: Number of children the pool will start with.
-        :param numJobs: Number of jobs to fill our work queue with.
         :param func: The function reference that will be put into our work queue `numJobs` times.
         :param file: Filename with directory of our script which contained `func`. This is used to create a relative log directory.
         :param kwargs: Kwargs dict passed to :func:`main`, eventually passes arguments on to GhostDriver. 
-            'staggered' is pulled from this dict if it exists.
+            'stagger' is pulled from this dict if it exists.
         :returns: Pool (self)
     """
-    def __init__( self, numChildren, numJobs, func, file, kwargs ):
+    def __init__( self, func, file, kwargs ):
         # Our children
         self.children = [ ]
         
@@ -35,14 +33,14 @@ class Pool:
         # Our work for children
         self.workQueue = Queue( )
 
+        # Options to be passed to children
+        self.options = kwargs
+
         # Starting children
-        self.startChildren = numChildren
+        self.startChildren = self.options['children']
 
         # Our function
         self.func = func
-
-        # Options to be passed to children
-        self.options = kwargs
 
         # General log directory, shared by all children
         self.log = os.path.join( os.path.dirname( os.path.abspath( file ) ), "logs", datetime.datetime.now( ).strftime( "%Y-%m-%d_%H-%M-%S" ) ) 
@@ -55,7 +53,7 @@ class Pool:
         self.lh = open( os.path.join( self.log, 'pool.txt' ), 'w+', 0 )
 
         # Our log level
-        self.level = self.options.get( 'level', NOTICE )
+        self.level = self.options['level']
 
         if self.level != NOTICE and self.level != NONE:
             self.logMsg( ''.join( [ "Internal log level overriden to: ", errorLevelToStr( self.level, False ) ] ) , NONE ) 
@@ -73,7 +71,7 @@ class Pool:
 
         ####### One Offs ########
         # Populate our work queue
-        for x in range(numJobs):
+        for x in range(self.options['jobs']):
             self.workQueue.put( func )
 
         # Next time we'll spawn a child
@@ -220,7 +218,7 @@ class Pool:
             # We have children left to spawn, spawn one
             if left > 0 and time.time( ) > self.nextSpawn:
                 self.newChild( )
-                if self.options['staggered']:
+                if self.options['stagger']:
                     self.nextSpawn = time.time( ) + self.staggeredTime
             # Done spawning children, so done starting
             elif left == 0:
