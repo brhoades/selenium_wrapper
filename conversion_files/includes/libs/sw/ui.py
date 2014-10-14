@@ -481,6 +481,7 @@ def getInput( stdscr, kwargs ):
 
     while res != "":
         if not res in kwcharmap:
+            stdscr.addstr( maxy-4, 1, " " * KWARGS_MAX )
             stdscr.addstr( maxy-4, 1, "Invalid Selection '" + res + "'" )
         else:
             stdscr.addstr( maxy-4, 1, " " * KWARGS_MAX )
@@ -492,24 +493,27 @@ def getInput( stdscr, kwargs ):
             if out != "" and out is not None:
                 key = kwcharmap[res]
                 default = kwmap[key][1]
+                win.clear( )
                 try:
                     if type( default ) is int:
-                        kwargs[key] = int( out )
+                        out = int( out ) 
                     elif type( default ) is float:
-                        kwargs[key] = float( out )
+                        out = float( out )
                     elif type( default ) is long:
-                        kwargs[key] = long( out )
+                        out = long( out )
                     elif type( default ) is str:
-                        kwargs[key] = str( out )
+                        out = str( out )
                     elif type( default ) is bool:
-                        kwargs[key] = bool( out )
-                    else:
-                        kwargs[key] = out
+                        if out == "False" or out == "false" or out == "f" \
+                                or out == "n" or out == "no" or out == "No":
+                            out = False
+                        out = bool( out )
+                    kwargs[key] = out
+                    win.addstr( str( out ) )
                 except Exception as e:
-                    win.clear( )
                     win.addstr( str( kwargs.get( key, default ) ) )
-                    win.refresh( )
                     stdscr.addstr( maxy-4, 1, "Error \"" + str( e ) + "\"" )
+                win.refresh( )
 
         stdscr.refresh( )
         ebox.clear( )
