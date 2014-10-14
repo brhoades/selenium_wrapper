@@ -16,6 +16,7 @@ class Ui:
     def __init__( self, screen, pool ):
         # The curses screen
         self.scr = screen
+        self.scr.clear( )
 
         # The pool we're a UI for.
         self.pool = pool
@@ -479,7 +480,6 @@ def getInput( stdscr, kwargs ):
     res = entry.gather( )
 
     while res != "":
-        res = entry.gather( ).rstrip( )
         if not res in kwcharmap:
             stdscr.addstr( maxy-4, 1, "Invalid Selection '" + res + "'" )
         else:
@@ -512,7 +512,4 @@ def getInput( stdscr, kwargs ):
         stdscr.refresh( )
         ebox.clear( )
         entry.edit( ) 
-        
-        
-
-    
+        res = entry.gather( ).rstrip( )
