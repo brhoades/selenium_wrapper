@@ -1,4 +1,4 @@
-import time, curses
+import time, curses, curses.textpad
 from math import *
 from sw.formatting import *
 
@@ -437,28 +437,57 @@ def getInput( stdscr, kwargs ):
     off = 0
     tab = 15
     for key in kwarray:
+        y = i + 1
+        x = 2
         if key in kwmap:
             default = str( kwmap[key][1] )
+            val = str( kwargs.get( key, default ) )
             size = len( kwmap[key][0] )
-            char = chr( ord('a') + i - off ) 
+            char = str( chr( ord('a') + i - off ) )
             kwcharmap[char] = key
 
             s = ''.join( [ char, ") ",
                 kwmap[key][0],
                 ":",
-                ( " "*( tab-size ) ),
-                str( kwargs.get( key, default ) )
+                ( " "*( tab-size ) )
                 ] )
-            stdscr.addstr( i+1, 2, s ) # Puts a message up top
+            stdscr.addstr( y, x, s )
+            kwmap[key].append( stdscr.subwin( 1, 50, y, x + len( s ) ) )
+            kwmap[key][2].addstr( val )
+            kwmap[key][2].refresh( )
         else:
-            stdscr.addstr( i+1, 2, key )
+            stdscr.addstr( y, x, key )
             off += 1
         
         i += 1
 
+    maxx = stdscr.getmaxyx( )[1]
+    maxy = stdscr.getmaxyx( )[0]
+
+    stdscr.addstr( maxy-3, 1, "Enter selection to change below or just press Enter to start." )
+    stdscr.addstr( maxy-2, 1, "Selection: " )
+
+    curses.curs_set( 1 )
+    ebox = stdscr.subwin( 1, 2, maxy-2, len( "Selection: " ) + 1 )
+    entry = curses.textpad.Textbox( ebox, insert_mode=True )
+    entry.stripspaces = 1
+
     stdscr.refresh( )
 
-    while True:
+    entry.edit( )
+    res = entry.gather( )
 
-        time.sleep( 0.01 )
+    while res != "":
+        res = entry.gather( ).rstrip( )
+        if not res in kwcharmap:
+            stdscr.addstr( maxy-4, 1, "Invalid Selection '" + res + "'" )
+        else:
+            stdscr.addstr( maxy-4, 1, " "*25 )
 
+        stdscr.refresh( )
+        ebox.clear( )
+        entry.edit( ) 
+        
+        
+
+    
