@@ -523,4 +523,6 @@ def getInput( stdscr, kwargs ):
     # Make sure kwargs has everything set, we set the defaults here
     for key in kwmap:
         if key not in kwargs:
+            if kwmap[key][1] == "auto":
+                kwmap[key][1] = None
             kwargs[key] = kwmap[key][1]
