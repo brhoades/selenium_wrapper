@@ -1,4 +1,4 @@
-import curses, curses.textpad
+import curses, curses.textpad, re
 
 class InitialSettings:
     def __init__( self, stdscr, kwargs ):
@@ -50,21 +50,20 @@ class InitialSettings:
 
     def handleInput( self ):
         self.entry.edit( )
-        res = self.entry.gather( )
+        res = self.entry.gather( ).rstrip( )
 
         while res != "":
             if not res in self.kwcharmap:
-                self.stdscr.addstr( self.maxy-4, 1, " " * self.KWARGS_MAX )
+                self.error( )
                 self.stdscr.addstr( self.maxy-4, 1, "Invalid Selection '" + res + "'" )
             else:
-                self.stdscr.addstr( self.maxy-4, 1, " " * self.KWARGS_MAX )
-                win = self.kwmap[self.kwcharmap[res]][2]
+                key = self.kwcharmap[res]
+                win = self.kwmap[key][2]
                 ewin = curses.textpad.Textbox( win, insert_mode=True )
                 ewin.stripspaces = 1
                 ewin.edit( )
                 out = ewin.gather( ).rstrip( )
                 if out != "" and out is not None:
-                    key = self.kwcharmap[res]
                     default = self.kwmap[key][1]
                     win.clear( )
                     try:
@@ -81,17 +80,36 @@ class InitialSettings:
                                     or out == "n" or out == "no" or out == "No":
                                 out = False
                             out = bool( out )
-                        self.kwargs[key] = out
                         win.addstr( str( out ) )
+
+                        # Check everything out
+                        if key == 'project':
+                            reg = re.findall( r'([^0-9A-Za-z\-])', out )
+                            if reg:
+                                self.error( ''.join( [ "Project name cannot include ", reg[0] ] ) )
+                                continue
+
+                        # Finally add it in and go on
+                        self.kwargs[key] = out
                     except Exception as e:
                         win.addstr( str( self.kwargs.get( key, default ) ) )
-                        self.stdscr.addstr( self.maxy-4, 1, "Error \"" + str( e ) + "\"" )
+                        self.error( e )
                     win.refresh( )
 
             self.stdscr.refresh( )
             self.ebox.clear( )
             self.entry.edit( ) 
             res = self.entry.gather( ).rstrip( )
+
+
+
+    def error( self, msg=None ):
+        if msg != None:
+            self.error( ) # Clear ourselves
+            self.stdscr.addstr( self.maxy-4, 1, "Error \"" + str( msg ) + "\"" )
+        else:
+            self.stdscr.addstr( self.maxy-4, 1, " " * self.KWARGS_MAX )
+        self.stdscr.refresh( )
 
 
 
