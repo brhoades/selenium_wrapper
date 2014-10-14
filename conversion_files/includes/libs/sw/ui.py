@@ -507,7 +507,7 @@ def getInput( stdscr, kwargs ):
                     win.clear( )
                     win.addstr( str( kwargs.get( key, default ) ) )
                     win.refresh( )
-                    stdscr.addstr( maxy-4, 1, "Error '" + str( e ) + "'" )
+                    stdscr.addstr( maxy-4, 1, "Error \"" + str( e ) + "\"" )
 
         stdscr.refresh( )
         ebox.clear( )
