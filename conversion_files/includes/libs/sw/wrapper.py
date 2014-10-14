@@ -1,5 +1,6 @@
 from sw.pool import Pool
-from sw.ui import Ui, getInput
+from sw.ui import Ui
+from sw.initialsettings import InitialSettings
 import sys, time, curses
 
 
@@ -12,7 +13,7 @@ def main( func, file, **kwargs ):
         :returns: None
     """
     # Get options and defaults 
-    curses.wrapper( getInput, kwargs )
+    curses.wrapper( InitialSettings, kwargs )
 
     pool = Pool( func, file, kwargs )
 
