@@ -499,8 +499,10 @@ def getInput( stdscr, kwargs ):
                         kwargs[key] = float( out )
                     elif type( default ) is long:
                         kwargs[key] = long( out )
-                    elif type( default ) is string:
+                    elif type( default ) is str:
                         kwargs[key] = str( out )
+                    elif type( default ) is bool:
+                        kwargs[key] = bool( out )
                     else:
                         kwargs[key] = out
                 except Exception as e:
