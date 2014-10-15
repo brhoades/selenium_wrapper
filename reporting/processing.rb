@@ -8,6 +8,12 @@ def process_report( )
   rid = nil
   response = { }
 
+  if req.has_key? "HELLOAREYOUTHERE"
+    response = { "YESIAMHERE" => nil }
+    status 200
+    return response.to_json
+  end
+
   ### Handle keys if we have them already
 
   if req.has_key? 'cid'
