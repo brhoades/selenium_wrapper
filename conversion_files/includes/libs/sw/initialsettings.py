@@ -107,8 +107,8 @@ class InitialSettings:
                                 self.error( ''.join( [ "Run name cannot include ", reg[0] ] ) )
                                 continue
 
-                        # Finally add it in and go on
-                        self.kwargs[key] = out
+                    # Finally add it in and go on
+                    self.kwargs[key] = out
                     win.addstr( str( out ) )
                 except Exception as e:
                     win.addstr( str( self.kwargs.get( key, default ) ) )
@@ -145,27 +145,27 @@ class InitialSettings:
                 err = str( e ) 
                 if len( err ) > 30:
                     err = ''.join( [ err[:27], "..." ] )
-        if r is None:
-            err = "Failure connecting to reporting server"
-        elif r.status_code != requests.codes.ok:
-            err = ''.join( [ "Received HTTP status code ", str( r.status_code ) ] )
-        else:
-            if r.text != None:
-                try:
-                    response = r.json( )
-                    if "YESIAMHERE" in response:
-                        if response["projectRequired"] and self.kwargs.get( 'project', None ) is None:
-                            self.error( "Server explicity requires a project name" )
-                            return False
-                except Exception as e:
-                    pass
-                if err is None:
-                    err = "Handshake failed; not a reporting server"
+            if r is None:
+                err = "Failure connecting to reporting server"
+            elif r.status_code != requests.codes.ok:
+                err = ''.join( [ "Received HTTP status code ", str( r.status_code ) ] )
             else:
-                err = "Connection to reporting server failed"
-        if err is not None:
-            self.error( ''.join( [ err, ", press enter again to ignore" ] ), "Warning" )
-            return False
+                if r.text != None:
+                    try:
+                        response = r.json( )
+                        if "YESIAMHERE" in response:
+                            if response["projectRequired"] and self.kwargs.get( 'project', None ) is None:
+                                self.error( "Server explicity requires a project name" )
+                                return False
+                    except Exception as e:
+                        pass
+                    if err is None:
+                        err = "Handshake failed; not a reporting server"
+                else:
+                    err = "Connection to reporting server failed"
+            if err is not None:
+                self.error( ''.join( [ err, ", press enter again to ignore" ] ), "Warning" )
+                return False
         return True
                                 
 
