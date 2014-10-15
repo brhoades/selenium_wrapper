@@ -158,7 +158,6 @@ class InitialSettings:
                             self.error( "Server explicity requires a project name" )
                             return False
                 except Exception as e:
-                    err = str( e )
                     pass
                 if err is None:
                     err = "Handshake failed; not a reporting server"
