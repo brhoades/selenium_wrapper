@@ -29,6 +29,8 @@ class Report:
         # The name for the current run, some sort of unique identifier
         self.run = pool.options.get( 'run', None )
 
+        self.project = pool.options.get( 'project', None )
+
         self.site = pool.options.get( 'report', None )
 
         self.enabled = self.site is not None
@@ -80,7 +82,10 @@ class Report:
 
         # Encode identifying information and the time
         payload['id']   = self.id( )
-        payload['run']  = self.run
+        if self.project is not None:
+            payload['run']  = ''.join( [ self.project, '_', self.run ] )
+        else:
+            payload['run'] = self.run
         payload['func'] = self.func
         payload['time'] = time.time( )
         payload['type'] = type

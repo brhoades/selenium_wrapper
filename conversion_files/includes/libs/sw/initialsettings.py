@@ -46,7 +46,7 @@ class InitialSettings:
         # Make sure self.kwargs has everything set, we set the defaults here
         for key in self.kwmap:
             if key not in self.kwargs:
-                if self.kwmap[key][1] == "auto":
+                if self.kwmap[key][1] == "auto" or self.kwmap[key][1] == "None":
                     self.kwmap[key][1] = None
                 self.kwargs[key] = self.kwmap[key][1]
 
@@ -59,34 +59,38 @@ class InitialSettings:
 
         while not done:
             if not res in self.kwcharmap:
-                self.error( )
-                self.stdscr.addstr( self.maxy-4, 1, "Invalid Selection '" + res + "'" )
+                self.error( ''.join( [ "Invalid Selection '", res, "'" ] ) )
             else:
                 key = self.kwcharmap[res]
-                win = self.kwmap[key][2]
-                default = self.kwmap[key][1]
+                win = self.kwmap[key][2]        # our setting's window
+                default = self.kwmap[key][1]    # the default value
+
                 ewin = curses.textpad.Textbox( win, insert_mode=True )
                 ewin.stripspaces = 1
                 ewin.edit( )
-                out = ewin.gather( ).rstrip( )
-                if out != "" and out is not None:
-                    win.clear( )
-                    try:
-                        if type( default ) is int:
-                            out = int( out ) 
-                        elif type( default ) is float:
-                            out = float( out )
-                        elif type( default ) is long:
-                            out = long( out )
-                        elif type( default ) is str:
-                            out = str( out )
-                        elif type( default ) is bool:
-                            if out == "False" or out == "false" or out == "f" \
-                                    or out == "n" or out == "no" or out == "No":
-                                out = False
-                            out = bool( out )
-                        win.addstr( str( out ) )
 
+                out = ewin.gather( ).rstrip( )
+                win.clear( )
+                try:
+                    if type( default ) is int:
+                        out = int( out ) 
+                    elif type( default ) is float:
+                        out = float( out )
+                    elif type( default ) is long:
+                        out = long( out )
+                    elif type( default ) is str:
+                        out = str( out )
+                    elif type( default ) is bool:
+                        if out == "False" or out == "false" or out == "f" \
+                                or out == "n" or out == "no" or out == "No":
+                            out = False
+                        out = bool( out )
+                    elif default is None:
+                        if out == "None" or out == "" or out == "none":
+                            out = None
+                    win.addstr( str( out ) )
+
+                    if ( default is None and out != "None" and out != "none" ) or out != default:
                         # Check everything out
                         if key == 'project':
                             reg = re.findall( r'([^0-9A-Za-z\-])', out )
@@ -104,14 +108,12 @@ class InitialSettings:
                                 self.error( ''.join( [ "Run name cannot include ", reg[0] ] ) )
                                 continue
 
-                            
-                        # Finally add it in and go on
-                        self.kwargs[key] = out
-                    except Exception as e:
-                        win.addstr( str( self.kwargs.get( key, default ) ) )
-                        self.error( e )
-                else:
-                    win.addstr( str( default ) )
+                        
+                    # Finally add it in and go on
+                    self.kwargs[key] = out
+                except Exception as e:
+                    win.addstr( str( self.kwargs.get( key, default ) ) )
+                    self.error( e )
 
                 win.refresh( )
                 self.error( )
@@ -142,10 +144,18 @@ class InitialSettings:
                         try:
                             response = r.json( )
                             if "YESIAMHERE" in response:
+                                if response["projectRequired"] and self.kwargs.get( 'project', None ) is None:
+                                    self.error( "Server explicity requires a project name" )
+                                    done = False
+                                    for key, value in self.kwcharmap.items( ):
+                                        if value == 'project':
+                                            res = key
                                 continue
-                        except:
+                        except Exception as e:
+                            err = str( e )
                             pass
-                        err = "Handshake failed; not a reporting server"
+                        if err is None:
+                            err = "Handshake failed; not a reporting server"
                     else:
                         continue
                 if err is not None:
@@ -193,7 +203,7 @@ class InitialSettings:
         self.kwarray.append( 'report' )
         self.kwmap['run']      = [ "Run Name", "auto" ]
         self.kwarray.append( 'run' )
-        self.kwmap['project']  = [ "Project Name", "auto" ]
+        self.kwmap['project']  = [ "Project Name", None ]
         self.kwarray.append( 'project' )
         self.kwmap['id']       = [ "Client Name", "auto" ]
         self.kwarray.append( 'id' )
