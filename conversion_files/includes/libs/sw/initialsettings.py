@@ -1,4 +1,5 @@
 import curses, curses.textpad, re
+import urlparse, requests
 
 class InitialSettings:
     def __init__( self, stdscr, kwargs ):
@@ -51,20 +52,21 @@ class InitialSettings:
     def handleInput( self ):
         self.entry.edit( )
         res = self.entry.gather( ).rstrip( )
+        done = False
 
-        while res != "":
+        while not done:
             if not res in self.kwcharmap:
                 self.error( )
                 self.stdscr.addstr( self.maxy-4, 1, "Invalid Selection '" + res + "'" )
             else:
                 key = self.kwcharmap[res]
                 win = self.kwmap[key][2]
+                default = self.kwmap[key][1]
                 ewin = curses.textpad.Textbox( win, insert_mode=True )
                 ewin.stripspaces = 1
                 ewin.edit( )
                 out = ewin.gather( ).rstrip( )
                 if out != "" and out is not None:
-                    default = self.kwmap[key][1]
                     win.clear( )
                     try:
                         if type( default ) is int:
@@ -88,18 +90,35 @@ class InitialSettings:
                             if reg:
                                 self.error( ''.join( [ "Project name cannot include ", reg[0] ] ) )
                                 continue
+                        elif key == 'report':
+                            o = bool( urlparse.urlparse( out ).netloc )
+                            if not o:
+                                self.error( "Reporting server must be a HTTP URL" )
+                                continue
+                        elif key == 'run':
+                            reg = re.findall( r'([^0-9A-Za-z\-\_])', out )
+                            if reg:
+                                self.error( ''.join( [ "Run name cannot include ", reg[0] ] ) )
+                                continue
 
+                            
                         # Finally add it in and go on
                         self.kwargs[key] = out
                     except Exception as e:
                         win.addstr( str( self.kwargs.get( key, default ) ) )
                         self.error( e )
-                    win.refresh( )
+                else:
+                    win.addstr( str( default ) )
+
+                win.refresh( )
+                self.error( )
 
             self.stdscr.refresh( )
             self.ebox.clear( )
             self.entry.edit( ) 
             res = self.entry.gather( ).rstrip( )
+            if res == "":
+                done = True
 
 
 
@@ -117,7 +136,7 @@ class InitialSettings:
         self.kwarray.append( "Run Settings" )
         self.kwarray.append( 'children' )
         self.kwmap['children'] = [ "# Children", 1 ]
-        self.kwmap['stagger']  = [ "Stagged Spawn", False ]
+        self.kwmap['stagger']  = [ "Stagger Spawn", False ]
         self.kwarray.append( 'stagger' )
         self.kwmap['jobs']     = [ "# Jobs", 1 ]
         self.kwarray.append( 'jobs' )
