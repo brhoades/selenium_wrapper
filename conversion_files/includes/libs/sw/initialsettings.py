@@ -88,9 +88,8 @@ class InitialSettings:
                     elif default is None:
                         if out == "None" or out == "" or out == "none":
                             out = None
-                    win.addstr( str( out ) )
 
-                    if ( default is None and out != "None" and out != "none" ) or out != default:
+                    if ( default is None and not out is None ) or out != default:
                         # Check everything out
                         if key == 'project':
                             reg = re.findall( r'([^0-9A-Za-z\-])', out )
@@ -108,9 +107,9 @@ class InitialSettings:
                                 self.error( ''.join( [ "Run name cannot include ", reg[0] ] ) )
                                 continue
 
-                        
-                    # Finally add it in and go on
-                    self.kwargs[key] = out
+                        # Finally add it in and go on
+                        self.kwargs[key] = out
+                    win.addstr( str( out ) )
                 except Exception as e:
                     win.addstr( str( self.kwargs.get( key, default ) ) )
                     self.error( e )
@@ -118,54 +117,58 @@ class InitialSettings:
                 win.refresh( )
                 self.error( )
 
-            self.stdscr.refresh( )
-            self.ebox.clear( )
-            self.entry.edit( ) 
-            res = self.entry.gather( ).rstrip( )
-            if res == "":
-                done = True
-
-                r = None
-                rep = self.kwargs['report']
-                err = None
-                if rep is not None:
-                    try: 
-                        r = requests.post( rep, data=json.dumps( { "HELLOAREYOUTHERE": None } ), timeout=1, headers={'content-type': 'application/json'} )
-                    except Exception as e:
-                        err = str( e ) 
-                        if len( err ) > 30:
-                            err = ''.join( [ err[:27], "..." ] )
-                if r is None:
-                    err = "Failure connecting to reporting server"
-                elif r.status_code != requests.codes.ok:
-                    err = ''.join( [ "Received HTTP status code ", str( r.status_code ) ] )
-                else:
-                    if r.text != None:
-                        try:
-                            response = r.json( )
-                            if "YESIAMHERE" in response:
-                                if response["projectRequired"] and self.kwargs.get( 'project', None ) is None:
-                                    self.error( "Server explicity requires a project name" )
-                                    done = False
-                                    for key, value in self.kwcharmap.items( ):
-                                        if value == 'project':
-                                            res = key
-                                continue
-                        except Exception as e:
-                            err = str( e )
-                            pass
-                        if err is None:
-                            err = "Handshake failed; not a reporting server"
-                    else:
-                        continue
-                if err is not None:
-                    self.error( ''.join( [ err, ", press enter again to ignore" ] ), "Warning" )
-                    self.entry.edit( )
-                    res = self.entry.gather( ).rstrip( )
-                    if res != "":
+            doneCheck = False
+            while not doneCheck: 
+                self.stdscr.refresh( )
+                self.ebox.clear( )
+                self.entry.edit( ) 
+                res = self.entry.gather( ).rstrip( )
+                if res == "":
+                    done = True
+                    if not self.checkValues( ):
                         done = False
-                    
+                    else:
+                        break
+                else:
+                    break
 
+
+
+    def checkValues( self ):
+        r = None
+        rep = self.kwargs.get( 'report', None )
+        err = None
+        if rep is not None:
+            try: 
+                r = requests.post( rep, data=json.dumps( { "HELLOAREYOUTHERE": None } ), timeout=1, headers={'content-type': 'application/json'} )
+            except Exception as e:
+                err = str( e ) 
+                if len( err ) > 30:
+                    err = ''.join( [ err[:27], "..." ] )
+        if r is None:
+            err = "Failure connecting to reporting server"
+        elif r.status_code != requests.codes.ok:
+            err = ''.join( [ "Received HTTP status code ", str( r.status_code ) ] )
+        else:
+            if r.text != None:
+                try:
+                    response = r.json( )
+                    if "YESIAMHERE" in response:
+                        if response["projectRequired"] and self.kwargs.get( 'project', None ) is None:
+                            self.error( "Server explicity requires a project name" )
+                            return False
+                except Exception as e:
+                    err = str( e )
+                    pass
+                if err is None:
+                    err = "Handshake failed; not a reporting server"
+            else:
+                err = "Connection to reporting server failed"
+        if err is not None:
+            self.error( ''.join( [ err, ", press enter again to ignore" ] ), "Warning" )
+            return False
+        return True
+                                
 
 
     def error( self, msg=None, type="Error" ):
