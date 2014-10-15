@@ -1,5 +1,5 @@
 import curses, curses.textpad, re
-import urlparse, requests
+import urlparse, requests, json
 
 class InitialSettings:
     def __init__( self, stdscr, kwargs ):
@@ -16,9 +16,12 @@ class InitialSettings:
         self.kwcharmap = { }
         self.kwmap = { }
 
+        curses.init_pair( 100, curses.COLOR_BLACK, curses.COLOR_RED )
+        curses.init_pair( 101, curses.COLOR_BLACK, curses.COLOR_YELLOW )
+
         self.maxx = self.stdscr.getmaxyx( )[1]
         self.maxy = self.stdscr.getmaxyx( )[0]
-        self.KWARGS_MAX = 50
+        self.KWARGS_MAX = 80
 
         self.stdscr.clear( )
 
@@ -27,7 +30,7 @@ class InitialSettings:
         self.renderList( )
         
         # Draw our selection box
-        self.stdscr.addstr( self.maxy-3, 1, "Enter selection to change below or just press Enter to start." )
+        self.stdscr.addstr( self.maxy-3, 1, "Type letter and hit enter to select or press enter to start" )
         self.stdscr.addstr( self.maxy-2, 1, "Selection: " )
 
         curses.curs_set( 1 )
@@ -120,14 +123,50 @@ class InitialSettings:
             if res == "":
                 done = True
 
+                r = None
+                rep = self.kwargs['report']
+                err = None
+                if rep is not None:
+                    try: 
+                        r = requests.post( rep, data=json.dumps( { "HELLOAREYOUTHERE": None } ), timeout=1, headers={'content-type': 'application/json'} )
+                    except Exception as e:
+                        err = str( e ) 
+                        if len( err ) > 30:
+                            err = ''.join( [ err[:27], "..." ] )
+                if r is None:
+                    err = "Failure connecting to reporting server"
+                elif r.status_code != requests.codes.ok:
+                    err = ''.join( [ "Received HTTP status code ", str( r.status_code ) ] )
+                else:
+                    if r.text != None:
+                        try:
+                            response = r.json( )
+                            if "YESIAMHERE" in response:
+                                continue
+                        except:
+                            pass
+                        err = "Handshake failed; not a reporting server"
+                    else:
+                        continue
+                if err is not None:
+                    self.error( ''.join( [ err, ", press enter again to ignore" ] ), "Warning" )
+                    self.entry.edit( )
+                    res = self.entry.gather( ).rstrip( )
+                    if res != "":
+                        done = False
+                    
 
 
-    def error( self, msg=None ):
+
+    def error( self, msg=None, type="Error" ):
         if msg != None:
             self.error( ) # Clear ourselves
-            self.stdscr.addstr( self.maxy-4, 1, "Error \"" + str( msg ) + "\"" )
+            color = 100
+            if type != "Error":
+                color = 101
+            self.stdscr.addstr( self.maxy-5, 1, ''.join( [ type, ": ", str( msg ) ]  ), curses.color_pair( color ) )
         else:
-            self.stdscr.addstr( self.maxy-4, 1, " " * self.KWARGS_MAX )
+            self.stdscr.addstr( self.maxy-5, 1, " " * self.KWARGS_MAX )
         self.stdscr.refresh( )
 
 
