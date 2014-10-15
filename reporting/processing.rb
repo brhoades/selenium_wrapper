@@ -1,4 +1,5 @@
 require 'json'
+require_relative '../const.rb'
 
 def process_report( ) 
   # Incoming data is JSON
@@ -9,7 +10,8 @@ def process_report( )
   response = { }
 
   if req.has_key? "HELLOAREYOUTHERE"
-    response = { "YESIAMHERE" => nil }
+    response = { "YESIAMHERE" => nil,
+                 "projectRequired" => PROJECT_PREFIX_REQUIRED }
     status 200
     return response.to_json
   end

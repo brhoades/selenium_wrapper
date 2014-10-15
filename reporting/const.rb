@@ -16,3 +16,7 @@ RUN_TIMEOUT         = 600
 # Timeout for how long after we don't hear from a client, that they
 # are deactivated.
 CLIENT_TIMEOUT      = 180
+
+# Whether we require a project prefix
+PROJECT_PREFIX_REQ  = true
+
