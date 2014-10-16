@@ -85,9 +85,11 @@ class InitialSettings:
                                 or out == "n" or out == "no" or out == "No":
                             out = False
                         out = bool( out )
-                    elif default is None:
-                        if out == "None" or out == "" or out == "none":
+                    elif default is None or default == "auto":
+                        if out == "None" or out == "none" or out == "auto":
                             out = None
+                        elif default == "auto":
+                            out = "auto"
 
                     if ( default is None and not out is None ) or out != default:
                         # Check everything out
@@ -108,7 +110,11 @@ class InitialSettings:
                                 continue
 
                     # Finally add it in and go on
-                    self.kwargs[key] = out
+                    if default == "auto" and ( out == "auto" or out == "" ):
+                        self.kwargs[key] = None
+                        out = "auto"
+                    else:
+                        self.kwargs[key] = out
                     win.addstr( str( out ) )
                 except Exception as e:
                     win.addstr( str( self.kwargs.get( key, default ) ) )
@@ -137,6 +143,7 @@ class InitialSettings:
     def checkValues( self ):
         r = None
         rep = self.kwargs.get( 'report', None )
+        run = self.kwargs.get( 'run', None )
         err = None
         if rep is not None:
             try: 
@@ -154,9 +161,10 @@ class InitialSettings:
                     try:
                         response = r.json( )
                         if "YESIAMHERE" in response:
-                            if response["projectRequired"] and self.kwargs.get( 'project', None ) is None:
-                                self.error( "Server explicity requires a project name" )
-                                return False
+                            if response["projectRequired"]:
+                                if self.kwargs.get( 'project', None ) is None:
+                                    self.error( "Server explicity requires a project name" )
+                                    return False
                     except Exception as e:
                         pass
                     if err is None:
@@ -166,8 +174,9 @@ class InitialSettings:
             if err is not None:
                 self.error( ''.join( [ err, ", press enter again to ignore" ] ), "Warning" )
                 return False
-        return True
-                                
+        if rep is not None and run is not None and self.kwargs.get( 'project', None ) is None:
+            self.error( "Must include a run name with a project name" )
+
 
 
     def error( self, msg=None, type="Error" ):
