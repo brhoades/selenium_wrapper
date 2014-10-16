@@ -18,6 +18,7 @@ class InitialSettings:
 
         curses.init_pair( 100, curses.COLOR_BLACK, curses.COLOR_RED )
         curses.init_pair( 101, curses.COLOR_BLACK, curses.COLOR_YELLOW )
+        curses.init_pair( 102, curses.COLOR_GREEN, curses.COLOR_BLACK )
 
         self.maxx = self.stdscr.getmaxyx( )[1]
         self.maxy = self.stdscr.getmaxyx( )[0]
@@ -232,6 +233,7 @@ class InitialSettings:
         for key in self.kwarray:
             y = i + 1
             x = 2
+            # This is a configurable field
             if key in self.kwmap:
                 default = str( self.kwmap[key][1] )
                 val = str( self.kwargs.get( key, default ) )
@@ -252,7 +254,8 @@ class InitialSettings:
                 self.kwmap[key][2].addstr( val )
                 self.kwmap[key][2].refresh( )
             else:
-                self.stdscr.addstr( y, x, key )
+                # This is a title field
+                self.stdscr.addstr( y, x, key, curses.color_pair( 102 ) )
                 off += 1
             
             i += 1
