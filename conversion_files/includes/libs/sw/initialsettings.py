@@ -166,16 +166,19 @@ class InitialSettings:
                                     self.error( "Server explicity requires a project name" )
                                     return False
                     except Exception as e:
+                        if err is None:
+                            err = "Handshake failed; not a reporting server"
                         pass
-                    if err is None:
-                        err = "Handshake failed; not a reporting server"
                 else:
                     err = "Connection to reporting server failed"
-            if err is not None:
-                self.error( ''.join( [ err, ", press enter again to ignore" ] ), "Warning" )
-                return False
-        if rep is not None and run is not None and self.kwargs.get( 'project', None ) is None:
-            self.error( "Must include a run name with a project name" )
+            if run is None and self.kwargs.get( 'project', None ) is not None:
+                self.error( "Must include a run name with a project name" )
+                return False # Returns false because this cannot be ignored.
+        if err is not None:
+            self.error( ''.join( [ err, ", press enter again to ignore" ] ), "Warning" )
+            return False
+        return True
+
 
 
 
