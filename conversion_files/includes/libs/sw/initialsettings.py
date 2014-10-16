@@ -53,14 +53,14 @@ class InitialSettings:
 
 
     def handleInput( self ):
-        self.entry.edit( )
-        res = self.entry.gather( ).rstrip( )
+        first = True
         done = False
+        res = ""
 
         while not done:
-            if not res in self.kwcharmap:
+            if not res in self.kwcharmap and not first:
                 self.error( ''.join( [ "Invalid Selection '", res, "'" ] ) )
-            else:
+            elif not first:
                 key = self.kwcharmap[res]
                 win = self.kwmap[key][2]        # our setting's window
                 default = self.kwmap[key][1]    # the default value
@@ -129,6 +129,7 @@ class InitialSettings:
                 self.ebox.clear( )
                 self.entry.edit( ) 
                 res = self.entry.gather( ).rstrip( )
+                first = False
                 if res == "":
                     done = True
                     if not self.checkValues( ):
