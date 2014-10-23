@@ -46,16 +46,6 @@ def formatError( res, type="message" ):
     return res
 
 
-def childMessage( num, msg ):
-    """Consistently formats a message to be print out to the console for this child.
-       
-       :param num: The number of the child we are printing a message for.
-       :param msg: The message for the child. Formatted like so: ``Child #num: msg``
-       :return: None
-    """
-    print( ''.join( [ "Child #", str( num + 1 ), ": ", msg ] ) )
-
-
 
 def stats( good, bad, timetaken, children, times, starttime ):
     """Prints out statistics for the current running pool.
@@ -105,26 +95,32 @@ def stats( good, bad, timetaken, children, times, starttime ):
 
 
 
-def errorLevelToStr( level ):
+def errorLevelToStr( level, parens=True ):
     """Takes a numeric error level and translates it into a string for displaying in a 
        log.
        
        :param level: The level to translate into a loggable string.
+       :param True parens: If the level will be contained in parenthesis
        :return: String of the level in parenthesis.
     """
+    r = ""
     if level == NOTICE:
-        return "(NOTICE)  "
-    if level == WARNING:
-        return "(WARNING) "
-    if level == ERROR: 
-        return "(ERROR)   "
-    if level == CRITICAL:
-        return "(CRITICAL)"
-    if level == INFO:
-        return "(INFO)    "
-    if level == NONE:
-        return "          "
-    return
+        r = "NOTICE"
+    elif level == WARNING:
+        r = "WARNING"
+    elif level == ERR: 
+        r = "ERROR"
+    elif level == CRITICAL:
+        r = "CRITICAL"
+    elif level == INFO:
+        r = "INFO"
+    elif level == NONE and parens == True:
+        parens = False
+    
+    if parens:
+        return ''.join( [ "(", r, ")", (10-len(r))*" " ] )
+    else:
+        return ''.join( [ r, (10-len(r))*" " ] )
 
 
 
@@ -134,6 +130,7 @@ def avg( numbers ):
        :param numbers: A list of numbers.
        :return: The average
     """
+
     if len( numbers ) == 0:
         return 0
     else:

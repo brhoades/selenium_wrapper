@@ -1,0 +1,13 @@
+source 'https://rubygems.org'
+
+gem 'mysql2'
+
+gem 'settingslogic'
+
+gem 'rufus-scheduler'
+
+gem 'connection_pool'
+
+gem 'sinatra'
+gem 'sinatra-assetpack'
+

@@ -1,4 +1,5 @@
 import os, time, traceback
+from selenium.common.exceptions import *
 from const import *
 
 
@@ -17,41 +18,6 @@ def loadScript( driver, js ):
         script.type = 'text/javascript'; \
         script.src = '" + js + "'; \
         document.getElementsByTagName('head')[0].appendChild( script );" )
-
-
-
-def jQCheck( driver, timeout=1 ):
-    """This function takes our webdriver object in and checks if the current loaded page has jQuery on it.
-       If it doesn't, it tries to load it. It will pause the script for up to `timeout` seconds after loading,
-       after that it just returns False so that the exists script will stop holding things up.
-
-       .. deprecated:: 0.1 
-          JavaScript is no longer used to check for elements before running webdriver checks.
-
-       :Parameters:
-         * :ref:`driver <common-params>`
-         * **timeout** (*1*) -- How long to wait for jQuery to load before continuing on. 
-       :return: Boolean, True if jQuery is loaded False if it did not load.
-    """
-
-    jqCheck = "return typeof jQuery != 'undefined'"          # Some StackOverflow post recommended this bit of code
-    loadScript( driver, "http://code.jquery.com/jquery-2.1.1.min.js" )
-
-    if not bool( driver.execute_script( jqCheck ) ):         #FIXME: Add a check that makes sure we haven't held up
-        driver.child.logMsg( "jQuery not loaded into browser, inserting manually.", INFO )
-        loadScript( driver, jq )
-
-        start = time.time( )
-        while not bool( driver.execute_script( jqCheck ) ) and time.time( ) - start < timeout:
-            time.sleep( driver.child.sleepTime )
-        if not bool( driver.execute_script( jqCheck ) ):
-            driver.child.logMsg( ''.join( [ "jQuery failed to load into browser after ", str( timeout ), "s." ] ), WARNING  )
-            return False                              # False, jQuery isn't loaded
-        else:
-            driver.child.logMsg( ''.join( [ "jQuery loaded into browser successfully after ", format( time.time( ) - start ), "s." ] ), INFO )
-            return True                               # True, it is
-    else:
-        return True
 
 
 
@@ -123,13 +89,15 @@ def sleepwait( driver, element, type, **kwargs ):
          * :ref:`lightConfirm <common-params>`
        :return: Boolean if doesn't exist, :py:class:`~selenium.webdriver.remote.webelement.WebElement` if it does.
     """
-    start = time.time( )
+    start        = time.time( )
     timeout      = kwargs.get( 'timeout', 15 )
     lightConfirm = kwargs.get( 'lightConfirm', False )
     cache        = kwargs.get( 'cache', True )
     url          = kwargs.get( 'url', driver.current_url )
     die          = kwargs.get( 'die', True )
     thinkTime = kwargs.get( 'thinkTime', driver.child.sleepTime )
+
+    driver.child.display( DISP_WAIT )
     
     e = exists( driver, element, type, url=url, cache=cache, lightConfirm=lightConfirm )
     if not e:
@@ -142,16 +110,19 @@ def sleepwait( driver, element, type, **kwargs ):
 
             e = exists( driver, element, type, url=url, cache=cache, lightConfirm=lightConfirm )
         else:
+            driver.child.display( DISP_GOOD ) 
             return e 
     else:
+        driver.child.display( DISP_GOOD )
         return e
 
+    driver.child.logMsg( ''.join( [ "Element will not be found on page \"", 
+        driver.current_url, "\"." ] ), CRITICAL, locals=locals( ) )
+
     if die:
-        driver.child.logMsg( ''.join( [ "Element will not be found on page \"", 
-            driver.current_url, "\"." ] ), ERROR, locals=locals( ) )
-        driver.child.restart( "element missing" )
+        driver.child.logMsg( "Child will now terminate.", CRITICAL, locals=locals( ) )
+        raise TimeoutException( ''.join( [  "Element ", element, " not found within timeout ", str(timeout), "s." ] ) )
         # Wait to be killed
-        time.sleep( 10 )
     return False
 
 
@@ -228,6 +199,7 @@ def waitToDisappear( driver, element, **kwargs ):
         else:
             if not recur:
                 driver.child.logMsg( ''.join( [ "Waiting for \"", element, "\"." ] ), INFO )
+            driver.child.display( STATI_WAIT )
             time.sleep( thinkTime )
 
         kwargs['die'] = die
@@ -238,9 +210,8 @@ def waitToDisappear( driver, element, **kwargs ):
                 driver.child.logMsg( ''.join( [ "Element did not disappear within ", str( timeout ), "s, timed out." ] ), 
                         CRITICAL, locals=locals( ) )
                 if die:
-                    driver.child.restart( "timed out" )
-                    # Wait to be killed
-                    time.sleep( 10 )
+                    driver.child.logMsg( "Child will now terminate.", CRITICAL, locals=locals( ) )
+                    raise TimeoutException( ''.join( [ "Element ", element, " didn't disappear within timeout", str(timeout), "s." ] ) ) 
 
                 break #this skips the else
             time.sleep( thinkTime )
@@ -257,6 +228,7 @@ def waitToDisappear( driver, element, **kwargs ):
 
                         waitToDisappear( driver, element, **kwargs )
                     time.sleep( thinkTime )
+        driver.child.display( DISP_GOOD )
 
 
 

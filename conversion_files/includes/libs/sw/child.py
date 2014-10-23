@@ -1,11 +1,11 @@
-from multiprocessing import Process, Queue
+from multiprocessing import Process, Queue, Value
 from selenium import webdriver
 from selenium.webdriver.phantomjs.service import Service as PhantomJSService
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from sw.const import * # Constants
 from sw.formatting import formatError, errorLevelToStr
 from sw.cache import ElementCache 
-import time, os, traceback
+import time, os, traceback, subprocess
 from pprint import pformat
 from datetime import datetime
 from selenium.common.exceptions import *
@@ -21,7 +21,7 @@ class Child:
     :param num: Number of the child relevant to :class:`sw.pool`'s self.data array. This index is used to 
         easily communicate results and relate them to the child in that array. `num` is also used when printing
         out a status message.
-    :param log: Base log directory which a child will create a `num`-`self.run` folder in to log to.
+    :param log: Base log directory which we spit logs and screenshots into.
     :param options: Dict from kwargs which contains directives to pass to GhostDriver.
 
     :return: Child (self)
@@ -36,43 +36,36 @@ class Child:
         # Our child number
         self.num = num
 
-        # Run number, used to have different logs and error screenshots after restarting
-        self.run = 0 
-        
         # Our driver instance
         self.driver = None
 
-        # Our log folder, which is changed each time start is called (so see start)
-        self.log = ""
-
-        # The base log folder, which never changes.
-        self.baselog = log
+        # Our log folder which never changes
+        self.log = log
 
         # Our log handle
         self.lh = "" 
 
-        # Logging level
-        self.level = INFO 
-
-        # Do we load images
+        # Do we load images and other options
         self.options = options
+
+        # Logging level
+        self.level = self.options.get( 'level', NOTICE )
+
+        # Storage for our function we get
+        self.func  = None
 
         # How long we sleep in loops
         self.sleepTime = 1
 
+        # Our per page element cache.
         self.cache = ElementCache( )
 
+        # Our current status, wrapped
+        self.statusVar = Value( 'i', STARTING )
+        
+
+        # Now start
         self.start( )
-
-
-
-    def msg( self, message ):
-        """Formats a message for this child to be printed out.
-
-        :param msg: The message to be printed out to the console.
-        :return: None
-        """
-        print( "Child #" + str( self.num + 1 ) + ": " + message )
 
 
 
@@ -83,6 +76,9 @@ class Child:
 
            :return: None
         """
+
+        # Push a STARTING message to our pool
+        self.display( DISP_START )
 
         wq = self.wq
         cq = self.cq
@@ -111,8 +107,7 @@ class Child:
             self.driver = webdriver.PhantomJS( desired_capabilities=dcaps, service_log_path=os.path.join( self.log, "ghostdriver.log" ), \
                                                service_args=sargs )
         except Exception as e:
-            self.logMsg( ''.join( [ "Webdriver failed to load: ", str( e ), "\n", traceback.formatexc( ) ] ), CRITICAL )
-            self.msg( "WEBDRIVER ERROR" )
+            self.logMsg( ''.join( [ "Webdriver failed to load: ", str( e ), "\n", traceback.format_exc( ) ] ), CRITICAL )
             try: 
                 self.driver.quit( )
             except:
@@ -125,41 +120,53 @@ class Child:
         # Change our implicit wait time
         self.driver.implicitly_wait( 0 )
 
-        # Push a STARTING message to our pool, if we print it we risk scrambling text in stdout
-        cq.put( [ self.num, READY, time.time( ), "" ] )
+        cq.put( [ self.num, READY, "" ] )
 
         # Write to our log another message indicating we are starting our runs
         self.logMsg( "Child process started and loaded" )
 
         # While our work queue isn't empty...
         while not wq.empty( ):
-            func = wq.get( True, 5 )
+            self.func = wq.get( True, 5 )
             res = []
             start = 0
+
+            # Still running
+            self.status( RUNNING )
             
             # Try, if an element isn't found an exception is thrown
             try:
                 self.cache.clear( )
                 start = time.time( )
-                func( self.driver )
+                self.display( DISP_GOOD )
+                self.func( self.driver )
             except TimeoutException as e:
+                self.display( DISP_ERROR )
+                self.logError( str( e ) )
                 self.logMsg( ''.join( [ "Stack trace: ", traceback.format_exc( ) ] ), CRITICAL )
                 
-                self.msg( "TIMEOUT" )
+                cq.put( [ self.num, FAILED, ( time.time( ) - start ), str( e ) ] )
                 self.logMsg( "Timeout when finding element." )
+                time.sleep( 1 )
             except Exception as e:
+                self.display( DISP_ERROR )
                 self.logError( str( e ) ) # Capture the exception and log it
                 self.logMsg( ''.join( [ "Stack trace: ", traceback.format_exc( ) ] ), CRITICAL )
 
                 cq.put( [ self.num, FAILED, ( time.time( ) - start ), str( e ) ] )
+                time.sleep( 1 )
                 break
             else:
+                self.display( DISP_FINISH )
                 t = time.time( ) - start
                 cq.put( [ self.num, DONE, ( time.time( ) - start ), "" ] )
                 self.logMsg( ''.join( [ "Successfully finished job (", format( t ), "s)" ] ) )
+                time.sleep( 0.5 )
 
         # Quit after we have finished our work queue, this kills the phantomjs process.
         self.driver.quit( )
+        self.display( DISP_DONE )
+        self.status( FINISHED )
 
 
 
@@ -182,7 +189,7 @@ class Child:
 
 
     def screenshot( self, level=NOTICE ):
-        """Saves a screenshot to `num`-`run`/error_#.png and prints a message into the log specifying the file logged to.
+        """Saves a screenshot to error_#.png and prints a message into the log specifying the file logged to.
            
            :param NOTICE level: This determines whether or not the error message will be logged according to the
                level set in self.level. The screenshot will print anyway. If this error is not greater or equal to the level specified in self.level,
@@ -193,7 +200,7 @@ class Child:
         i = 0
         # If we are writing several errors, number them appropriately
         if not os.path.exists( self.log ):
-            self.logMsg( ''.join( [ "Cannot write to a log directory that doesn't exist. ", self.log ] ), CRITICAL )
+            raise ValueError( ''.join( [ "Cannot write to a log directory that doesn't exist. ", self.log ] ), CRITICAL )
             return
 
         while True:
@@ -221,6 +228,11 @@ class Child:
            :return: None
         """
         locals = kwargs.get( 'locals', None )
+
+        # Send error if appropriate
+        if level >= ERROR:
+            self.display( DISP_ERROR )
+
         # Determine if we're logging this low
         if level < self.level:
             return
@@ -244,13 +256,23 @@ class Child:
 
 
 
-    def is_alive( self ):
+    def display( self, t ):
+        """Sends a display message to the main loop, which is then translated to the UI.
+           
+           :param t: The status this child will now show, a constant starting with DISP_ in const.py.
+
+           :returns: None
         """
-           Checks if the child's process is still running, if it is then it returns True, otherwise False.
+        self.cq.put( [ self.num, DISPLAY, t ] )
+
+
+
+    def is_alive( self ):
+        """Checks if the child's process is still running, if it is then it returns True, otherwise False.
            There's a check for if the process is None, which is set when a child terminates.
 
            :return: Boolean for if Child process is still active (different from if a child is processing data).
-           """
+        """
         if self.proc != None:
             return self.proc.is_alive( )
         else:  
@@ -258,25 +280,34 @@ class Child:
 
 
 
-    def is_done( self ):
-        """Check if a child is done. When a child process is finished its self.proc is set to None.
-           
-           :return: Boolean for if Child is finished processing data. This is usually signal to kill the subprocess.
+    def status( self, type=None ):
+        """Uses a multiprocess-safe variable to transmit our status upstream. These values are listed under
+           universal status types in const.py. The status types allow better logging and, for example, prevent
+           children that were already terminated from being terminated again (and throwing an exception).
+
+           When called with a type it will set this child's status on both the main process and the child's 
+           process. When called without it, it reads from the status variable.
+
+           :param None type: The new value of our status.
+
+           :returns: If type isn't specified, our status. If it is, it sets our type and returns None.
         """
-        return self.proc == None
+        if type is None:
+            return self.statusVar.value
+        else:
+            with self.statusVar.get_lock( ):
+                self.statusVar.value = type
 
 
 
-    def start( self ):
+    def start( self, flag=DISP_LOAD ):
         """Starts our child process off properly, used after a restart typically.
            
+           :param DISP_LOAD flag: A custom flag to change the display color of the child, if desired.
            :return: None
         """
-        # Move our run number up since we are starting
-        self.run = str( int( self.run ) + 1 )
-
-        # Log directory, now just our top level folder.
-        self.log = self.baselog
+        # Not stopped anymore
+        self.status( STARTING )
 
         # Create our path
         if not os.path.isdir( self.log ):
@@ -285,45 +316,66 @@ class Child:
         # Open our handle
         self.lh = open( os.path.join( self.log, ''.join( [ 'log-', str( self.num + 1 ), '.txt' ] ) ), 'a+' )
 
-        # Our process        
+        # Show loading
+        self.display( flag )
+
+        # Our process 
         self.proc = Process( target=self.think, args=( ) )
-        self.msg( "LOADING" )
         self.proc.start( )
 
 
 
-    def restart( self, msg="restarting" ):
+    def restart( self, msg="restarting", flag=None ):
         """Restarts the child process and gets webdriver running again.
 
            :param "RESTARTING" msg: A message to print out in parenenthesis.
+           :param None flag: A custom flag to change the display color of the child, if desired.
+
            :return: None
         """
-        self.stop( msg )
-        self.start( )
+        if flag is not None:
+            self.stop( msg, flag )
+            self.start( flag )
+        else:
+            self.stop( msg )
+            self.start( )
 
 
 
-    def stop( self, msg="" ):
+    def stop( self, msg="", flag=FINISHED, disp_flag=DISP_DONE ):
         """Stops a child process properly and sets its self.proc to None. Optionally takes a message
            to print out.
         
            :param "" msg: A message to show in parenthesis on the console next to ``Child #: STOPPING (msg)``.
+           :param FINISHED flag: A custom status flag for if the child is finished, paused, stopped, or whatever is desired.
+           :param DISP_DONE disp_flag: A custom display flag for the status of the child after stopping.
+
            :return: None
         """
         if self.proc == None:
             return
 
+        # Prevent the pool from trying to restart us
+        self.status( flag )
+
         if msg != "":
             self.logMsg( ''.join( [ "Stopping child process: \"", msg, "\"" ] ) )
-            self.msg( ''.join( [ "STOPPING (", msg, ")" ] ) )
         else:
             self.logMsg( "Stopping child process" )
-            self.msg( "STOPPING" )
 
-        self.proc.terminate( )
-        self.proc.join( )
-        self.proc = None
+        # Kill our process
+        if self.proc != None:
+            if os.name != "posix":
+                subprocess.call( [ 'taskkill', '/F', '/T', '/PID', str( self.proc.pid ) ], stdout=open( os.devnull, 'wb' ), stderr=open( os.devnull, 'wb' ) )
+            else:
+                subprocess.call( [ 'pkill', '-TERM', '-P', str( self.proc.pid ) ], stdout=open( os.devnull, 'wb' ), stderr=open( os.devnull, 'wb' ) )
+            self.proc.join( )
+            self.proc = None
 
+        # Inform the TUI that we're done.
+        self.display( disp_flag )
+
+        # Close our log
         self.lh.close( )
 
 

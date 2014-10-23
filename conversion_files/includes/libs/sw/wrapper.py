@@ -1,5 +1,7 @@
-from sw.pool import *
-import sys, time
+from sw.pool import Pool
+from sw.ui import Ui
+from sw.initialsettings import InitialSettings
+import sys, time, curses
 
 
 def main( func, file, **kwargs ):
@@ -10,41 +12,31 @@ def main( func, file, **kwargs ):
         :param file: Usually __file__, the name of a script in the directory that log/ will be in.
         :returns: None
     """
-    print( "\nLibraries loaded!\n\n" )
-    numTimes = 1
-    children = 3 
-    images = False
-    staggered = False
+    # Get options and defaults 
+    curses.wrapper( InitialSettings, kwargs )
 
-    if len( sys.argv ) > 1:
-        numTimes = int( sys.argv[1] )
-    if len( sys.argv ) > 2:
-        children = int( sys.argv[2] )
-    if len( sys.argv ) > 3:
-        if sys.argv[3] == "y":
-            staggered = True
-     
-    print( "\n" + ( "=" * 40 ) )
+    pool = Pool( func, file, kwargs )
 
-    kwargs['staggered'] = staggered
-
-    pool = Pool( children, numTimes, func, file, kwargs )
-
-    mainLoop( pool )
-
-    pool.reportStatistics( True )
+    curses.wrapper( mainLoop, pool )
 
     pool.stop( )
 
 
 
-def mainLoop( pool ):
+def mainLoop( stdscr, pool ):
     """Takes the pool created previously and just loops around it. Currently it just calls the pool's
         think function repeatedly.
 
+        :param stdscr: Our screen from curses.
         :param pool: Our created child pool in :func:`main`.
         :returns: None
     """
-    while not pool.done( ):
+
+    pool.ui = Ui( stdscr, pool )
+
+    pool.ui.drawMainScreen( True )
+
+    while True:
         pool.think( )
-        time.sleep( 0.1 )
+        pool.ui.think( )
+        pool.ui.sleep( 0.1 )
