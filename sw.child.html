@@ -73,7 +73,7 @@ when it finishes a job / starts initially.</li>
 <li><strong>num</strong> &#8211; Number of the child relevant to <a class="reference internal" href="sw.pool.html#module-sw.pool" title="sw.pool"><tt class="xref py py-class docutils literal"><span class="pre">sw.pool</span></tt></a>&#8216;s self.data array. This index is used to 
 easily communicate results and relate them to the child in that array. <cite>num</cite> is also used when printing
 out a status message.</li>
-<li><strong>log</strong> &#8211; Base log directory which a child will create a <cite>num</cite>-<cite>self.run</cite> folder in to log to.</li>
+<li><strong>log</strong> &#8211; Base log directory which we spit logs and screenshots into.</li>
 <li><strong>options</strong> &#8211; Dict from kwargs which contains directives to pass to GhostDriver.</li>
 </ul>
 </td>
@@ -84,6 +84,22 @@ out a status message.</li>
 </tbody>
 </table>
 <dl class="method">
+<dt id="sw.child.Child.display">
+<tt class="descname">display</tt><big>(</big><em>t</em><big>)</big><a class="reference internal" href="_modules/sw/child.html#Child.display"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.child.Child.display" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sends a display message to the main loop, which is then translated to the UI.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>t</strong> &#8211; The status this child will now show, a constant starting with <a href="#id1"><span class="problematic" id="id2">DISP_</span></a> in const.py.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="sw.child.Child.is_alive">
 <tt class="descname">is_alive</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sw/child.html#Child.is_alive"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.child.Child.is_alive" title="Permalink to this definition">¶</a></dt>
 <dd><p>Checks if the child&#8217;s process is still running, if it is then it returns True, otherwise False.
@@ -93,20 +109,6 @@ There&#8217;s a check for if the process is None, which is set when a child term
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Boolean for if Child process is still active (different from if a child is processing data).</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="sw.child.Child.is_done">
-<tt class="descname">is_done</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sw/child.html#Child.is_done"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.child.Child.is_done" title="Permalink to this definition">¶</a></dt>
-<dd><p>Check if a child is done. When a child process is finished its self.proc is set to None.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Boolean for if Child is finished processing data. This is usually signal to kill the subprocess.</td>
 </tr>
 </tbody>
 </table>
@@ -164,32 +166,21 @@ it is not printed. If it is, the message is printed into log.txt with the level 
 </dd></dl>
 
 <dl class="method">
-<dt id="sw.child.Child.msg">
-<tt class="descname">msg</tt><big>(</big><em>message</em><big>)</big><a class="reference internal" href="_modules/sw/child.html#Child.msg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.child.Child.msg" title="Permalink to this definition">¶</a></dt>
-<dd><p>Formats a message for this child to be printed out.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>msg</strong> &#8211; The message to be printed out to the console.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">None</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
 <dt id="sw.child.Child.restart">
-<tt class="descname">restart</tt><big>(</big><em>msg='restarting'</em><big>)</big><a class="reference internal" href="_modules/sw/child.html#Child.restart"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.child.Child.restart" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">restart</tt><big>(</big><em>msg='restarting'</em>, <em>flag=None</em><big>)</big><a class="reference internal" href="_modules/sw/child.html#Child.restart"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.child.Child.restart" title="Permalink to this definition">¶</a></dt>
 <dd><p>Restarts the child process and gets webdriver running again.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>msg</strong> (<em>&#8220;RESTARTING&#8221;</em>) &#8211; A message to print out in parenenthesis.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>msg</strong> (<em>&#8220;RESTARTING&#8221;</em>) &#8211; A message to print out in parenenthesis.</li>
+<li><strong>flag</strong> (<em>None</em>) &#8211; A custom flag to change the display color of the child, if desired.</li>
+</ul>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
 </tr>
 </tbody>
 </table>
@@ -198,7 +189,7 @@ it is not printed. If it is, the message is printed into log.txt with the level 
 <dl class="method">
 <dt id="sw.child.Child.screenshot">
 <tt class="descname">screenshot</tt><big>(</big><em>level=0</em><big>)</big><a class="reference internal" href="_modules/sw/child.html#Child.screenshot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.child.Child.screenshot" title="Permalink to this definition">¶</a></dt>
-<dd><p>Saves a screenshot to <cite>num</cite>-<cite>run</cite>/error_#.png and prints a message into the log specifying the file logged to.</p>
+<dd><p>Saves a screenshot to error_#.png and prints a message into the log specifying the file logged to.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -215,13 +206,35 @@ it is not printed. If it is, the message is printed into log.txt with the level 
 
 <dl class="method">
 <dt id="sw.child.Child.start">
-<tt class="descname">start</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sw/child.html#Child.start"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.child.Child.start" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">start</tt><big>(</big><em>flag=1</em><big>)</big><a class="reference internal" href="_modules/sw/child.html#Child.start"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.child.Child.start" title="Permalink to this definition">¶</a></dt>
 <dd><p>Starts our child process off properly, used after a restart typically.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>flag</strong> (<em>DISP_LOAD</em>) &#8211; A custom flag to change the display color of the child, if desired.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sw.child.Child.status">
+<tt class="descname">status</tt><big>(</big><em>type=None</em><big>)</big><a class="reference internal" href="_modules/sw/child.html#Child.status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.child.Child.status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Uses a multiprocess-safe variable to transmit our status upstream. These values are listed under
+universal status types in const.py. The status types allow better logging and, for example, prevent
+children that were already terminated from being terminated again (and throwing an exception).</p>
+<p>When called with a type it will set this child&#8217;s status on both the main process and the child&#8217;s 
+process. When called without it, it reads from the status variable.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>type</strong> (<em>None</em>) &#8211; The new value of our status.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">If type isn&#8217;t specified, our status. If it is, it sets our type and returns None.</td>
 </tr>
 </tbody>
 </table>
@@ -229,16 +242,22 @@ it is not printed. If it is, the message is printed into log.txt with the level 
 
 <dl class="method">
 <dt id="sw.child.Child.stop">
-<tt class="descname">stop</tt><big>(</big><em>msg=''</em><big>)</big><a class="reference internal" href="_modules/sw/child.html#Child.stop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.child.Child.stop" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">stop</tt><big>(</big><em>msg=''</em>, <em>flag=4</em>, <em>disp_flag=6</em><big>)</big><a class="reference internal" href="_modules/sw/child.html#Child.stop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.child.Child.stop" title="Permalink to this definition">¶</a></dt>
 <dd><p>Stops a child process properly and sets its self.proc to None. Optionally takes a message
 to print out.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>msg</strong> (<em>&#8220;&#8221;</em>) &#8211; A message to show in parenthesis on the console next to <tt class="docutils literal"><span class="pre">Child</span> <span class="pre">#:</span> <span class="pre">STOPPING</span> <span class="pre">(msg)</span></tt>.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>msg</strong> (<em>&#8220;&#8221;</em>) &#8211; A message to show in parenthesis on the console next to <tt class="docutils literal"><span class="pre">Child</span> <span class="pre">#:</span> <span class="pre">STOPPING</span> <span class="pre">(msg)</span></tt>.</li>
+<li><strong>flag</strong> (<em>FINISHED</em>) &#8211; A custom status flag for if the child is finished, paused, stopped, or whatever is desired.</li>
+<li><strong>disp_flag</strong> (<em>DISP_DONE</em>) &#8211; A custom display flag for the status of the child after stopping.</li>
+</ul>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
 </tr>
 </tbody>
 </table>

@@ -48,6 +48,7 @@
             
   <h1>Source code for sw.utils</h1><div class="highlight"><pre>
 <span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">time</span><span class="o">,</span> <span class="nn">traceback</span>
+<span class="kn">from</span> <span class="nn">selenium.common.exceptions</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="kn">from</span> <span class="nn">const</span> <span class="kn">import</span> <span class="o">*</span>
 
 
@@ -66,41 +67,6 @@
 <span class="s">        script.type = &#39;text/javascript&#39;; </span><span class="se">\</span>
 <span class="s">        script.src = &#39;&quot;</span> <span class="o">+</span> <span class="n">js</span> <span class="o">+</span> <span class="s">&quot;&#39;; </span><span class="se">\</span>
 <span class="s">        document.getElementsByTagName(&#39;head&#39;)[0].appendChild( script );&quot;</span> <span class="p">)</span>
-
-
-</div>
-<div class="viewcode-block" id="jQCheck"><a class="viewcode-back" href="../../sw.utils.html#sw.utils.jQCheck">[docs]</a><span class="k">def</span> <span class="nf">jQCheck</span><span class="p">(</span> <span class="n">driver</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">1</span> <span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;This function takes our webdriver object in and checks if the current loaded page has jQuery on it.</span>
-<span class="sd">       If it doesn&#39;t, it tries to load it. It will pause the script for up to `timeout` seconds after loading,</span>
-<span class="sd">       after that it just returns False so that the exists script will stop holding things up.</span>
-
-<span class="sd">       .. deprecated:: 0.1 </span>
-<span class="sd">          JavaScript is no longer used to check for elements before running webdriver checks.</span>
-
-<span class="sd">       :Parameters:</span>
-<span class="sd">         * :ref:`driver &lt;common-params&gt;`</span>
-<span class="sd">         * **timeout** (*1*) -- How long to wait for jQuery to load before continuing on. </span>
-<span class="sd">       :return: Boolean, True if jQuery is loaded False if it did not load.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="n">jqCheck</span> <span class="o">=</span> <span class="s">&quot;return typeof jQuery != &#39;undefined&#39;&quot;</span>          <span class="c"># Some StackOverflow post recommended this bit of code</span>
-    <span class="n">loadScript</span><span class="p">(</span> <span class="n">driver</span><span class="p">,</span> <span class="s">&quot;http://code.jquery.com/jquery-2.1.1.min.js&quot;</span> <span class="p">)</span>
-
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">bool</span><span class="p">(</span> <span class="n">driver</span><span class="o">.</span><span class="n">execute_script</span><span class="p">(</span> <span class="n">jqCheck</span> <span class="p">)</span> <span class="p">):</span>         <span class="c">#FIXME: Add a check that makes sure we haven&#39;t held up</span>
-        <span class="n">driver</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&quot;jQuery not loaded into browser, inserting manually.&quot;</span><span class="p">,</span> <span class="n">INFO</span> <span class="p">)</span>
-        <span class="n">loadScript</span><span class="p">(</span> <span class="n">driver</span><span class="p">,</span> <span class="n">jq</span> <span class="p">)</span>
-
-        <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">)</span>
-        <span class="k">while</span> <span class="ow">not</span> <span class="nb">bool</span><span class="p">(</span> <span class="n">driver</span><span class="o">.</span><span class="n">execute_script</span><span class="p">(</span> <span class="n">jqCheck</span> <span class="p">)</span> <span class="p">)</span> <span class="ow">and</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">)</span> <span class="o">-</span> <span class="n">start</span> <span class="o">&lt;</span> <span class="n">timeout</span><span class="p">:</span>
-            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span> <span class="n">driver</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">sleepTime</span> <span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">bool</span><span class="p">(</span> <span class="n">driver</span><span class="o">.</span><span class="n">execute_script</span><span class="p">(</span> <span class="n">jqCheck</span> <span class="p">)</span> <span class="p">):</span>
-            <span class="n">driver</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;jQuery failed to load into browser after &quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span> <span class="n">timeout</span> <span class="p">),</span> <span class="s">&quot;s.&quot;</span> <span class="p">]</span> <span class="p">),</span> <span class="n">WARNING</span>  <span class="p">)</span>
-            <span class="k">return</span> <span class="bp">False</span>                              <span class="c"># False, jQuery isn&#39;t loaded</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">driver</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;jQuery loaded into browser successfully after &quot;</span><span class="p">,</span> <span class="n">format</span><span class="p">(</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">)</span> <span class="o">-</span> <span class="n">start</span> <span class="p">),</span> <span class="s">&quot;s.&quot;</span> <span class="p">]</span> <span class="p">),</span> <span class="n">INFO</span> <span class="p">)</span>
-            <span class="k">return</span> <span class="bp">True</span>                               <span class="c"># True, it is</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">True</span>
 
 
 </div>
@@ -172,13 +138,15 @@
 <span class="sd">         * :ref:`lightConfirm &lt;common-params&gt;`</span>
 <span class="sd">       :return: Boolean if doesn&#39;t exist, :py:class:`~selenium.webdriver.remote.webelement.WebElement` if it does.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">)</span>
+    <span class="n">start</span>        <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">)</span>
     <span class="n">timeout</span>      <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&#39;timeout&#39;</span><span class="p">,</span> <span class="mi">15</span> <span class="p">)</span>
     <span class="n">lightConfirm</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&#39;lightConfirm&#39;</span><span class="p">,</span> <span class="bp">False</span> <span class="p">)</span>
     <span class="n">cache</span>        <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&#39;cache&#39;</span><span class="p">,</span> <span class="bp">True</span> <span class="p">)</span>
     <span class="n">url</span>          <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&#39;url&#39;</span><span class="p">,</span> <span class="n">driver</span><span class="o">.</span><span class="n">current_url</span> <span class="p">)</span>
     <span class="n">die</span>          <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&#39;die&#39;</span><span class="p">,</span> <span class="bp">True</span> <span class="p">)</span>
     <span class="n">thinkTime</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&#39;thinkTime&#39;</span><span class="p">,</span> <span class="n">driver</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">sleepTime</span> <span class="p">)</span>
+
+    <span class="n">driver</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">display</span><span class="p">(</span> <span class="n">DISP_WAIT</span> <span class="p">)</span>
     
     <span class="n">e</span> <span class="o">=</span> <span class="n">exists</span><span class="p">(</span> <span class="n">driver</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="n">cache</span><span class="p">,</span> <span class="n">lightConfirm</span><span class="o">=</span><span class="n">lightConfirm</span> <span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">e</span><span class="p">:</span>
@@ -191,16 +159,19 @@
 
             <span class="n">e</span> <span class="o">=</span> <span class="n">exists</span><span class="p">(</span> <span class="n">driver</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="n">cache</span><span class="p">,</span> <span class="n">lightConfirm</span><span class="o">=</span><span class="n">lightConfirm</span> <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
+            <span class="n">driver</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">display</span><span class="p">(</span> <span class="n">DISP_GOOD</span> <span class="p">)</span> 
             <span class="k">return</span> <span class="n">e</span> 
     <span class="k">else</span><span class="p">:</span>
+        <span class="n">driver</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">display</span><span class="p">(</span> <span class="n">DISP_GOOD</span> <span class="p">)</span>
         <span class="k">return</span> <span class="n">e</span>
 
+    <span class="n">driver</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Element will not be found on page </span><span class="se">\&quot;</span><span class="s">&quot;</span><span class="p">,</span> 
+        <span class="n">driver</span><span class="o">.</span><span class="n">current_url</span><span class="p">,</span> <span class="s">&quot;</span><span class="se">\&quot;</span><span class="s">.&quot;</span> <span class="p">]</span> <span class="p">),</span> <span class="n">CRITICAL</span><span class="p">,</span> <span class="nb">locals</span><span class="o">=</span><span class="nb">locals</span><span class="p">(</span> <span class="p">)</span> <span class="p">)</span>
+
     <span class="k">if</span> <span class="n">die</span><span class="p">:</span>
-        <span class="n">driver</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Element will not be found on page </span><span class="se">\&quot;</span><span class="s">&quot;</span><span class="p">,</span> 
-            <span class="n">driver</span><span class="o">.</span><span class="n">current_url</span><span class="p">,</span> <span class="s">&quot;</span><span class="se">\&quot;</span><span class="s">.&quot;</span> <span class="p">]</span> <span class="p">),</span> <span class="n">ERROR</span><span class="p">,</span> <span class="nb">locals</span><span class="o">=</span><span class="nb">locals</span><span class="p">(</span> <span class="p">)</span> <span class="p">)</span>
-        <span class="n">driver</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">restart</span><span class="p">(</span> <span class="s">&quot;element missing&quot;</span> <span class="p">)</span>
+        <span class="n">driver</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&quot;Child will now terminate.&quot;</span><span class="p">,</span> <span class="n">CRITICAL</span><span class="p">,</span> <span class="nb">locals</span><span class="o">=</span><span class="nb">locals</span><span class="p">(</span> <span class="p">)</span> <span class="p">)</span>
+        <span class="k">raise</span> <span class="n">TimeoutException</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span>  <span class="s">&quot;Element &quot;</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="s">&quot; not found within timeout &quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">timeout</span><span class="p">),</span> <span class="s">&quot;s.&quot;</span> <span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
         <span class="c"># Wait to be killed</span>
-        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span> <span class="mi">10</span> <span class="p">)</span>
     <span class="k">return</span> <span class="bp">False</span>
 
 
@@ -277,6 +248,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">recur</span><span class="p">:</span>
                 <span class="n">driver</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Waiting for </span><span class="se">\&quot;</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="s">&quot;</span><span class="se">\&quot;</span><span class="s">.&quot;</span> <span class="p">]</span> <span class="p">),</span> <span class="n">INFO</span> <span class="p">)</span>
+            <span class="n">driver</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">display</span><span class="p">(</span> <span class="n">STATI_WAIT</span> <span class="p">)</span>
             <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span> <span class="n">thinkTime</span> <span class="p">)</span>
 
         <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;die&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">die</span>
@@ -287,9 +259,8 @@
                 <span class="n">driver</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Element did not disappear within &quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span> <span class="n">timeout</span> <span class="p">),</span> <span class="s">&quot;s, timed out.&quot;</span> <span class="p">]</span> <span class="p">),</span> 
                         <span class="n">CRITICAL</span><span class="p">,</span> <span class="nb">locals</span><span class="o">=</span><span class="nb">locals</span><span class="p">(</span> <span class="p">)</span> <span class="p">)</span>
                 <span class="k">if</span> <span class="n">die</span><span class="p">:</span>
-                    <span class="n">driver</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">restart</span><span class="p">(</span> <span class="s">&quot;timed out&quot;</span> <span class="p">)</span>
-                    <span class="c"># Wait to be killed</span>
-                    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span> <span class="mi">10</span> <span class="p">)</span>
+                    <span class="n">driver</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&quot;Child will now terminate.&quot;</span><span class="p">,</span> <span class="n">CRITICAL</span><span class="p">,</span> <span class="nb">locals</span><span class="o">=</span><span class="nb">locals</span><span class="p">(</span> <span class="p">)</span> <span class="p">)</span>
+                    <span class="k">raise</span> <span class="n">TimeoutException</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Element &quot;</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="s">&quot; didn&#39;t disappear within timeout&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">timeout</span><span class="p">),</span> <span class="s">&quot;s.&quot;</span> <span class="p">]</span> <span class="p">)</span> <span class="p">)</span> 
 
                 <span class="k">break</span> <span class="c">#this skips the else</span>
             <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span> <span class="n">thinkTime</span> <span class="p">)</span>
@@ -306,6 +277,7 @@
 
                         <span class="n">waitToDisappear</span><span class="p">(</span> <span class="n">driver</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span> <span class="p">)</span>
                     <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span> <span class="n">thinkTime</span> <span class="p">)</span>
+        <span class="n">driver</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">display</span><span class="p">(</span> <span class="n">DISP_GOOD</span> <span class="p">)</span>
 
 
 </div>

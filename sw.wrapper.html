@@ -80,16 +80,21 @@ line and then starts and manages our pool.</p>
 
 <dl class="function">
 <dt id="sw.wrapper.mainLoop">
-<tt class="descclassname">sw.wrapper.</tt><tt class="descname">mainLoop</tt><big>(</big><em>pool</em><big>)</big><a class="reference internal" href="_modules/sw/wrapper.html#mainLoop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.wrapper.mainLoop" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">sw.wrapper.</tt><tt class="descname">mainLoop</tt><big>(</big><em>stdscr</em>, <em>pool</em><big>)</big><a class="reference internal" href="_modules/sw/wrapper.html#mainLoop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.wrapper.mainLoop" title="Permalink to this definition">¶</a></dt>
 <dd><p>Takes the pool created previously and just loops around it. Currently it just calls the pool&#8217;s
 think function repeatedly.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pool</strong> &#8211; Our created child pool in <a class="reference internal" href="#sw.wrapper.main" title="sw.wrapper.main"><tt class="xref py py-func docutils literal"><span class="pre">main()</span></tt></a>.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stdscr</strong> &#8211; Our screen from curses.</li>
+<li><strong>pool</strong> &#8211; Our created child pool in <a class="reference internal" href="#sw.wrapper.main" title="sw.wrapper.main"><tt class="xref py py-func docutils literal"><span class="pre">main()</span></tt></a>.</li>
+</ul>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
 </tr>
 </tbody>
 </table>

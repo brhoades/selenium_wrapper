@@ -27,6 +27,9 @@ Module Reference
    sw.cache
    sw.utils
    sw.formatting
+   sw.ui
+   sw.report
+   sw.initialsettings
 
 
 ******************

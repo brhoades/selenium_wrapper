@@ -1,12 +1,12 @@
 ================================
-Child Module :mod:`sw.child` 
+UI Module :mod:`sw.ui` 
 ================================
 
 *******
 Classes
 *******
 
-.. automodule:: sw.child
+.. automodule:: sw.ui
    :members:
    :undoc-members:
    :show-inheritance:

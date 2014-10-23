@@ -82,8 +82,9 @@ the repository:</p>
 </div>
 <div class="section" id="converter-setup">
 <h3>Converter Setup<a class="headerlink" href="#converter-setup" title="Permalink to this headline">¶</a></h3>
-<p>Install <a class="reference external" href="http://www.activestate.com/activetcl/downloads">ActiveTCL</a>. After installing,
-navigate to the directory cloned into and run:</p>
+<p>Install <a class="reference external" href="https://www.ruby-lang.org/en/">Ruby</a> and then the appropriate
+<a class="reference external" href="http://www.activestate.com/activetcl/downloads">ActiveTCL</a> library for your version.
+After installing, navigate to the directory cloned into and run:</p>
 <div class="highlight-python"><div class="highlight"><pre>bundle install
 </pre></div>
 </div>
@@ -91,24 +92,38 @@ navigate to the directory cloned into and run:</p>
 </div>
 <div class="section" id="wrapper-setup">
 <h3>Wrapper Setup<a class="headerlink" href="#wrapper-setup" title="Permalink to this headline">¶</a></h3>
-<p>Prepare a python installation for the converter program. Python 2.7.7 is the supported
-Python version. Create a folder named <tt class="docutils literal"><span class="pre">python277</span></tt> in <tt class="docutils literal"><span class="pre">conversion_files/</span></tt>. Now
-<a class="reference external" href="https://www.python.org/download/releases/2.7.7/">install Python</a> for the correct platform.</p>
-<p>On Windows, perform an
-<a class="reference external" href="http://technet.microsoft.com/en-us/library/cc759262(v=ws.10).aspx">administrative installation</a>
-of Python. Target the folder created above and finish the installation.</p>
-<p>Use pip to install <a class="reference external" href="https://pypi.python.org/pypi/selenium">Selenium</a> for Python into the local
-directory. Alternatively, manually download and install
-<a class="reference external" href="https://pypi.python.org/pypi/selenium">the module</a> locally into the Python libraries:</p>
+<p>Prepare a python installation for the converter program. Python 2.7.8 is the supported
+Python version. Now <a class="reference external" href="https://www.python.org/download/releases/2.7.8/">install Python</a>
+for the correct platform.</p>
+<p>Use <a class="reference external" href="https://pip.pypa.io/en/latest/installing.html">pip</a> to install
+<a class="reference external" href="https://pypi.python.org/pypi/selenium">Selenium</a>:</p>
 <div class="highlight-python"><div class="highlight"><pre>pip install selenium
 </pre></div>
 </div>
-<p>Also install the latest version of <a class="reference external" href="http://phantomjs.org/download.html">PhantomJS</a> and put it
-(in its folder) in the previously created <tt class="docutils literal"><span class="pre">conversion_files/python277</span></tt> folder. The folder
-path may need to be updated in <tt class="docutils literal"><span class="pre">conversion_files/run.bat</span></tt> if it is not 1.9.7.</p>
+<p>Also install the latest version of <a class="reference external" href="http://phantomjs.org/download.html">PhantomJS</a> for your
+platform.</p>
+<p>Currently a distributed setup where a separate install of Python is shipped with each script
+is only possible for Windows. For other operating systems, there will need to be a system wide
+installation on every machine participating. For these other operating systems ensure that the
+&#8220;Python&#8221; option is unchecked on the converter.</p>
+<div class="section" id="windows-setup">
+<h4>Windows Setup<a class="headerlink" href="#windows-setup" title="Permalink to this headline">¶</a></h4>
+<p>Perform an installation of <a class="reference external" href="https://www.python.org/download/releases/2.7.8/">Python</a>
+into the default folder. The fewer modules that are included, the better.
+Excluding lib-tk, documentation, and testing suites will streamline things.
+This folder will later be copied to the correct spot.</p>
+<p>Install <a class="reference external" href="https://pip.pypa.io/en/latest/installing.html">pip</a> into your Python installation
+and now install the module for <a class="reference external" href="https://pypi.python.org/pypi/selenium">Selenium</a>:</p>
+<div class="highlight-python"><div class="highlight"><pre>pip install selenium
+</pre></div>
+</div>
+<p>Now install the <a class="reference external" href="http://www.lfd.uci.edu/~gohlke/pythonlibs/#curses">curses extension package</a>.</p>
+<p>Afterwards copy/move the Python folder that was just created to <tt class="docutils literal"><span class="pre">conversion_utils/python27</span></tt>.
+Extract the <tt class="docutils literal"><span class="pre">phantomjs-release.zip</span></tt> for Windows into the Python folder as well.</p>
 <p>Now run the conversion program:</p>
 <div class="highlight-python"><div class="highlight"><pre>ruby main.rb
 </pre></div>
+</div>
 </div>
 </div>
 <div class="section" id="converter-distribution">
@@ -314,14 +329,14 @@ are within a timestamped folder in <tt class="docutils literal"><span class="pre
 <tt class="docutils literal"><span class="pre">logs/&lt;timestamp&gt;/log-#.log</span></tt>, where the number is the child&#8217;s number printed to the console. This
 log will contain detailed information about errors, time taken, and the status of the script. Logging
 level is not currently easily configurable, but can be seen in <tt class="docutils literal"><span class="pre">conversion_files/includes/libs/sw/child.py</span></tt>:</p>
-<div class="highlight-python"><div class="highlight"><pre>        <span class="c"># Our log handle</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">lh</span> <span class="o">=</span> <span class="s">&quot;&quot;</span> 
+<div class="highlight-python"><div class="highlight"><pre>        <span class="c"># Logging level</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&#39;level&#39;</span><span class="p">,</span> <span class="n">NOTICE</span> <span class="p">)</span>
 
-        <span class="c"># Logging level</span>
-<span class="hll">        <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">=</span> <span class="n">INFO</span> 
+        <span class="c"># Storage for our function we get</span>
+<span class="hll">        <span class="bp">self</span><span class="o">.</span><span class="n">func</span>  <span class="o">=</span> <span class="bp">None</span>
 </span>
-        <span class="c"># Do we load images</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">options</span> <span class="o">=</span> <span class="n">options</span>
+        <span class="c"># How long we sleep in loops</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sleepTime</span> <span class="o">=</span> <span class="mi">1</span>
 </pre></div>
 </div>
 <p>There are several levels as seen in <tt class="docutils literal"><span class="pre">conversion_files/includes/libs/sw/const.py</span></tt>:</p>
@@ -330,12 +345,10 @@ level is not currently easily configurable, but can be seen in <tt class="docuti
 <span class="c">#   Error log levels are used to mark a message as a certain category, then output it if that level</span>
 <span class="c">#   of detail is requested.</span>
 <span class="n">INFO</span>           <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+<span class="n">DEBUG</span>          <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
 <span class="n">NOTICE</span>         <span class="o">=</span> <span class="mi">0</span>
 <span class="n">WARNING</span>        <span class="o">=</span> <span class="mi">1</span>
 <span class="n">ERR</span>            <span class="o">=</span> <span class="mi">2</span>
-<span class="n">CRITICAL</span>       <span class="o">=</span> <span class="mi">3</span>
-<span class="n">NONE</span>           <span class="o">=</span> <span class="mi">5</span>
-<span class="c">####################################################################################################</span>
 </pre></div>
 </div>
 <p>With the lowest log level, <tt class="docutils literal"><span class="pre">INFO</span></tt>, this is an example of a log that is prepared:</p>
@@ -417,7 +430,10 @@ encountered:</p>
 <li><a class="reference internal" href="#project-outline">Project Outline</a></li>
 <li><a class="reference internal" href="#installation">Installation</a><ul>
 <li><a class="reference internal" href="#converter-setup">Converter Setup</a></li>
-<li><a class="reference internal" href="#wrapper-setup">Wrapper Setup</a></li>
+<li><a class="reference internal" href="#wrapper-setup">Wrapper Setup</a><ul>
+<li><a class="reference internal" href="#windows-setup">Windows Setup</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#converter-distribution">Converter Distribution</a></li>
 </ul>
 </li>

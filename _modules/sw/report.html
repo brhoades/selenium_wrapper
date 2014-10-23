@@ -1,0 +1,399 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sw.report &mdash; selenium_wrapper 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="selenium_wrapper 0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">selenium_wrapper 0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sw.report</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">json</span><span class="o">,</span> <span class="nn">requests</span><span class="o">,</span> <span class="nn">time</span><span class="o">,</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">getpass</span><span class="o">,</span> <span class="nn">socket</span><span class="o">,</span> <span class="nn">base64</span><span class="o">,</span> <span class="nn">traceback</span>
+<span class="kn">import</span> <span class="nn">Queue</span> <span class="kn">as</span> <span class="nn">Q</span>
+<span class="kn">from</span> <span class="nn">sw.const</span> <span class="kn">import</span> <span class="o">*</span> 
+
+<div class="viewcode-block" id="Report"><a class="viewcode-back" href="../../sw.report.html#sw.report.Report">[docs]</a><span class="k">class</span> <span class="nc">Report</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Report handles all the reporting events sent from the Pool, currently it exclusively sends these upstream to a</span>
+<span class="sd">       server which then does further handling. The events are sent from the pool via calls to this instance&#39;s functions</span>
+<span class="sd">       that in turn call :func:`send`.</span>
+
+<span class="sd">       Reporting can be disabled by excluding the report option from the kwargs of :func:`main`. This has the</span>
+<span class="sd">       same effect as not including the #report=&quot;url&quot; option within the options header of a script before conversion. This URL</span>
+<span class="sd">       should point to the included sinatra server in reporting/ like so: &quot;http://reporting-server.com:4567/report&quot;. </span>
+
+<span class="sd">       Other options include a id=&quot;&quot; option which allows you to specify a custom computer ID. Similarly, including run=&quot;&quot; allows</span>
+<span class="sd">       you to choose a specific run to join. Note that the run will be created if it doesn&#39;t already exist and will be used for </span>
+<span class="sd">       all subsequent script calls until removed.</span>
+
+<span class="sd">       :param pool: Reference to our owning pool. This is primarily to access pool.options and not used much elsewhere. </span>
+
+<span class="sd">       :return: Report (self)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">pool</span> <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pool</span> <span class="o">=</span> <span class="n">pool</span>
+
+        <span class="c"># This machine&#39;s identifier</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ID</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&#39;id&#39;</span><span class="p">,</span> <span class="bp">None</span> <span class="p">)</span>
+        
+        <span class="c"># The name for the current run, some sort of unique identifier</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">run</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&#39;run&#39;</span><span class="p">,</span> <span class="bp">None</span> <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">project</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&#39;project&#39;</span><span class="p">,</span> <span class="bp">None</span> <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">site</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&#39;report&#39;</span><span class="p">,</span> <span class="bp">None</span> <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">enabled</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">site</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">enabled</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="c"># Set these, these are initialized when we get a response from the server</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rid</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cid</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="c"># Set on an error transmitting</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nextSend</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">pingFreq</span> <span class="o">=</span> <span class="mi">60</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">tries</span> <span class="o">=</span> <span class="mi">5</span>
+
+        <span class="c"># Ping Frequency</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nextPing</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">pingFreq</span>
+
+        <span class="c"># Our queue of things to submit to our server</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">queue</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">Queue</span><span class="p">(</span> <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="n">__name__</span>
+
+        <span class="n">pool</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Reporting to URL: &quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">site</span> <span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+
+
+
+<div class="viewcode-block" id="Report.send"><a class="viewcode-back" href="../../sw.report.html#sw.report.Report.send">[docs]</a>    <span class="k">def</span> <span class="nf">send</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">payload</span><span class="p">,</span> <span class="nb">type</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Send enables a payload to be parsed and added into our local queue for transmission</span>
+<span class="sd">           reporting server, where applicable. It is called as a sort of wrapper function from all</span>
+<span class="sd">           of the individual reporting functions (such as :func:`endchild`) to facilitate</span>
+<span class="sd">           standard transmission of the data upstream.</span>
+
+<span class="sd">           Currently (to be fixed) it encodes repeat information in every single payload including</span>
+<span class="sd">           all identifying characteristics about the run, pool, and our id. There&#39;s major issue for this</span>
+<span class="sd">           except for further stressing network bandwidth and the JSON parser.</span>
+<span class="sd">            </span>
+<span class="sd">           :param payload: A hash of information to send upstream to our reporting server.</span>
+<span class="sd">           :param type: The R_* constant identifier for the type of payload included. </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c">#FIXME: Remove duplicate header information and just have a identifying header at the top of all</span>
+        <span class="c">#payloads.</span>
+           
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">enabled</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="c"># Encode identifying information and the time</span>
+        <span class="n">payload</span><span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">(</span> <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">project</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">payload</span><span class="p">[</span><span class="s">&#39;run&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="bp">self</span><span class="o">.</span><span class="n">project</span><span class="p">,</span> <span class="s">&#39;_&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">run</span> <span class="p">]</span> <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">payload</span><span class="p">[</span><span class="s">&#39;run&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run</span>
+        <span class="n">payload</span><span class="p">[</span><span class="s">&#39;func&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span>
+        <span class="n">payload</span><span class="p">[</span><span class="s">&#39;time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">)</span>
+        <span class="n">payload</span><span class="p">[</span><span class="s">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">type</span>
+
+        <span class="c"># Log payload</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&quot;Sending payload to queue: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span> <span class="n">payload</span> <span class="p">),</span> <span class="n">DEBUG</span> <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span> <span class="n">payload</span> <span class="p">)</span>
+
+
+
+    <span class="c"># Thinking</span></div>
+<div class="viewcode-block" id="Report.think"><a class="viewcode-back" href="../../sw.report.html#sw.report.Report.think">[docs]</a>    <span class="k">def</span> <span class="nf">think</span><span class="p">(</span> <span class="bp">self</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The think function called by our pool periodically. If enabled, it checks for the need to ping</span>
+<span class="sd">           (keepalive) or if the next payload is ready to send. This function also handles the transmission of</span>
+<span class="sd">           our payload.</span>
+
+<span class="sd">           If our report.queue has content in it, it prepares to send everything upstream. The payload is transmitted</span>
+<span class="sd">           in JSON with the following general format::</span>
+<span class="sd">             { </span>
+<span class="sd">                &quot;cid&quot; =&gt; #, // Our client ID assigned by the server, nil if we don&#39;t have one yet.</span>
+<span class="sd">                &quot;rid&quot; =&gt; #, // Our run ID assined by the server, ^</span>
+<span class="sd">                &quot;payload&quot; =&gt; </span>
+<span class="sd">                    [</span>
+<span class="sd">                        { </span>
+<span class="sd">                            &quot;type&quot; =&gt; R_START,    // For example, this is the type of payload here.</span>
+<span class="sd">                            &quot;time&quot; =&gt; UNIX_EPOCH, // Since sometimes the Queue has a delay in transmission, each</span>
+<span class="sd">                                                  // payload contains it own timestamp.</span>
+<span class="sd">                            // Some miscellaneous identifying information goes in here that&#39;s deprecated</span>
+<span class="sd">                            // and unused.</span>
+
+<span class="sd">                            // If the type involves a child:</span>
+<span class="sd">                            &quot;ChildID&quot; =&gt; #, // The index of our child in pool.children / pool.data</span>
+
+<span class="sd">                            // If the type involves a job:</span>
+<span class="sd">                            &quot;timetaken&quot; =&gt; UNIX_EPOCH //The time the job took to complete.</span>
+<span class="sd">                        },</span>
+<span class="sd">                        </span>
+<span class="sd">                        //{  another here },</span>
+<span class="sd">                        ...</span>
+<span class="sd">                    ]</span>
+
+<span class="sd">             }</span>
+
+<span class="sd">          The JSON above is arranged and then attempts to open a HTTP request to the provided server. If it fails,</span>
+<span class="sd">          it tries 5 more times every 5 seconds with a timeout of 1 second. It attemps to send the JSON up via post</span>
+<span class="sd">          and then waits for an HTTP 200 or similar before considering it a success. If R_START was included in the </span>
+<span class="sd">          payload, the server will respond with a cid and a rid for the client which it then stores internally for </span>
+<span class="sd">          future reports.</span>
+
+<span class="sd">          :returns: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">enabled</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="n">t</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">nextPing</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ping</span><span class="p">(</span> <span class="p">)</span> 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nextSend</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">t</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">nextSend</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">queue</span><span class="o">.</span><span class="n">qsize</span><span class="p">(</span> <span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="c"># We try to smash all of our data into a single array, which is then in</span>
+        <span class="c"># a hash. This way we can trasmit everything in one fell swoop.</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">[</span> <span class="p">]</span>
+
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">queue</span><span class="o">.</span><span class="n">qsize</span><span class="p">(</span> <span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">queue</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="bp">False</span> <span class="p">)</span>
+            <span class="k">except</span> <span class="n">Q</span><span class="o">.</span><span class="n">Empty</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">m</span> <span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span> <span class="n">data</span> <span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">payload</span> <span class="o">=</span> <span class="p">{</span> <span class="s">&quot;payload&quot;</span><span class="p">:</span> <span class="n">data</span> <span class="p">}</span>
+
+            <span class="c"># Preparing header for payload</span>
+            <span class="n">payload</span><span class="p">[</span><span class="s">&#39;cid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cid</span>
+            <span class="n">payload</span><span class="p">[</span><span class="s">&#39;rid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rid</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&#39;Sending&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span> <span class="nb">len</span><span class="p">(</span> <span class="n">data</span> <span class="p">)</span> <span class="p">),</span> <span class="s">&#39;payload(s) to server.&#39;</span> <span class="p">]</span> <span class="p">),</span> <span class="n">NOTICE</span> <span class="p">)</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span> <span class="n">payload</span> <span class="p">),</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;content-type&#39;</span><span class="p">:</span> <span class="s">&#39;application/json&#39;</span><span class="p">}</span> <span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&quot;Fatal error with reporting, probably failed to connect: &quot;</span><span class="p">,</span> <span class="n">CRITICAL</span> <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">(</span> <span class="p">),</span> <span class="n">CRITICAL</span> <span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tries</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">tries</span> <span class="o">-=</span> <span class="mi">1</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Disabling reporting after &quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">tries</span> <span class="p">),</span> <span class="s">&quot; more tries.&quot;</span> <span class="p">]</span> <span class="p">),</span> <span class="n">CRITICAL</span> <span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">nextSend</span> <span class="o">=</span> <span class="n">t</span> <span class="o">+</span> <span class="mi">5</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&quot;Disabling reporting.&quot;</span><span class="p">,</span> <span class="n">CRITICAL</span> <span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">enabled</span> <span class="o">=</span> <span class="bp">False</span>
+                    <span class="k">return</span>
+
+                <span class="c"># Put our data back in the send queue</span>
+                <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span> <span class="n">m</span> <span class="p">)</span>
+                <span class="k">return</span>
+
+            <span class="c"># There was a failure</span>
+            <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="n">requests</span><span class="o">.</span><span class="n">codes</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Payload failed to send with HTTP status code: &quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span> <span class="p">)</span> <span class="p">]</span> <span class="p">),</span> <span class="n">CRITICAL</span> <span class="p">)</span>
+                <span class="c"># Put our data back in the send queue</span>
+                <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span> <span class="n">m</span> <span class="p">)</span>
+                <span class="c"># Wait 5 seconds before we try again</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">nextSend</span> <span class="o">=</span> <span class="n">t</span> <span class="o">+</span> <span class="mi">5</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Sent payload successfully with status &quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span> <span class="p">)</span> <span class="p">]</span> <span class="p">)</span> <span class="p">,</span> <span class="n">INFO</span> <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Response from server: &quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span> <span class="n">r</span><span class="o">.</span><span class="n">text</span> <span class="p">)</span> <span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+        
+                <span class="n">response</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">(</span> <span class="p">)</span>
+
+                <span class="k">if</span> <span class="s">&#39;cid&#39;</span> <span class="ow">in</span> <span class="n">response</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">cid</span> <span class="o">=</span> <span class="n">response</span><span class="p">[</span><span class="s">&#39;cid&#39;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="s">&#39;rid&#39;</span> <span class="ow">in</span> <span class="n">response</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">rid</span> <span class="o">=</span> <span class="n">response</span><span class="p">[</span><span class="s">&#39;rid&#39;</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">tries</span> <span class="o">=</span> <span class="mi">5</span>
+
+
+
+    <span class="c"># Individual reporting functions</span>
+</div>
+<div class="viewcode-block" id="Report.start"><a class="viewcode-back" href="../../sw.report.html#sw.report.Report.start">[docs]</a>    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span> <span class="bp">self</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sends a start notification payload.</span>
+
+<span class="sd">           :returns: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span> <span class="p">{</span> <span class="p">},</span> <span class="n">R_START</span> <span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Report.stop"><a class="viewcode-back" href="../../sw.report.html#sw.report.Report.stop">[docs]</a>    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span> <span class="bp">self</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sends a stop notification payload.</span>
+<span class="sd">        </span>
+<span class="sd">           :returns: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span> <span class="p">{</span> <span class="p">},</span> <span class="n">R_STOP</span> <span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Report.jobStart"><a class="viewcode-back" href="../../sw.report.html#sw.report.Report.jobStart">[docs]</a>    <span class="k">def</span> <span class="nf">jobStart</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">child</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sends a job start notification payload.</span>
+<span class="sd">            </span>
+<span class="sd">           :param child: The index of the child reporting in pool.children/pool.data.</span>
+<span class="sd">           :returns: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span> <span class="p">{</span> <span class="s">&quot;childID&quot;</span><span class="p">:</span> <span class="n">child</span> <span class="p">},</span> <span class="n">R_JOB_START</span> <span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Report.jobFinish"><a class="viewcode-back" href="../../sw.report.html#sw.report.Report.jobFinish">[docs]</a>    <span class="k">def</span> <span class="nf">jobFinish</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">timetaken</span><span class="p">,</span> <span class="n">child</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sends a job finish notification payload.</span>
+
+<span class="sd">           :param timetaken: The time it took for the job to finish, recorded</span>
+<span class="sd">             internally.</span>
+<span class="sd">           :param child: The index of the child reporting in pool.children/pool.data.</span>
+<span class="sd">           :returns: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span> <span class="s">&#39;timetaken&#39;</span><span class="p">:</span> <span class="n">timetaken</span><span class="p">,</span> <span class="s">&#39;childID&#39;</span><span class="p">:</span> <span class="n">child</span> <span class="p">}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span> <span class="n">data</span><span class="p">,</span> <span class="n">R_JOB_COMPLETE</span> <span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Report.jobFail"><a class="viewcode-back" href="../../sw.report.html#sw.report.Report.jobFail">[docs]</a>    <span class="k">def</span> <span class="nf">jobFail</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">error</span><span class="p">,</span> <span class="n">child</span><span class="p">,</span> <span class="n">screenshot</span><span class="o">=</span><span class="bp">None</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sends a job failed notification payload.</span>
+
+<span class="sd">           :param error: The error text that was included with the error.</span>
+<span class="sd">           :param child: The index of the child reporting in pool.children/pool.data.</span>
+<span class="sd">           :param None screenshot: A image from selenium&#39;s screenshot to be encoded in base64 </span>
+<span class="sd">             for sending (optional).</span>
+<span class="sd">           :returns: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span> <span class="s">&#39;error&#39;</span><span class="p">:</span> <span class="n">error</span><span class="p">,</span> <span class="s">&#39;childID&#39;</span><span class="p">:</span> <span class="n">child</span> <span class="p">}</span>
+
+        <span class="k">if</span> <span class="n">screenshot</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span> <span class="n">screenshot</span><span class="p">,</span> <span class="s">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">img</span><span class="p">:</span>
+                <span class="n">data</span><span class="p">[</span><span class="s">&#39;screenshot&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64encode</span><span class="p">(</span> <span class="n">img</span><span class="o">.</span><span class="n">read</span><span class="p">(</span> <span class="p">)</span> <span class="p">)</span> 
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span> <span class="n">data</span><span class="p">,</span> <span class="n">R_JOB_FAIL</span> <span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Report.newChild"><a class="viewcode-back" href="../../sw.report.html#sw.report.Report.newChild">[docs]</a>    <span class="k">def</span> <span class="nf">newChild</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">child</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sends a new child notification payload. This is called even when a child</span>
+<span class="sd">           is restarted.</span>
+
+<span class="sd">           :param child: The index of the child reporting in self.children/pool.data.</span>
+<span class="sd">           :returns: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span> <span class="p">{</span> <span class="s">&#39;childID&#39;</span><span class="p">:</span> <span class="n">child</span> <span class="p">},</span> <span class="n">R_NEW_CHILD</span> <span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Report.endChild"><a class="viewcode-back" href="../../sw.report.html#sw.report.Report.endChild">[docs]</a>    <span class="k">def</span> <span class="nf">endChild</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">child</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sends a child process killed notification payload.</span>
+
+<span class="sd">           :param child: The index of the child reporting in self.children/pool.data.</span>
+<span class="sd">           :returns: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span> <span class="p">{</span> <span class="s">&#39;childID&#39;</span><span class="p">:</span> <span class="n">child</span> <span class="p">},</span> <span class="n">R_END_CHILD</span> <span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Report.ping"><a class="viewcode-back" href="../../sw.report.html#sw.report.Report.ping">[docs]</a>    <span class="k">def</span> <span class="nf">ping</span><span class="p">(</span> <span class="bp">self</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sends a keepalive notice to the server, effectively keeping this client and</span>
+<span class="sd">           its run from timing out.</span>
+
+<span class="sd">           :returns: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nextPing</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">pingFreq</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span> <span class="p">{</span> <span class="p">},</span> <span class="n">R_ALIVE</span> <span class="p">)</span>
+
+    <span class="c"># Generators</span></div>
+<div class="viewcode-block" id="Report.id"><a class="viewcode-back" href="../../sw.report.html#sw.report.Report.id">[docs]</a>    <span class="k">def</span> <span class="nf">id</span><span class="p">(</span> <span class="bp">self</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;If self.id was not already set by the user, it generates a deterministic ID </span>
+<span class="sd">           based on the user running the script and the machine&#39;s name.</span>
+
+<span class="sd">           :returns: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># If we have a prespecified id, use that</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">ID</span><span class="p">:</span>
+            <span class="c"># Generate one, user@machinename</span>
+            <span class="n">user</span> <span class="o">=</span> <span class="n">getpass</span><span class="o">.</span><span class="n">getuser</span><span class="p">(</span> <span class="p">)</span>
+            <span class="n">machine</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">gethostname</span><span class="p">(</span> <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ID</span> <span class="o">=</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="n">user</span><span class="p">,</span> <span class="s">&#39;@&#39;</span><span class="p">,</span> <span class="n">machine</span> <span class="p">]</span> <span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ID</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">selenium_wrapper 0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Billy Rhoades.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

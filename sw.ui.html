@@ -1,0 +1,316 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>UI Module sw.ui &mdash; selenium_wrapper 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="selenium_wrapper 0.1 documentation" href="index.html" />
+    <link rel="next" title="Reporting Module sw.report" href="sw.report.html" />
+    <link rel="prev" title="Formatting Module sw.formatting" href="sw.formatting.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="sw.report.html" title="Reporting Module sw.report"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="sw.formatting.html" title="Formatting Module sw.formatting"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">selenium_wrapper 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="ui-module-sw-ui">
+<h1>UI Module <a class="reference internal" href="#module-sw.ui" title="sw.ui"><tt class="xref py py-mod docutils literal"><span class="pre">sw.ui</span></tt></a><a class="headerlink" href="#ui-module-sw-ui" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-sw.ui">
+<span id="classes"></span><h2>Classes<a class="headerlink" href="#module-sw.ui" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sw.ui.Ui">
+<em class="property">class </em><tt class="descclassname">sw.ui.</tt><tt class="descname">Ui</tt><big>(</big><em>screen</em>, <em>pool</em><big>)</big><a class="reference internal" href="_modules/sw/ui.html#Ui"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.ui.Ui" title="Permalink to this definition">¶</a></dt>
+<dd><p>The UI class houses the curses instance which in turn enables all user-requested actions while displaying
+relevant information. Only one instance of UI should ever be initialized. Initialization handles all the color 
+constants generation along with defining all subwindows statically.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>screen</strong> &#8211; Used with the wrapping function provided by curses. This is a curses screen that has
+just been created.</li>
+<li><strong>pool</strong> &#8211; Reference to our owning pool. This pool will be monitored and displayed on the main status window.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">UI (self)</p>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="sw.ui.Ui.drawMainScreen">
+<tt class="descname">drawMainScreen</tt><big>(</big><em>first=False</em><big>)</big><a class="reference internal" href="_modules/sw/ui.html#Ui.drawMainScreen"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.ui.Ui.drawMainScreen" title="Permalink to this definition">¶</a></dt>
+<dd><p>Renders the initial screen and sets up options for curses. Draws
+the border around the screen and the separators for the various sections
+with the title.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>first</strong> (<em>False</em>) &#8211; Whether this is the call by the UI initialization.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sw.ui.Ui.handleCommandKeys">
+<tt class="descname">handleCommandKeys</tt><big>(</big><em>key</em><big>)</big><a class="reference internal" href="_modules/sw/ui.html#Ui.handleCommandKeys"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.ui.Ui.handleCommandKeys" title="Permalink to this definition">¶</a></dt>
+<dd><p>Part of our <a class="reference internal" href="#sw.ui.Ui.sleep" title="sw.ui.Ui.sleep"><tt class="xref py py-func docutils literal"><span class="pre">sleep()</span></tt></a> function which checks if any of our accepted keys
+are pressed. It handles the logic for interpreting presses while recording and
+discarding them. The render of keys in the bottom right of the screen is done by
+<a class="reference internal" href="#sw.ui.Ui.updateKeys" title="sw.ui.Ui.updateKeys"><tt class="xref py py-func docutils literal"><span class="pre">updateKeys()</span></tt></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>key</strong> &#8211; The key to process / store. If it&#8217;s +/-, the all recorded keys that are
+relevant are executed.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sw.ui.Ui.sleep">
+<tt class="descname">sleep</tt><big>(</big><em>amount</em><big>)</big><a class="reference internal" href="_modules/sw/ui.html#Ui.sleep"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.ui.Ui.sleep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles sleeping while listening for button presses. The hardcoded subsleep (0.01s)
+amount is an appropriate resolution that allows for seemingly instant button press responses
+without consuming an entire core (when constantly listening).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>amount</strong> &#8211; Float for amount of seconds to wait while listening to button presses.
+This is accurately followed to a resolution of 0.01s.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sw.ui.Ui.think">
+<tt class="descname">think</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sw/ui.html#Ui.think"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.ui.Ui.think" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calls several other functions which need to be checked constantly. Includes
+<a class="reference internal" href="#sw.ui.Ui.updateStats" title="sw.ui.Ui.updateStats"><tt class="xref py py-func docutils literal"><span class="pre">updateStats()</span></tt></a>, <a class="reference internal" href="#sw.ui.Ui.updateKeys" title="sw.ui.Ui.updateKeys"><tt class="xref py py-func docutils literal"><span class="pre">updateKeys()</span></tt></a>, and <a class="reference internal" href="#sw.ui.Ui.updateMain" title="sw.ui.Ui.updateMain"><tt class="xref py py-func docutils literal"><span class="pre">updateMain()</span></tt></a>. 
+The last one is called every time think is, while the other two are called every 
+self.nextUpdate seconds.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sw.ui.Ui.toggleKey">
+<tt class="descname">toggleKey</tt><big>(</big><em>key</em><big>)</big><a class="reference internal" href="_modules/sw/ui.html#Ui.toggleKey"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.ui.Ui.toggleKey" title="Permalink to this definition">¶</a></dt>
+<dd><p>Toggles a key display on the right hand side.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>key</strong> &#8211; A key that&#8217;s listed on the right hand pane to toggle to an alternate option.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sw.ui.Ui.updateKeys">
+<tt class="descname">updateKeys</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sw/ui.html#Ui.updateKeys"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.ui.Ui.updateKeys" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles rendering any relevant keys recorded from user input. It reads
+from self.keys to do this.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sw.ui.Ui.updateMain">
+<tt class="descname">updateMain</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sw/ui.html#Ui.updateMain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.ui.Ui.updateMain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prints out a number for each of our children with an appropriate color
+for each corresponding with the last status message they reported. Refreshes
+the screen when done.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sw.ui.Ui.updateStats">
+<tt class="descname">updateStats</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sw/ui.html#Ui.updateStats"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.ui.Ui.updateStats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates the statistics field within our window. Completely clears all of it initally
+then slowly goes through and reads from each individual pool value to rebuild it.
+This is called from <a class="reference internal" href="#sw.ui.Ui.think" title="sw.ui.Ui.think"><tt class="xref py py-func docutils literal"><span class="pre">think()</span></tt></a> and refreshes several times per second.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sw.ui.Ui.x">
+<tt class="descname">x</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sw/ui.html#Ui.x"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.ui.Ui.x" title="Permalink to this definition">¶</a></dt>
+<dd><p>Accessor for returning the x size of the curses screen.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Integer of the number of characters along the x axis of the screen.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sw.ui.Ui.y">
+<tt class="descname">y</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sw/ui.html#Ui.y"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.ui.Ui.y" title="Permalink to this definition">¶</a></dt>
+<dd><p>Accessor for returning the y size of the curses screen.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Integer of the number of characters along the y axis of the screen.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">UI Module <tt class="docutils literal"><span class="pre">sw.ui</span></tt></a><ul>
+<li><a class="reference internal" href="#module-sw.ui">Classes</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="sw.formatting.html"
+                        title="previous chapter">Formatting Module <tt class="docutils literal"><span class="pre">sw.formatting</span></tt></a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="sw.report.html"
+                        title="next chapter">Reporting Module <tt class="docutils literal"><span class="pre">sw.report</span></tt></a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/sw.ui.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="sw.report.html" title="Reporting Module sw.report"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="sw.formatting.html" title="Formatting Module sw.formatting"
+             >previous</a> |</li>
+        <li><a href="index.html">selenium_wrapper 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Billy Rhoades.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,420 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sw.initialsettings &mdash; selenium_wrapper 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="selenium_wrapper 0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">selenium_wrapper 0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sw.initialsettings</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">curses</span><span class="o">,</span> <span class="nn">curses.textpad</span><span class="o">,</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">urlparse</span><span class="o">,</span> <span class="nn">requests</span><span class="o">,</span> <span class="nn">json</span>
+
+<div class="viewcode-block" id="InitialSettings"><a class="viewcode-back" href="../../sw.initialsettings.html#sw.initialsettings.InitialSettings">[docs]</a><span class="k">class</span> <span class="nc">InitialSettings</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Initializing this class more or less handles every part of the initial settings menu.</span>
+<span class="sd">       There are no other parts of it which needs to be called, as the initialize function will go through</span>
+<span class="sd">       and call every function it needs in order. This function should be initialized with the wrapper for curses</span>
+<span class="sd">       around it with the kwargs passed to our wrapper function included.</span>
+<span class="sd">        </span>
+<span class="sd">       Initial settings presents the user with the default options (or whatever kwargs were included) and allows</span>
+<span class="sd">       them to go through either individually change or review every one, while at the same time validating them.</span>
+
+<span class="sd">       :param stdscr: Provided by the curses wrapper, just the screen object that will be printed to.</span>
+<span class="sd">       :param kwargs: The keyword arguments provided to :func:`sw.wrapper.main`</span>
+<span class="sd">       :returns: InitialSettings (self)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">stdscr</span><span class="p">,</span> <span class="n">kwargs</span> <span class="p">):</span>
+        <span class="n">stdscr</span><span class="o">.</span><span class="n">nodelay</span><span class="p">(</span> <span class="bp">True</span> <span class="p">)</span>   <span class="c"># Don&#39;t wait on key presses</span>
+        <span class="n">curses</span><span class="o">.</span><span class="n">curs_set</span><span class="p">(</span> <span class="mi">0</span> <span class="p">)</span>     <span class="c"># Invisible Cursor</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">stdscr</span> <span class="o">=</span> <span class="n">stdscr</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span> <span class="o">=</span> <span class="n">kwargs</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwarray</span> <span class="o">=</span> <span class="p">[</span> <span class="p">]</span>      <span class="c"># Contains our options to print out. This includes any titles and text after letters you see</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwmap</span> <span class="o">=</span> <span class="p">{</span> <span class="p">}</span>        <span class="c"># Maps a kwarg to an array [ default value string, default value ] ie [ &#39;None&#39;, &#39;&#39; ]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwcharmap</span> <span class="o">=</span> <span class="p">{</span> <span class="p">}</span>    <span class="c"># Maps a key to kwarg text (ie &#39;a&#39; =&gt; &#39;numJobs&#39;)</span>
+
+        <span class="n">curses</span><span class="o">.</span><span class="n">init_pair</span><span class="p">(</span> <span class="mi">100</span><span class="p">,</span> <span class="n">curses</span><span class="o">.</span><span class="n">COLOR_BLACK</span><span class="p">,</span> <span class="n">curses</span><span class="o">.</span><span class="n">COLOR_RED</span> <span class="p">)</span>
+        <span class="n">curses</span><span class="o">.</span><span class="n">init_pair</span><span class="p">(</span> <span class="mi">101</span><span class="p">,</span> <span class="n">curses</span><span class="o">.</span><span class="n">COLOR_BLACK</span><span class="p">,</span> <span class="n">curses</span><span class="o">.</span><span class="n">COLOR_YELLOW</span> <span class="p">)</span>
+        <span class="n">curses</span><span class="o">.</span><span class="n">init_pair</span><span class="p">(</span> <span class="mi">102</span><span class="p">,</span> <span class="n">curses</span><span class="o">.</span><span class="n">COLOR_GREEN</span><span class="p">,</span> <span class="n">curses</span><span class="o">.</span><span class="n">COLOR_BLACK</span> <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">maxx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stdscr</span><span class="o">.</span><span class="n">getmaxyx</span><span class="p">(</span> <span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maxy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stdscr</span><span class="o">.</span><span class="n">getmaxyx</span><span class="p">(</span> <span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">KWARGS_MAX</span> <span class="o">=</span> <span class="mi">80</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">stdscr</span><span class="o">.</span><span class="n">clear</span><span class="p">(</span> <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setupDefaults</span><span class="p">(</span> <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">renderList</span><span class="p">(</span> <span class="p">)</span>
+        
+        <span class="c"># Draw our selection box</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stdscr</span><span class="o">.</span><span class="n">addstr</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxy</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&quot;Type letter and hit enter to select or press enter to start&quot;</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stdscr</span><span class="o">.</span><span class="n">addstr</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxy</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&quot;Selection: &quot;</span> <span class="p">)</span>
+
+        <span class="n">curses</span><span class="o">.</span><span class="n">curs_set</span><span class="p">(</span> <span class="mi">1</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ebox</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stdscr</span><span class="o">.</span><span class="n">subwin</span><span class="p">(</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxy</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span> <span class="s">&quot;Selection: &quot;</span> <span class="p">)</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">entry</span> <span class="o">=</span> <span class="n">curses</span><span class="o">.</span><span class="n">textpad</span><span class="o">.</span><span class="n">Textbox</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">ebox</span><span class="p">,</span> <span class="n">insert_mode</span><span class="o">=</span><span class="bp">True</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">entry</span><span class="o">.</span><span class="n">stripspaces</span> <span class="o">=</span> <span class="mi">1</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">stdscr</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span> <span class="p">)</span>
+
+        <span class="c"># Digest input and changes to the options we presented</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">handleInput</span><span class="p">(</span> <span class="p">)</span>
+
+        <span class="c"># Make sure self.kwargs has everything set, we set the defaults here</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwmap</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwmap</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s">&quot;auto&quot;</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwmap</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s">&quot;None&quot;</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">kwmap</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwmap</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+
+
+
+<div class="viewcode-block" id="InitialSettings.handleInput"><a class="viewcode-back" href="../../sw.initialsettings.html#sw.initialsettings.InitialSettings.handleInput">[docs]</a>    <span class="k">def</span> <span class="nf">handleInput</span><span class="p">(</span> <span class="bp">self</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;This method is a giant loop which calls most other functions. It waits for key presses,</span>
+<span class="sd">           validates them, then loops through getting input for what was pressed, validating the</span>
+<span class="sd">           input, then seeing if the user is ready to terminate... more or less.</span>
+
+<span class="sd">           :returns: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">first</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="n">done</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+
+        <span class="k">while</span> <span class="ow">not</span> <span class="n">done</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">res</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwcharmap</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">first</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Invalid Selection &#39;&quot;</span><span class="p">,</span> <span class="n">res</span><span class="p">,</span> <span class="s">&quot;&#39;&quot;</span> <span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="n">first</span><span class="p">:</span>
+                <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwcharmap</span><span class="p">[</span><span class="n">res</span><span class="p">]</span>
+                <span class="n">win</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwmap</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>        <span class="c"># our setting&#39;s window</span>
+                <span class="n">ewin</span> <span class="o">=</span> <span class="n">curses</span><span class="o">.</span><span class="n">textpad</span><span class="o">.</span><span class="n">Textbox</span><span class="p">(</span> <span class="n">win</span><span class="p">,</span> <span class="n">insert_mode</span><span class="o">=</span><span class="bp">True</span> <span class="p">)</span>
+                <span class="n">ewin</span><span class="o">.</span><span class="n">stripspaces</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="n">ewin</span><span class="o">.</span><span class="n">edit</span><span class="p">(</span> <span class="p">)</span>
+
+                <span class="n">out</span> <span class="o">=</span> <span class="n">ewin</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span> <span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span> <span class="p">)</span>
+                <span class="n">win</span><span class="o">.</span><span class="n">clear</span><span class="p">(</span> <span class="p">)</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">processEntry</span><span class="p">(</span> <span class="n">out</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">win</span> <span class="p">)</span>
+                <span class="k">if</span> <span class="n">out</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="k">continue</span>
+
+                <span class="n">win</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span> <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="p">(</span> <span class="p">)</span>
+
+            <span class="n">doneCheck</span> <span class="o">=</span> <span class="bp">False</span>
+            <span class="k">while</span> <span class="ow">not</span> <span class="n">doneCheck</span><span class="p">:</span> 
+                <span class="bp">self</span><span class="o">.</span><span class="n">stdscr</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span> <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ebox</span><span class="o">.</span><span class="n">clear</span><span class="p">(</span> <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">entry</span><span class="o">.</span><span class="n">edit</span><span class="p">(</span> <span class="p">)</span> 
+                <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">entry</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span> <span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span> <span class="p">)</span>
+                <span class="n">first</span> <span class="o">=</span> <span class="bp">False</span>
+                <span class="k">if</span> <span class="n">res</span> <span class="o">==</span> <span class="s">&quot;&quot;</span><span class="p">:</span>
+                    <span class="n">done</span> <span class="o">=</span> <span class="bp">True</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">checkValues</span><span class="p">(</span> <span class="p">):</span>
+                        <span class="n">done</span> <span class="o">=</span> <span class="bp">False</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">break</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">break</span>
+
+
+</div>
+<div class="viewcode-block" id="InitialSettings.processEntry"><a class="viewcode-back" href="../../sw.initialsettings.html#sw.initialsettings.InitialSettings.processEntry">[docs]</a>    <span class="k">def</span> <span class="nf">processEntry</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">win</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Called as part of :func:`handleInput`, this method checks for the type</span>
+<span class="sd">           of the default value and transforms the input to that... unless the default is</span>
+<span class="sd">           None, in which case it assumes String.</span>
+
+<span class="sd">           It will also check for specific kwargs, such as report, which upon entry it validates</span>
+<span class="sd">           it as being a real URL.</span>
+
+<span class="sd">           :param String out: Input given from the user to fill the field specified by key.</span>
+<span class="sd">           :param String key: The letter the user entered, which points to a kwarg and its default value.</span>
+<span class="sd">           :param win: A curses window object for the area where the value was written. It is often written back over</span>
+<span class="sd">             after the value is interpreted. For example, in a field where the default value for a kwarg is bool the field</span>
+<span class="sd">             evaluates anything not /f(alse)?/i or /no?/i as True and writes &quot;True&quot; to the field. </span>
+<span class="sd">           </span>
+<span class="sd">           :returns: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">default</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwmap</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>    <span class="c"># the default value</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span> <span class="n">default</span> <span class="p">)</span> <span class="ow">is</span> <span class="nb">int</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span> <span class="n">out</span> <span class="p">)</span> 
+            <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span> <span class="n">default</span> <span class="p">)</span> <span class="ow">is</span> <span class="nb">float</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span> <span class="n">out</span> <span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span> <span class="n">default</span> <span class="p">)</span> <span class="ow">is</span> <span class="nb">long</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="nb">long</span><span class="p">(</span> <span class="n">out</span> <span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span> <span class="n">default</span> <span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span> <span class="n">out</span> <span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span> <span class="n">default</span> <span class="p">)</span> <span class="ow">is</span> <span class="nb">bool</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">out</span> <span class="o">==</span> <span class="s">&quot;False&quot;</span> <span class="ow">or</span> <span class="n">out</span> <span class="o">==</span> <span class="s">&quot;false&quot;</span> <span class="ow">or</span> <span class="n">out</span> <span class="o">==</span> <span class="s">&quot;f&quot;</span> \
+                        <span class="ow">or</span> <span class="n">out</span> <span class="o">==</span> <span class="s">&quot;n&quot;</span> <span class="ow">or</span> <span class="n">out</span> <span class="o">==</span> <span class="s">&quot;no&quot;</span> <span class="ow">or</span> <span class="n">out</span> <span class="o">==</span> <span class="s">&quot;No&quot;</span><span class="p">:</span>
+                    <span class="n">out</span> <span class="o">=</span> <span class="bp">False</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span> <span class="n">out</span> <span class="p">)</span>
+            <span class="k">elif</span> <span class="n">default</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">default</span> <span class="o">==</span> <span class="s">&quot;auto&quot;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">out</span> <span class="o">==</span> <span class="s">&quot;None&quot;</span> <span class="ow">or</span> <span class="n">out</span> <span class="o">==</span> <span class="s">&quot;none&quot;</span> <span class="ow">or</span> <span class="n">out</span> <span class="o">==</span> <span class="s">&quot;auto&quot;</span><span class="p">:</span>
+                    <span class="n">out</span> <span class="o">=</span> <span class="bp">None</span>
+                <span class="k">elif</span> <span class="n">default</span> <span class="o">==</span> <span class="s">&quot;auto&quot;</span><span class="p">:</span>
+                    <span class="n">out</span> <span class="o">=</span> <span class="s">&quot;auto&quot;</span>
+
+            <span class="k">if</span> <span class="p">(</span> <span class="n">default</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">out</span> <span class="ow">is</span> <span class="bp">None</span> <span class="p">)</span> <span class="ow">or</span> <span class="n">out</span> <span class="o">!=</span> <span class="n">default</span><span class="p">:</span>
+                <span class="c"># Check everything out</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s">&#39;project&#39;</span><span class="p">:</span>
+                    <span class="n">reg</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span> <span class="s">r&#39;([^0-9A-Za-z\-])&#39;</span><span class="p">,</span> <span class="n">out</span> <span class="p">)</span>
+                    <span class="k">if</span> <span class="n">reg</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Project name cannot include &quot;</span><span class="p">,</span> <span class="n">reg</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+                        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+                <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="s">&#39;report&#39;</span><span class="p">:</span>
+                    <span class="n">o</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span> <span class="n">urlparse</span><span class="o">.</span><span class="n">urlparse</span><span class="p">(</span> <span class="n">out</span> <span class="p">)</span><span class="o">.</span><span class="n">netloc</span> <span class="p">)</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">o</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="p">(</span> <span class="s">&quot;Reporting server must be a HTTP URL&quot;</span> <span class="p">)</span>
+                        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+                <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="s">&#39;run&#39;</span><span class="p">:</span>
+                    <span class="n">reg</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span> <span class="s">r&#39;([^0-9A-Za-z\-\_])&#39;</span><span class="p">,</span> <span class="n">out</span> <span class="p">)</span>
+                    <span class="k">if</span> <span class="n">reg</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Run name cannot include &quot;</span><span class="p">,</span> <span class="n">reg</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+                        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+
+            <span class="c"># Finally add it in and go on</span>
+            <span class="k">if</span> <span class="n">default</span> <span class="o">==</span> <span class="s">&quot;auto&quot;</span> <span class="ow">and</span> <span class="p">(</span> <span class="n">out</span> <span class="o">==</span> <span class="s">&quot;auto&quot;</span> <span class="ow">or</span> <span class="n">out</span> <span class="o">==</span> <span class="s">&quot;&quot;</span> <span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="s">&quot;auto&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">out</span>
+            <span class="n">win</span><span class="o">.</span><span class="n">addstr</span><span class="p">(</span> <span class="nb">str</span><span class="p">(</span> <span class="n">out</span> <span class="p">)</span> <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">win</span><span class="o">.</span><span class="n">addstr</span><span class="p">(</span> <span class="nb">str</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="n">key</span><span class="p">,</span> <span class="n">default</span> <span class="p">)</span> <span class="p">)</span> <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="p">(</span> <span class="n">e</span> <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">out</span>
+
+</div>
+<div class="viewcode-block" id="InitialSettings.checkValues"><a class="viewcode-back" href="../../sw.initialsettings.html#sw.initialsettings.InitialSettings.checkValues">[docs]</a>    <span class="k">def</span> <span class="nf">checkValues</span><span class="p">(</span> <span class="bp">self</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Checks values after the user enters a blank character (they ask to begin). The primary function this serves</span>
+<span class="sd">           is to check that the reporting server exists, if specified, by resolving the address, doing a handshake, and </span>
+<span class="sd">           seeing what requirements, if any, the server has. Currently the only supported requirement is for the project</span>
+<span class="sd">           field to not be blank.</span>
+<span class="sd">           </span>
+<span class="sd">           :returns: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="n">rep</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&#39;report&#39;</span><span class="p">,</span> <span class="bp">None</span> <span class="p">)</span>
+        <span class="n">run</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&#39;run&#39;</span><span class="p">,</span> <span class="bp">None</span> <span class="p">)</span>
+        <span class="n">err</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">if</span> <span class="n">rep</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span> 
+                <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span> <span class="n">rep</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span> <span class="p">{</span> <span class="s">&quot;HELLOAREYOUTHERE&quot;</span><span class="p">:</span> <span class="bp">None</span> <span class="p">}</span> <span class="p">),</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;content-type&#39;</span><span class="p">:</span> <span class="s">&#39;application/json&#39;</span><span class="p">}</span> <span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">err</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span> <span class="n">e</span> <span class="p">)</span> 
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span> <span class="n">err</span> <span class="p">)</span> <span class="o">&gt;</span> <span class="mi">30</span><span class="p">:</span>
+                    <span class="n">err</span> <span class="o">=</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="n">err</span><span class="p">[:</span><span class="mi">27</span><span class="p">],</span> <span class="s">&quot;...&quot;</span> <span class="p">]</span> <span class="p">)</span>
+            <span class="k">if</span> <span class="n">r</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">err</span> <span class="o">=</span> <span class="s">&quot;Failure connecting to reporting server&quot;</span>
+            <span class="k">elif</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="n">requests</span><span class="o">.</span><span class="n">codes</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
+                <span class="n">err</span> <span class="o">=</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Received HTTP status code &quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span> <span class="p">)</span> <span class="p">]</span> <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">text</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">response</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">(</span> <span class="p">)</span>
+                        <span class="k">if</span> <span class="s">&quot;YESIAMHERE&quot;</span> <span class="ow">in</span> <span class="n">response</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="n">response</span><span class="p">[</span><span class="s">&quot;projectRequired&quot;</span><span class="p">]:</span>
+                                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&#39;project&#39;</span><span class="p">,</span> <span class="bp">None</span> <span class="p">)</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="p">(</span> <span class="s">&quot;Server explicity requires a project name&quot;</span> <span class="p">)</span>
+                                    <span class="k">return</span> <span class="bp">False</span>
+                    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">err</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                            <span class="n">err</span> <span class="o">=</span> <span class="s">&quot;Handshake failed; not a reporting server&quot;</span>
+                        <span class="k">pass</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">err</span> <span class="o">=</span> <span class="s">&quot;Connection to reporting server failed&quot;</span>
+            <span class="k">if</span> <span class="n">run</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&#39;project&#39;</span><span class="p">,</span> <span class="bp">None</span> <span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="p">(</span> <span class="s">&quot;Must include a run name with a project name&quot;</span> <span class="p">)</span>
+                <span class="k">return</span> <span class="bp">False</span> <span class="c"># Returns false because this cannot be ignored.</span>
+        <span class="k">if</span> <span class="n">err</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="n">err</span><span class="p">,</span> <span class="s">&quot;, press enter again to ignore&quot;</span> <span class="p">]</span> <span class="p">),</span> <span class="s">&quot;Warning&quot;</span> <span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="bp">True</span>
+
+
+
+</div>
+<div class="viewcode-block" id="InitialSettings.error"><a class="viewcode-back" href="../../sw.initialsettings.html#sw.initialsettings.InitialSettings.error">[docs]</a>    <span class="k">def</span> <span class="nf">error</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s">&quot;Error&quot;</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Prints an error in a standard way above the user input field. The default type, Error, results in a red message,</span>
+<span class="sd">           while any other value will print a yellow one.</span>
+
+<span class="sd">           :param msg: The message to print out as an error.</span>
+<span class="sd">           :param type: The type of error to print out, any value that&#39;s not Error will be yellow. This type will prefix msg.</span>
+<span class="sd">           :returns: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">msg</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="p">(</span> <span class="p">)</span> <span class="c"># Clear ourselves</span>
+            <span class="n">color</span> <span class="o">=</span> <span class="mi">100</span>
+            <span class="k">if</span> <span class="nb">type</span> <span class="o">!=</span> <span class="s">&quot;Error&quot;</span><span class="p">:</span>
+                <span class="n">color</span> <span class="o">=</span> <span class="mi">101</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stdscr</span><span class="o">.</span><span class="n">addstr</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxy</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="nb">type</span><span class="p">,</span> <span class="s">&quot;: &quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span> <span class="n">msg</span> <span class="p">)</span> <span class="p">]</span>  <span class="p">),</span> <span class="n">curses</span><span class="o">.</span><span class="n">color_pair</span><span class="p">(</span> <span class="n">color</span> <span class="p">)</span> <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stdscr</span><span class="o">.</span><span class="n">addstr</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxy</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&quot; &quot;</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">KWARGS_MAX</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stdscr</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span> <span class="p">)</span>
+
+
+</div>
+<div class="viewcode-block" id="InitialSettings.setupDefaults"><a class="viewcode-back" href="../../sw.initialsettings.html#sw.initialsettings.InitialSettings.setupDefaults">[docs]</a>    <span class="k">def</span> <span class="nf">setupDefaults</span><span class="p">(</span> <span class="bp">self</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;This method loads into kwmap and kwarray the defaults for various kwargs as well as the titles to print</span>
+<span class="sd">           in front of them on the display screen. It does nothing more than just loading the values up, :func:`renderList`</span>
+<span class="sd">           does the dirty work.</span>
+
+<span class="sd">           :returns: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwarray</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="s">&quot;Run Settings&quot;</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwarray</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="s">&#39;children&#39;</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwmap</span><span class="p">[</span><span class="s">&#39;children&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span> <span class="s">&quot;# Children&quot;</span><span class="p">,</span> <span class="mi">1</span> <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwmap</span><span class="p">[</span><span class="s">&#39;stagger&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="p">[</span> <span class="s">&quot;Stagger Spawn&quot;</span><span class="p">,</span> <span class="bp">False</span> <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwarray</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="s">&#39;stagger&#39;</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwmap</span><span class="p">[</span><span class="s">&#39;jobs&#39;</span><span class="p">]</span>     <span class="o">=</span> <span class="p">[</span> <span class="s">&quot;# Jobs&quot;</span><span class="p">,</span> <span class="mi">1</span> <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwarray</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="s">&#39;jobs&#39;</span> <span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwarray</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="s">&quot;&quot;</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwarray</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="s">&quot;Pool Settings&quot;</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwmap</span><span class="p">[</span><span class="s">&#39;level&#39;</span><span class="p">]</span>    <span class="o">=</span> <span class="p">[</span> <span class="s">&quot;Log Lvl (0-5)&quot;</span><span class="p">,</span> <span class="mi">1</span> <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwarray</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="s">&#39;level&#39;</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwmap</span><span class="p">[</span><span class="s">&#39;images&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="p">[</span> <span class="s">&quot;Get Images&quot;</span><span class="p">,</span> <span class="bp">False</span> <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwarray</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="s">&#39;images&#39;</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwarray</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="s">&quot;&quot;</span> <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwarray</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="s">&quot;Reporting Settings&quot;</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwmap</span><span class="p">[</span><span class="s">&#39;report&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="p">[</span> <span class="s">&quot;Server&quot;</span><span class="p">,</span> <span class="bp">None</span> <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwarray</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="s">&#39;report&#39;</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwmap</span><span class="p">[</span><span class="s">&#39;run&#39;</span><span class="p">]</span>      <span class="o">=</span> <span class="p">[</span> <span class="s">&quot;Run Name&quot;</span><span class="p">,</span> <span class="s">&quot;auto&quot;</span> <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwarray</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="s">&#39;run&#39;</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwmap</span><span class="p">[</span><span class="s">&#39;project&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="p">[</span> <span class="s">&quot;Project Name&quot;</span><span class="p">,</span> <span class="bp">None</span> <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwarray</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="s">&#39;project&#39;</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwmap</span><span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">]</span>       <span class="o">=</span> <span class="p">[</span> <span class="s">&quot;Client Name&quot;</span><span class="p">,</span> <span class="s">&quot;auto&quot;</span> <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwarray</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="s">&#39;id&#39;</span> <span class="p">)</span>
+
+
+</div>
+<div class="viewcode-block" id="InitialSettings.renderList"><a class="viewcode-back" href="../../sw.initialsettings.html#sw.initialsettings.InitialSettings.renderList">[docs]</a>    <span class="k">def</span> <span class="nf">renderList</span><span class="p">(</span> <span class="bp">self</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Renders all values prepared from :func:`setupDefaults` on the screen, but only once. This method is never</span>
+<span class="sd">           called again, so it&#39;s assumed all the values are kept pristine. In addition to printing all the titles and</span>
+<span class="sd">           kwargs on screen, it adds into kwmap a 3rd index (kwmap[key][2]) which is a reference to the subwindow for</span>
+<span class="sd">           that kwarg&#39;s value. So, in the future, to modify f&#39;s display value::</span>
+<span class="sd">             self.kwmap[&#39;f&#39;][2].addstr( &#39;New Value&#39; )</span>
+<span class="sd">           </span>
+<span class="sd">           :returns: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span> 
+        <span class="n">off</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">tab</span> <span class="o">=</span> <span class="mi">15</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwarray</span><span class="p">:</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="mi">2</span>
+            <span class="c"># This is a configurable field</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwmap</span><span class="p">:</span>
+                <span class="n">default</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwmap</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="p">)</span>
+                <span class="n">val</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="n">key</span><span class="p">,</span> <span class="n">default</span> <span class="p">)</span> <span class="p">)</span>
+                <span class="n">size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwmap</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="p">)</span>
+                <span class="n">char</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span> <span class="nb">chr</span><span class="p">(</span> <span class="nb">ord</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="n">i</span> <span class="o">-</span> <span class="n">off</span> <span class="p">)</span> <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">kwcharmap</span><span class="p">[</span><span class="n">char</span><span class="p">]</span> <span class="o">=</span> <span class="n">key</span>
+
+                <span class="c"># Get our first column out there</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="n">char</span><span class="p">,</span> <span class="s">&quot;) &quot;</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">kwmap</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+                    <span class="s">&quot;:&quot;</span><span class="p">,</span>
+                    <span class="p">(</span> <span class="s">&quot; &quot;</span><span class="o">*</span><span class="p">(</span> <span class="n">tab</span><span class="o">-</span><span class="n">size</span> <span class="p">)</span> <span class="p">)</span>
+                    <span class="p">]</span> <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stdscr</span><span class="o">.</span><span class="n">addstr</span><span class="p">(</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">s</span> <span class="p">)</span>
+                
+                <span class="c"># Now print our field</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">kwmap</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">stdscr</span><span class="o">.</span><span class="n">subwin</span><span class="p">(</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span> <span class="n">s</span> <span class="p">)</span> <span class="p">)</span> <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">kwmap</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">addstr</span><span class="p">(</span> <span class="n">val</span> <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">kwmap</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span> <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c"># This is a title field</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stdscr</span><span class="o">.</span><span class="n">addstr</span><span class="p">(</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">curses</span><span class="o">.</span><span class="n">color_pair</span><span class="p">(</span> <span class="mi">102</span> <span class="p">)</span> <span class="p">)</span>
+                <span class="n">off</span> <span class="o">+=</span> <span class="mi">1</span>
+            
+            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+</pre></div></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">selenium_wrapper 0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Billy Rhoades.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

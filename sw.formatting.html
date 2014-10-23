@@ -24,6 +24,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="selenium_wrapper 0.1 documentation" href="index.html" />
+    <link rel="next" title="UI Module sw.ui" href="sw.ui.html" />
     <link rel="prev" title="Utilities Module sw.utils" href="sw.utils.html" /> 
   </head>
   <body>
@@ -36,6 +37,9 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="sw.ui.html" title="UI Module sw.ui"
+             accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="sw.utils.html" title="Utilities Module sw.utils"
              accesskey="P">previous</a> |</li>
@@ -69,38 +73,22 @@
 </dd></dl>
 
 <dl class="function">
-<dt id="sw.formatting.childMessage">
-<tt class="descclassname">sw.formatting.</tt><tt class="descname">childMessage</tt><big>(</big><em>num</em>, <em>msg</em><big>)</big><a class="reference internal" href="_modules/sw/formatting.html#childMessage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.formatting.childMessage" title="Permalink to this definition">¶</a></dt>
-<dd><p>Consistently formats a message to be print out to the console for this child.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>num</strong> &#8211; The number of the child we are printing a message for.</li>
-<li><strong>msg</strong> &#8211; The message for the child. Formatted like so: <tt class="docutils literal"><span class="pre">Child</span> <span class="pre">#num:</span> <span class="pre">msg</span></tt></li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
 <dt id="sw.formatting.errorLevelToStr">
-<tt class="descclassname">sw.formatting.</tt><tt class="descname">errorLevelToStr</tt><big>(</big><em>level</em><big>)</big><a class="reference internal" href="_modules/sw/formatting.html#errorLevelToStr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.formatting.errorLevelToStr" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">sw.formatting.</tt><tt class="descname">errorLevelToStr</tt><big>(</big><em>level</em>, <em>parens=True</em><big>)</big><a class="reference internal" href="_modules/sw/formatting.html#errorLevelToStr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.formatting.errorLevelToStr" title="Permalink to this definition">¶</a></dt>
 <dd><p>Takes a numeric error level and translates it into a string for displaying in a 
 log.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>level</strong> &#8211; The level to translate into a loggable string.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>level</strong> &#8211; The level to translate into a loggable string.</li>
+<li><strong>parens</strong> (<em>True</em>) &#8211; If the level will be contained in parenthesis</li>
+</ul>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">String of the level in parenthesis.</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">String of the level in parenthesis.</p>
+</td>
 </tr>
 </tbody>
 </table>
@@ -204,6 +192,9 @@ regex ignores it.</li>
   <h4>Previous topic</h4>
   <p class="topless"><a href="sw.utils.html"
                         title="previous chapter">Utilities Module <tt class="docutils literal"><span class="pre">sw.utils</span></tt></a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="sw.ui.html"
+                        title="next chapter">UI Module <tt class="docutils literal"><span class="pre">sw.ui</span></tt></a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/sw.formatting.txt"
@@ -235,6 +226,9 @@ regex ignores it.</li>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="sw.ui.html" title="UI Module sw.ui"
+             >next</a> |</li>
         <li class="right" >
           <a href="sw.utils.html" title="Utilities Module sw.utils"
              >previous</a> |</li>

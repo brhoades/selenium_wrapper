@@ -1,12 +1,12 @@
 ================================
-Child Module :mod:`sw.child` 
+Reporting Module :mod:`sw.report` 
 ================================
 
 *******
 Classes
 *******
 
-.. automodule:: sw.child
+.. automodule:: sw.report
    :members:
    :undoc-members:
    :show-inheritance:

@@ -1,12 +1,12 @@
 ===================================
-ElementCache Module :mod:`sw.cache` 
+InitialSettings Module :mod:`sw.initialsettings` 
 ===================================
 
 *******
 Classes
 *******
 
-.. automodule:: sw.cache
+.. automodule:: sw.initialsettings
    :members:
    :undoc-members:
    :show-inheritance:

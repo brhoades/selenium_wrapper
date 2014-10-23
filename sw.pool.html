@@ -58,7 +58,7 @@
 <span id="classes"></span><h2>Classes<a class="headerlink" href="#module-sw.pool" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="sw.pool.Pool">
-<em class="property">class </em><tt class="descclassname">sw.pool.</tt><tt class="descname">Pool</tt><big>(</big><em>numChildren</em>, <em>numJobs</em>, <em>func</em>, <em>file</em>, <em>kwargs</em><big>)</big><a class="reference internal" href="_modules/sw/pool.html#Pool"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.pool.Pool" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">sw.pool.</tt><tt class="descname">Pool</tt><big>(</big><em>func</em>, <em>file</em>, <em>kwargs</em><big>)</big><a class="reference internal" href="_modules/sw/pool.html#Pool"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.pool.Pool" title="Permalink to this definition">¶</a></dt>
 <dd><p>Stores parameters across all children, sets out log directory, initializes our data arrays,
 records start times, and pops <cite>numJobs</cite> functions into a Queue. Abstracts and makes it easier to
 manage scores of child processes. Also has a <a class="reference internal" href="#sw.pool.Pool.think" title="sw.pool.Pool.think"><tt class="xref py py-func docutils literal"><span class="pre">think()</span></tt></a> process to continuously manage them.</p>
@@ -67,12 +67,10 @@ manage scores of child processes. Also has a <a class="reference internal" href=
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>numChildren</strong> &#8211; Number of children the pool will start with.</li>
-<li><strong>numJobs</strong> &#8211; Number of jobs to fill our work queue with.</li>
 <li><strong>func</strong> &#8211; The function reference that will be put into our work queue <cite>numJobs</cite> times.</li>
 <li><strong>file</strong> &#8211; Filename with directory of our script which contained <cite>func</cite>. This is used to create a relative log directory.</li>
 <li><strong>kwargs</strong> &#8211; Kwargs dict passed to <tt class="xref py py-func docutils literal"><span class="pre">main()</span></tt>, eventually passes arguments on to GhostDriver. 
-&#8216;staggered&#8217; is pulled from this dict if it exists.</li>
+&#8216;stagger&#8217; is pulled from this dict if it exists.</li>
 </ul>
 </td>
 </tr>
@@ -97,15 +95,15 @@ loop. When False, the program terminates.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="sw.pool.Pool.newChild">
-<tt class="descname">newChild</tt><big>(</big><em>i=None</em><big>)</big><a class="reference internal" href="_modules/sw/pool.html#Pool.newChild"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.pool.Pool.newChild" title="Permalink to this definition">¶</a></dt>
-<dd><p>Creates a new <tt class="xref py py-class docutils literal"><span class="pre">child</span></tt> which will in turn start itself. If i is none, it grabs the next available array
-index, assuming it was initialized for this many children (will grab an index that doesn&#8217;t exist if not).</p>
+<dt id="sw.pool.Pool.endChild">
+<tt class="descname">endChild</tt><big>(</big><em>i=None</em><big>)</big><a class="reference internal" href="_modules/sw/pool.html#Pool.endChild"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.pool.Pool.endChild" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes the last created <tt class="xref py py-class docutils literal"><span class="pre">child</span></tt>, called by GUI.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>i</strong> (<em>None</em>) &#8211; Index for child process within pool&#8217;s data structure.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>i</strong> (<em>None</em>) &#8211; The index of the child process to kill. If not specified, it chooses
+the last child in the pool.children array that is alive.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">None</td>
 </tr>
@@ -114,18 +112,65 @@ index, assuming it was initialized for this many children (will grab an index th
 </dd></dl>
 
 <dl class="method">
-<dt id="sw.pool.Pool.reportStatistics">
-<tt class="descname">reportStatistics</tt><big>(</big><em>force=False</em><big>)</big><a class="reference internal" href="_modules/sw/pool.html#Pool.reportStatistics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.pool.Pool.reportStatistics" title="Permalink to this definition">¶</a></dt>
-<dd><p>Translates statistics into the archaic form used by the <a class="reference internal" href="sw.formatting.html#sw.formatting.stats" title="sw.formatting.stats"><tt class="xref py py-func docutils literal"><span class="pre">sw.formatting.stats()</span></tt></a>.
-Map and reduce are used to get things quickly out of the self.data 2-d array. This function
-is only called every self.timePerReport seconds as set in this class&#8217;s initialization func.</p>
+<dt id="sw.pool.Pool.failed">
+<tt class="descname">failed</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sw/pool.html#Pool.failed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.pool.Pool.failed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reports failed jobs so far.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>force</strong> (<em>False</em>) &#8211; Forces a report of statistics. Only called by the script itself when done.</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Integer for number of failed jobs.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sw.pool.Pool.logMsg">
+<tt class="descname">logMsg</tt><big>(</big><em>msg</em>, <em>level=0</em><big>)</big><a class="reference internal" href="_modules/sw/pool.html#Pool.logMsg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.pool.Pool.logMsg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Logs a message to our log file in a consistent format. Depends on pool.lh 
+already being initialized and ready for writing. Does not flush the handle.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>msg</strong> &#8211; The message to be logged.</li>
+<li><strong>level</strong> (<em>NOTICE</em>) &#8211; The level of the message included. If the level is not
+greater than or equal to the user-specified level, the message is discarded.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sw.pool.Pool.newChild">
+<tt class="descname">newChild</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sw/pool.html#Pool.newChild"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.pool.Pool.newChild" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new <tt class="xref py py-class docutils literal"><span class="pre">child</span></tt> which will in turn start itself.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sw.pool.Pool.start">
+<tt class="descname">start</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sw/pool.html#Pool.start"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.pool.Pool.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Restarts a pool after it&#8217;s been stop( )ed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">None</td>
 </tr>
 </tbody>
 </table>
@@ -133,13 +178,32 @@ is only called every self.timePerReport seconds as set in this class&#8217;s ini
 
 <dl class="method">
 <dt id="sw.pool.Pool.stop">
-<tt class="descname">stop</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sw/pool.html#Pool.stop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.pool.Pool.stop" title="Permalink to this definition">¶</a></dt>
-<dd><p>Stops the pool cleanly and terminates all the children in it.</p>
+<tt class="descname">stop</tt><big>(</big><em>type=3</em><big>)</big><a class="reference internal" href="_modules/sw/pool.html#Pool.stop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.pool.Pool.stop" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Stops the pool cleanly and terminates all the children in it.</dt>
+<dd>Currently handles pausing too until I need special functionality.</dd>
+</dl>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>type</strong> (<em>STOPPED</em>) &#8211; Type of stopping this is, either pausing or stopping.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sw.pool.Pool.successful">
+<tt class="descname">successful</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sw/pool.html#Pool.successful"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.pool.Pool.successful" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reports the number of jobs successfully completed so far.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Integer for number of jobs successfully completed.</td>
 </tr>
 </tbody>
 </table>
@@ -155,6 +219,22 @@ Check children are alive/restart if there are more jobs. Checks queues and parse
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sw.pool.Pool.timeTaken">
+<tt class="descname">timeTaken</tt><big>(</big><em>sum=False</em><big>)</big><a class="reference internal" href="_modules/sw/pool.html#Pool.timeTaken"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.pool.Pool.timeTaken" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reports how long everything has taken so far.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>sum</strong> (<em>False</em>) &#8211; Whether or not to return the sum of the time taken on jobs.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">List of individual job run times if sum is False, otherwise the amount of time taken as a float.</td>
 </tr>
 </tbody>
 </table>

@@ -1,0 +1,379 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Reporting Module sw.report &mdash; selenium_wrapper 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="selenium_wrapper 0.1 documentation" href="index.html" />
+    <link rel="next" title="InitialSettings Module sw.initialsettings" href="sw.initialsettings.html" />
+    <link rel="prev" title="UI Module sw.ui" href="sw.ui.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="sw.initialsettings.html" title="InitialSettings Module sw.initialsettings"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="sw.ui.html" title="UI Module sw.ui"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">selenium_wrapper 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="reporting-module-sw-report">
+<h1>Reporting Module <a class="reference internal" href="#module-sw.report" title="sw.report"><tt class="xref py py-mod docutils literal"><span class="pre">sw.report</span></tt></a><a class="headerlink" href="#reporting-module-sw-report" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-sw.report">
+<span id="classes"></span><h2>Classes<a class="headerlink" href="#module-sw.report" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sw.report.Report">
+<em class="property">class </em><tt class="descclassname">sw.report.</tt><tt class="descname">Report</tt><big>(</big><em>pool</em><big>)</big><a class="reference internal" href="_modules/sw/report.html#Report"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.report.Report" title="Permalink to this definition">¶</a></dt>
+<dd><p>Report handles all the reporting events sent from the Pool, currently it exclusively sends these upstream to a
+server which then does further handling. The events are sent from the pool via calls to this instance&#8217;s functions
+that in turn call <a class="reference internal" href="#sw.report.Report.send" title="sw.report.Report.send"><tt class="xref py py-func docutils literal"><span class="pre">send()</span></tt></a>.</p>
+<p>Reporting can be disabled by excluding the report option from the kwargs of <tt class="xref py py-func docutils literal"><span class="pre">main()</span></tt>. This has the
+same effect as not including the #report=&#8221;url&#8221; option within the options header of a script before conversion. This URL
+should point to the included sinatra server in reporting/ like so: &#8220;<a class="reference external" href="http://reporting-server.com:4567/report">http://reporting-server.com:4567/report</a>&#8221;.</p>
+<p>Other options include a id=&#8221;&#8221; option which allows you to specify a custom computer ID. Similarly, including run=&#8221;&#8221; allows
+you to choose a specific run to join. Note that the run will be created if it doesn&#8217;t already exist and will be used for 
+all subsequent script calls until removed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pool</strong> &#8211; Reference to our owning pool. This is primarily to access pool.options and not used much elsewhere.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Report (self)</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="sw.report.Report.endChild">
+<tt class="descname">endChild</tt><big>(</big><em>child</em><big>)</big><a class="reference internal" href="_modules/sw/report.html#Report.endChild"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.report.Report.endChild" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sends a child process killed notification payload.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>child</strong> &#8211; The index of the child reporting in self.children/pool.data.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sw.report.Report.id">
+<tt class="descname">id</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sw/report.html#Report.id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.report.Report.id" title="Permalink to this definition">¶</a></dt>
+<dd><p>If self.id was not already set by the user, it generates a deterministic ID 
+based on the user running the script and the machine&#8217;s name.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sw.report.Report.jobFail">
+<tt class="descname">jobFail</tt><big>(</big><em>error</em>, <em>child</em>, <em>screenshot=None</em><big>)</big><a class="reference internal" href="_modules/sw/report.html#Report.jobFail"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.report.Report.jobFail" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sends a job failed notification payload.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>error</strong> &#8211; The error text that was included with the error.</li>
+<li><strong>child</strong> &#8211; The index of the child reporting in pool.children/pool.data.</li>
+<li><strong>screenshot</strong> (<em>None</em>) &#8211; A image from selenium&#8217;s screenshot to be encoded in base64 
+for sending (optional).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sw.report.Report.jobFinish">
+<tt class="descname">jobFinish</tt><big>(</big><em>timetaken</em>, <em>child</em><big>)</big><a class="reference internal" href="_modules/sw/report.html#Report.jobFinish"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.report.Report.jobFinish" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sends a job finish notification payload.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>timetaken</strong> &#8211; The time it took for the job to finish, recorded
+internally.</li>
+<li><strong>child</strong> &#8211; The index of the child reporting in pool.children/pool.data.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sw.report.Report.jobStart">
+<tt class="descname">jobStart</tt><big>(</big><em>child</em><big>)</big><a class="reference internal" href="_modules/sw/report.html#Report.jobStart"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.report.Report.jobStart" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sends a job start notification payload.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>child</strong> &#8211; The index of the child reporting in pool.children/pool.data.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sw.report.Report.newChild">
+<tt class="descname">newChild</tt><big>(</big><em>child</em><big>)</big><a class="reference internal" href="_modules/sw/report.html#Report.newChild"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.report.Report.newChild" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sends a new child notification payload. This is called even when a child
+is restarted.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>child</strong> &#8211; The index of the child reporting in self.children/pool.data.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sw.report.Report.ping">
+<tt class="descname">ping</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sw/report.html#Report.ping"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.report.Report.ping" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sends a keepalive notice to the server, effectively keeping this client and
+its run from timing out.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sw.report.Report.send">
+<tt class="descname">send</tt><big>(</big><em>payload</em>, <em>type</em><big>)</big><a class="reference internal" href="_modules/sw/report.html#Report.send"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.report.Report.send" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send enables a payload to be parsed and added into our local queue for transmission
+reporting server, where applicable. It is called as a sort of wrapper function from all
+of the individual reporting functions (such as <tt class="xref py py-func docutils literal"><span class="pre">endchild()</span></tt>) to facilitate
+standard transmission of the data upstream.</p>
+<p>Currently (to be fixed) it encodes repeat information in every single payload including
+all identifying characteristics about the run, pool, and our id. There&#8217;s major issue for this
+except for further stressing network bandwidth and the JSON parser.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>payload</strong> &#8211; A hash of information to send upstream to our reporting server.</li>
+<li><strong>type</strong> &#8211; The R_* constant identifier for the type of payload included.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sw.report.Report.start">
+<tt class="descname">start</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sw/report.html#Report.start"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.report.Report.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sends a start notification payload.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sw.report.Report.stop">
+<tt class="descname">stop</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sw/report.html#Report.stop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.report.Report.stop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sends a stop notification payload.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sw.report.Report.think">
+<tt class="descname">think</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sw/report.html#Report.think"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.report.Report.think" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>The think function called by our pool periodically. If enabled, it checks for the need to ping</dt>
+<dd><p class="first">(keepalive) or if the next payload is ready to send. This function also handles the transmission of
+our payload.</p>
+<p>If our report.queue has content in it, it prepares to send everything upstream. The payload is transmitted
+in JSON with the following general format:</p>
+<div class="last highlight-python"><div class="highlight"><pre>{ 
+   &quot;cid&quot; =&gt; #, // Our client ID assigned by the server, nil if we don&#39;t have one yet.
+   &quot;rid&quot; =&gt; #, // Our run ID assined by the server, ^
+   &quot;payload&quot; =&gt; 
+       [
+           { 
+               &quot;type&quot; =&gt; R_START,    // For example, this is the type of payload here.
+               &quot;time&quot; =&gt; UNIX_EPOCH, // Since sometimes the Queue has a delay in transmission, each
+                                     // payload contains it own timestamp.
+               // Some miscellaneous identifying information goes in here that&#39;s deprecated
+               // and unused.
+
+               // If the type involves a child:
+               &quot;ChildID&quot; =&gt; #, // The index of our child in pool.children / pool.data
+
+               // If the type involves a job:
+               &quot;timetaken&quot; =&gt; UNIX_EPOCH //The time the job took to complete.
+           },
+           
+           //{  another here },
+           ...
+       ]
+
+}
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>The JSON above is arranged and then attempts to open a HTTP request to the provided server. If it fails,
+it tries 5 more times every 5 seconds with a timeout of 1 second. It attemps to send the JSON up via post
+and then waits for an HTTP 200 or similar before considering it a success. If R_START was included in the 
+payload, the server will respond with a cid and a rid for the client which it then stores internally for 
+future reports.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Reporting Module <tt class="docutils literal"><span class="pre">sw.report</span></tt></a><ul>
+<li><a class="reference internal" href="#module-sw.report">Classes</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="sw.ui.html"
+                        title="previous chapter">UI Module <tt class="docutils literal"><span class="pre">sw.ui</span></tt></a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="sw.initialsettings.html"
+                        title="next chapter">InitialSettings Module <tt class="docutils literal"><span class="pre">sw.initialsettings</span></tt></a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/sw.report.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="sw.initialsettings.html" title="InitialSettings Module sw.initialsettings"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="sw.ui.html" title="UI Module sw.ui"
+             >previous</a> |</li>
+        <li><a href="index.html">selenium_wrapper 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Billy Rhoades.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

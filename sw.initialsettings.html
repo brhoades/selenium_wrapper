@@ -1,0 +1,262 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>InitialSettings Module sw.initialsettings &mdash; selenium_wrapper 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="selenium_wrapper 0.1 documentation" href="index.html" />
+    <link rel="prev" title="Reporting Module sw.report" href="sw.report.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="sw.report.html" title="Reporting Module sw.report"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">selenium_wrapper 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="initialsettings-module-sw-initialsettings">
+<h1>InitialSettings Module <a class="reference internal" href="#module-sw.initialsettings" title="sw.initialsettings"><tt class="xref py py-mod docutils literal"><span class="pre">sw.initialsettings</span></tt></a><a class="headerlink" href="#initialsettings-module-sw-initialsettings" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-sw.initialsettings">
+<span id="classes"></span><h2>Classes<a class="headerlink" href="#module-sw.initialsettings" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sw.initialsettings.InitialSettings">
+<em class="property">class </em><tt class="descclassname">sw.initialsettings.</tt><tt class="descname">InitialSettings</tt><big>(</big><em>stdscr</em>, <em>kwargs</em><big>)</big><a class="reference internal" href="_modules/sw/initialsettings.html#InitialSettings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.initialsettings.InitialSettings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializing this class more or less handles every part of the initial settings menu.
+There are no other parts of it which needs to be called, as the initialize function will go through
+and call every function it needs in order. This function should be initialized with the wrapper for curses
+around it with the kwargs passed to our wrapper function included.</p>
+<p>Initial settings presents the user with the default options (or whatever kwargs were included) and allows
+them to go through either individually change or review every one, while at the same time validating them.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stdscr</strong> &#8211; Provided by the curses wrapper, just the screen object that will be printed to.</li>
+<li><strong>kwargs</strong> &#8211; The keyword arguments provided to <a class="reference internal" href="sw.wrapper.html#sw.wrapper.main" title="sw.wrapper.main"><tt class="xref py py-func docutils literal"><span class="pre">sw.wrapper.main()</span></tt></a></li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">InitialSettings (self)</p>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="sw.initialsettings.InitialSettings.checkValues">
+<tt class="descname">checkValues</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sw/initialsettings.html#InitialSettings.checkValues"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.initialsettings.InitialSettings.checkValues" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks values after the user enters a blank character (they ask to begin). The primary function this serves
+is to check that the reporting server exists, if specified, by resolving the address, doing a handshake, and 
+seeing what requirements, if any, the server has. Currently the only supported requirement is for the project
+field to not be blank.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sw.initialsettings.InitialSettings.error">
+<tt class="descname">error</tt><big>(</big><em>msg=None</em>, <em>type='Error'</em><big>)</big><a class="reference internal" href="_modules/sw/initialsettings.html#InitialSettings.error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.initialsettings.InitialSettings.error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prints an error in a standard way above the user input field. The default type, Error, results in a red message,
+while any other value will print a yellow one.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>msg</strong> &#8211; The message to print out as an error.</li>
+<li><strong>type</strong> &#8211; The type of error to print out, any value that&#8217;s not Error will be yellow. This type will prefix msg.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sw.initialsettings.InitialSettings.handleInput">
+<tt class="descname">handleInput</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sw/initialsettings.html#InitialSettings.handleInput"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.initialsettings.InitialSettings.handleInput" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method is a giant loop which calls most other functions. It waits for key presses,
+validates them, then loops through getting input for what was pressed, validating the
+input, then seeing if the user is ready to terminate... more or less.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sw.initialsettings.InitialSettings.processEntry">
+<tt class="descname">processEntry</tt><big>(</big><em>out</em>, <em>key</em>, <em>win</em><big>)</big><a class="reference internal" href="_modules/sw/initialsettings.html#InitialSettings.processEntry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.initialsettings.InitialSettings.processEntry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called as part of <a class="reference internal" href="#sw.initialsettings.InitialSettings.handleInput" title="sw.initialsettings.InitialSettings.handleInput"><tt class="xref py py-func docutils literal"><span class="pre">handleInput()</span></tt></a>, this method checks for the type
+of the default value and transforms the input to that... unless the default is
+None, in which case it assumes String.</p>
+<p>It will also check for specific kwargs, such as report, which upon entry it validates
+it as being a real URL.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>out</strong> (<em>String</em>) &#8211; Input given from the user to fill the field specified by key.</li>
+<li><strong>key</strong> (<em>String</em>) &#8211; The letter the user entered, which points to a kwarg and its default value.</li>
+<li><strong>win</strong> &#8211; A curses window object for the area where the value was written. It is often written back over
+after the value is interpreted. For example, in a field where the default value for a kwarg is bool the field
+evaluates anything not /f(alse)?/i or /no?/i as True and writes &#8220;True&#8221; to the field.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sw.initialsettings.InitialSettings.renderList">
+<tt class="descname">renderList</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sw/initialsettings.html#InitialSettings.renderList"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.initialsettings.InitialSettings.renderList" title="Permalink to this definition">¶</a></dt>
+<dd><p>Renders all values prepared from <a class="reference internal" href="#sw.initialsettings.InitialSettings.setupDefaults" title="sw.initialsettings.InitialSettings.setupDefaults"><tt class="xref py py-func docutils literal"><span class="pre">setupDefaults()</span></tt></a> on the screen, but only once. This method is never
+called again, so it&#8217;s assumed all the values are kept pristine. In addition to printing all the titles and
+kwargs on screen, it adds into kwmap a 3rd index (kwmap[key][2]) which is a reference to the subwindow for
+that kwarg&#8217;s value. So, in the future, to modify f&#8217;s display value:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="bp">self</span><span class="o">.</span><span class="n">kwmap</span><span class="p">[</span><span class="s">&#39;f&#39;</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">addstr</span><span class="p">(</span> <span class="s">&#39;New Value&#39;</span> <span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sw.initialsettings.InitialSettings.setupDefaults">
+<tt class="descname">setupDefaults</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sw/initialsettings.html#InitialSettings.setupDefaults"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.initialsettings.InitialSettings.setupDefaults" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method loads into kwmap and kwarray the defaults for various kwargs as well as the titles to print
+in front of them on the display screen. It does nothing more than just loading the values up, <a class="reference internal" href="#sw.initialsettings.InitialSettings.renderList" title="sw.initialsettings.InitialSettings.renderList"><tt class="xref py py-func docutils literal"><span class="pre">renderList()</span></tt></a>
+does the dirty work.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">InitialSettings Module <tt class="docutils literal"><span class="pre">sw.initialsettings</span></tt></a><ul>
+<li><a class="reference internal" href="#module-sw.initialsettings">Classes</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="sw.report.html"
+                        title="previous chapter">Reporting Module <tt class="docutils literal"><span class="pre">sw.report</span></tt></a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/sw.initialsettings.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="sw.report.html" title="Reporting Module sw.report"
+             >previous</a> |</li>
+        <li><a href="index.html">selenium_wrapper 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Billy Rhoades.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

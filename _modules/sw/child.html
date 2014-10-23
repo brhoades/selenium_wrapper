@@ -47,14 +47,14 @@
           <div class="body">
             
   <h1>Source code for sw.child</h1><div class="highlight"><pre>
-<span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">Process</span><span class="p">,</span> <span class="n">Queue</span>
+<span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">Process</span><span class="p">,</span> <span class="n">Queue</span><span class="p">,</span> <span class="n">Value</span>
 <span class="kn">from</span> <span class="nn">selenium</span> <span class="kn">import</span> <span class="n">webdriver</span>
 <span class="kn">from</span> <span class="nn">selenium.webdriver.phantomjs.service</span> <span class="kn">import</span> <span class="n">Service</span> <span class="k">as</span> <span class="n">PhantomJSService</span>
 <span class="kn">from</span> <span class="nn">selenium.webdriver.common.desired_capabilities</span> <span class="kn">import</span> <span class="n">DesiredCapabilities</span>
 <span class="kn">from</span> <span class="nn">sw.const</span> <span class="kn">import</span> <span class="o">*</span> <span class="c"># Constants</span>
 <span class="kn">from</span> <span class="nn">sw.formatting</span> <span class="kn">import</span> <span class="n">formatError</span><span class="p">,</span> <span class="n">errorLevelToStr</span>
 <span class="kn">from</span> <span class="nn">sw.cache</span> <span class="kn">import</span> <span class="n">ElementCache</span> 
-<span class="kn">import</span> <span class="nn">time</span><span class="o">,</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">traceback</span>
+<span class="kn">import</span> <span class="nn">time</span><span class="o">,</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">traceback</span><span class="o">,</span> <span class="nn">subprocess</span>
 <span class="kn">from</span> <span class="nn">pprint</span> <span class="kn">import</span> <span class="n">pformat</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
 <span class="kn">from</span> <span class="nn">selenium.common.exceptions</span> <span class="kn">import</span> <span class="o">*</span>
@@ -70,7 +70,7 @@
 <span class="sd">    :param num: Number of the child relevant to :class:`sw.pool`&#39;s self.data array. This index is used to </span>
 <span class="sd">        easily communicate results and relate them to the child in that array. `num` is also used when printing</span>
 <span class="sd">        out a status message.</span>
-<span class="sd">    :param log: Base log directory which a child will create a `num`-`self.run` folder in to log to.</span>
+<span class="sd">    :param log: Base log directory which we spit logs and screenshots into.</span>
 <span class="sd">    :param options: Dict from kwargs which contains directives to pass to GhostDriver.</span>
 
 <span class="sd">    :return: Child (self)</span>
@@ -85,46 +85,39 @@
         <span class="c"># Our child number</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">num</span> <span class="o">=</span> <span class="n">num</span>
 
-        <span class="c"># Run number, used to have different logs and error screenshots after restarting</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">run</span> <span class="o">=</span> <span class="mi">0</span> 
-        
         <span class="c"># Our driver instance</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">driver</span> <span class="o">=</span> <span class="bp">None</span>
 
-        <span class="c"># Our log folder, which is changed each time start is called (so see start)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
-
-        <span class="c"># The base log folder, which never changes.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">baselog</span> <span class="o">=</span> <span class="n">log</span>
+        <span class="c"># Our log folder which never changes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> <span class="n">log</span>
 
         <span class="c"># Our log handle</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">lh</span> <span class="o">=</span> <span class="s">&quot;&quot;</span> 
 
-        <span class="c"># Logging level</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">=</span> <span class="n">INFO</span> 
-
-        <span class="c"># Do we load images</span>
+        <span class="c"># Do we load images and other options</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">options</span> <span class="o">=</span> <span class="n">options</span>
+
+        <span class="c"># Logging level</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&#39;level&#39;</span><span class="p">,</span> <span class="n">NOTICE</span> <span class="p">)</span>
+
+        <span class="c"># Storage for our function we get</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">func</span>  <span class="o">=</span> <span class="bp">None</span>
 
         <span class="c"># How long we sleep in loops</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">sleepTime</span> <span class="o">=</span> <span class="mi">1</span>
 
+        <span class="c"># Our per page element cache.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cache</span> <span class="o">=</span> <span class="n">ElementCache</span><span class="p">(</span> <span class="p">)</span>
 
+        <span class="c"># Our current status, wrapped</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">statusVar</span> <span class="o">=</span> <span class="n">Value</span><span class="p">(</span> <span class="s">&#39;i&#39;</span><span class="p">,</span> <span class="n">STARTING</span> <span class="p">)</span>
+        
+
+        <span class="c"># Now start</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">(</span> <span class="p">)</span>
 
 
 
-<div class="viewcode-block" id="Child.msg"><a class="viewcode-back" href="../../sw.child.html#sw.child.Child.msg">[docs]</a>    <span class="k">def</span> <span class="nf">msg</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">message</span> <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Formats a message for this child to be printed out.</span>
-
-<span class="sd">        :param msg: The message to be printed out to the console.</span>
-<span class="sd">        :return: None</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">print</span><span class="p">(</span> <span class="s">&quot;Child #&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">num</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">)</span> <span class="o">+</span> <span class="s">&quot;: &quot;</span> <span class="o">+</span> <span class="n">message</span> <span class="p">)</span>
-
-
-</div>
 <div class="viewcode-block" id="Child.think"><a class="viewcode-back" href="../../sw.child.html#sw.child.Child.think">[docs]</a>    <span class="k">def</span> <span class="nf">think</span><span class="p">(</span> <span class="bp">self</span> <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;The meat of the wrapper, where the main thinking is done. Takes no arguments, just reads from </span>
 <span class="sd">           self variables set in :py:class:`sw.Child`. PhantomJS is added into the python path by run.bat, so</span>
@@ -132,6 +125,9 @@
 
 <span class="sd">           :return: None</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c"># Push a STARTING message to our pool</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">display</span><span class="p">(</span> <span class="n">DISP_START</span> <span class="p">)</span>
 
         <span class="n">wq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wq</span>
         <span class="n">cq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cq</span>
@@ -160,8 +156,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">driver</span> <span class="o">=</span> <span class="n">webdriver</span><span class="o">.</span><span class="n">PhantomJS</span><span class="p">(</span> <span class="n">desired_capabilities</span><span class="o">=</span><span class="n">dcaps</span><span class="p">,</span> <span class="n">service_log_path</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">,</span> <span class="s">&quot;ghostdriver.log&quot;</span> <span class="p">),</span> \
                                                <span class="n">service_args</span><span class="o">=</span><span class="n">sargs</span> <span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Webdriver failed to load: &quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span> <span class="n">e</span> <span class="p">),</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">traceback</span><span class="o">.</span><span class="n">formatexc</span><span class="p">(</span> <span class="p">)</span> <span class="p">]</span> <span class="p">),</span> <span class="n">CRITICAL</span> <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="p">(</span> <span class="s">&quot;WEBDRIVER ERROR&quot;</span> <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Webdriver failed to load: &quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span> <span class="n">e</span> <span class="p">),</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">(</span> <span class="p">)</span> <span class="p">]</span> <span class="p">),</span> <span class="n">CRITICAL</span> <span class="p">)</span>
             <span class="k">try</span><span class="p">:</span> 
                 <span class="bp">self</span><span class="o">.</span><span class="n">driver</span><span class="o">.</span><span class="n">quit</span><span class="p">(</span> <span class="p">)</span>
             <span class="k">except</span><span class="p">:</span>
@@ -174,41 +169,53 @@
         <span class="c"># Change our implicit wait time</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">driver</span><span class="o">.</span><span class="n">implicitly_wait</span><span class="p">(</span> <span class="mi">0</span> <span class="p">)</span>
 
-        <span class="c"># Push a STARTING message to our pool, if we print it we risk scrambling text in stdout</span>
-        <span class="n">cq</span><span class="o">.</span><span class="n">put</span><span class="p">(</span> <span class="p">[</span> <span class="bp">self</span><span class="o">.</span><span class="n">num</span><span class="p">,</span> <span class="n">READY</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">),</span> <span class="s">&quot;&quot;</span> <span class="p">]</span> <span class="p">)</span>
+        <span class="n">cq</span><span class="o">.</span><span class="n">put</span><span class="p">(</span> <span class="p">[</span> <span class="bp">self</span><span class="o">.</span><span class="n">num</span><span class="p">,</span> <span class="n">READY</span><span class="p">,</span> <span class="s">&quot;&quot;</span> <span class="p">]</span> <span class="p">)</span>
 
         <span class="c"># Write to our log another message indicating we are starting our runs</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&quot;Child process started and loaded&quot;</span> <span class="p">)</span>
 
         <span class="c"># While our work queue isn&#39;t empty...</span>
         <span class="k">while</span> <span class="ow">not</span> <span class="n">wq</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span> <span class="p">):</span>
-            <span class="n">func</span> <span class="o">=</span> <span class="n">wq</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="bp">True</span><span class="p">,</span> <span class="mi">5</span> <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">func</span> <span class="o">=</span> <span class="n">wq</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="bp">True</span><span class="p">,</span> <span class="mi">5</span> <span class="p">)</span>
             <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="n">start</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="c"># Still running</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">(</span> <span class="n">RUNNING</span> <span class="p">)</span>
             
             <span class="c"># Try, if an element isn&#39;t found an exception is thrown</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">clear</span><span class="p">(</span> <span class="p">)</span>
                 <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">)</span>
-                <span class="n">func</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">driver</span> <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">display</span><span class="p">(</span> <span class="n">DISP_GOOD</span> <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">driver</span> <span class="p">)</span>
             <span class="k">except</span> <span class="n">TimeoutException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">display</span><span class="p">(</span> <span class="n">DISP_ERROR</span> <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logError</span><span class="p">(</span> <span class="nb">str</span><span class="p">(</span> <span class="n">e</span> <span class="p">)</span> <span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Stack trace: &quot;</span><span class="p">,</span> <span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">(</span> <span class="p">)</span> <span class="p">]</span> <span class="p">),</span> <span class="n">CRITICAL</span> <span class="p">)</span>
                 
-                <span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="p">(</span> <span class="s">&quot;TIMEOUT&quot;</span> <span class="p">)</span>
+                <span class="n">cq</span><span class="o">.</span><span class="n">put</span><span class="p">(</span> <span class="p">[</span> <span class="bp">self</span><span class="o">.</span><span class="n">num</span><span class="p">,</span> <span class="n">FAILED</span><span class="p">,</span> <span class="p">(</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">)</span> <span class="o">-</span> <span class="n">start</span> <span class="p">),</span> <span class="nb">str</span><span class="p">(</span> <span class="n">e</span> <span class="p">)</span> <span class="p">]</span> <span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&quot;Timeout when finding element.&quot;</span> <span class="p">)</span>
+                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span> <span class="mi">1</span> <span class="p">)</span>
             <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">display</span><span class="p">(</span> <span class="n">DISP_ERROR</span> <span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">logError</span><span class="p">(</span> <span class="nb">str</span><span class="p">(</span> <span class="n">e</span> <span class="p">)</span> <span class="p">)</span> <span class="c"># Capture the exception and log it</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Stack trace: &quot;</span><span class="p">,</span> <span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">(</span> <span class="p">)</span> <span class="p">]</span> <span class="p">),</span> <span class="n">CRITICAL</span> <span class="p">)</span>
 
                 <span class="n">cq</span><span class="o">.</span><span class="n">put</span><span class="p">(</span> <span class="p">[</span> <span class="bp">self</span><span class="o">.</span><span class="n">num</span><span class="p">,</span> <span class="n">FAILED</span><span class="p">,</span> <span class="p">(</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">)</span> <span class="o">-</span> <span class="n">start</span> <span class="p">),</span> <span class="nb">str</span><span class="p">(</span> <span class="n">e</span> <span class="p">)</span> <span class="p">]</span> <span class="p">)</span>
+                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span> <span class="mi">1</span> <span class="p">)</span>
                 <span class="k">break</span>
             <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">display</span><span class="p">(</span> <span class="n">DISP_FINISH</span> <span class="p">)</span>
                 <span class="n">t</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">)</span> <span class="o">-</span> <span class="n">start</span>
                 <span class="n">cq</span><span class="o">.</span><span class="n">put</span><span class="p">(</span> <span class="p">[</span> <span class="bp">self</span><span class="o">.</span><span class="n">num</span><span class="p">,</span> <span class="n">DONE</span><span class="p">,</span> <span class="p">(</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">)</span> <span class="o">-</span> <span class="n">start</span> <span class="p">),</span> <span class="s">&quot;&quot;</span> <span class="p">]</span> <span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Successfully finished job (&quot;</span><span class="p">,</span> <span class="n">format</span><span class="p">(</span> <span class="n">t</span> <span class="p">),</span> <span class="s">&quot;s)&quot;</span> <span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span> <span class="mf">0.5</span> <span class="p">)</span>
 
         <span class="c"># Quit after we have finished our work queue, this kills the phantomjs process.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">driver</span><span class="o">.</span><span class="n">quit</span><span class="p">(</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">display</span><span class="p">(</span> <span class="n">DISP_DONE</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">(</span> <span class="n">FINISHED</span> <span class="p">)</span>
 
 
 </div>
@@ -231,7 +238,7 @@
 
 </div>
 <div class="viewcode-block" id="Child.screenshot"><a class="viewcode-back" href="../../sw.child.html#sw.child.Child.screenshot">[docs]</a>    <span class="k">def</span> <span class="nf">screenshot</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">NOTICE</span> <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Saves a screenshot to `num`-`run`/error_#.png and prints a message into the log specifying the file logged to.</span>
+        <span class="sd">&quot;&quot;&quot;Saves a screenshot to error_#.png and prints a message into the log specifying the file logged to.</span>
 <span class="sd">           </span>
 <span class="sd">           :param NOTICE level: This determines whether or not the error message will be logged according to the</span>
 <span class="sd">               level set in self.level. The screenshot will print anyway. If this error is not greater or equal to the level specified in self.level,</span>
@@ -242,7 +249,7 @@
         <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="c"># If we are writing several errors, number them appropriately</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Cannot write to a log directory that doesn&#39;t exist. &quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="p">]</span> <span class="p">),</span> <span class="n">CRITICAL</span> <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Cannot write to a log directory that doesn&#39;t exist. &quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="p">]</span> <span class="p">),</span> <span class="n">CRITICAL</span> <span class="p">)</span>
             <span class="k">return</span>
 
         <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
@@ -270,6 +277,11 @@
 <span class="sd">           :return: None</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">locals</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&#39;locals&#39;</span><span class="p">,</span> <span class="bp">None</span> <span class="p">)</span>
+
+        <span class="c"># Send error if appropriate</span>
+        <span class="k">if</span> <span class="n">level</span> <span class="o">&gt;=</span> <span class="n">ERROR</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">display</span><span class="p">(</span> <span class="n">DISP_ERROR</span> <span class="p">)</span>
+
         <span class="c"># Determine if we&#39;re logging this low</span>
         <span class="k">if</span> <span class="n">level</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">level</span><span class="p">:</span>
             <span class="k">return</span>
@@ -293,13 +305,23 @@
 
 
 </div>
+<div class="viewcode-block" id="Child.display"><a class="viewcode-back" href="../../sw.child.html#sw.child.Child.display">[docs]</a>    <span class="k">def</span> <span class="nf">display</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">t</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sends a display message to the main loop, which is then translated to the UI.</span>
+<span class="sd">           </span>
+<span class="sd">           :param t: The status this child will now show, a constant starting with DISP_ in const.py.</span>
+
+<span class="sd">           :returns: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cq</span><span class="o">.</span><span class="n">put</span><span class="p">(</span> <span class="p">[</span> <span class="bp">self</span><span class="o">.</span><span class="n">num</span><span class="p">,</span> <span class="n">DISPLAY</span><span class="p">,</span> <span class="n">t</span> <span class="p">]</span> <span class="p">)</span>
+
+
+</div>
 <div class="viewcode-block" id="Child.is_alive"><a class="viewcode-back" href="../../sw.child.html#sw.child.Child.is_alive">[docs]</a>    <span class="k">def</span> <span class="nf">is_alive</span><span class="p">(</span> <span class="bp">self</span> <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">           Checks if the child&#39;s process is still running, if it is then it returns True, otherwise False.</span>
+        <span class="sd">&quot;&quot;&quot;Checks if the child&#39;s process is still running, if it is then it returns True, otherwise False.</span>
 <span class="sd">           There&#39;s a check for if the process is None, which is set when a child terminates.</span>
 
 <span class="sd">           :return: Boolean for if Child process is still active (different from if a child is processing data).</span>
-<span class="sd">           &quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">proc</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">proc</span><span class="o">.</span><span class="n">is_alive</span><span class="p">(</span> <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>  
@@ -307,25 +329,34 @@
 
 
 </div>
-<div class="viewcode-block" id="Child.is_done"><a class="viewcode-back" href="../../sw.child.html#sw.child.Child.is_done">[docs]</a>    <span class="k">def</span> <span class="nf">is_done</span><span class="p">(</span> <span class="bp">self</span> <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Check if a child is done. When a child process is finished its self.proc is set to None.</span>
-<span class="sd">           </span>
-<span class="sd">           :return: Boolean for if Child is finished processing data. This is usually signal to kill the subprocess.</span>
+<div class="viewcode-block" id="Child.status"><a class="viewcode-back" href="../../sw.child.html#sw.child.Child.status">[docs]</a>    <span class="k">def</span> <span class="nf">status</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="bp">None</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Uses a multiprocess-safe variable to transmit our status upstream. These values are listed under</span>
+<span class="sd">           universal status types in const.py. The status types allow better logging and, for example, prevent</span>
+<span class="sd">           children that were already terminated from being terminated again (and throwing an exception).</span>
+
+<span class="sd">           When called with a type it will set this child&#39;s status on both the main process and the child&#39;s </span>
+<span class="sd">           process. When called without it, it reads from the status variable.</span>
+
+<span class="sd">           :param None type: The new value of our status.</span>
+
+<span class="sd">           :returns: If type isn&#39;t specified, our status. If it is, it sets our type and returns None.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">proc</span> <span class="o">==</span> <span class="bp">None</span>
+        <span class="k">if</span> <span class="nb">type</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">statusVar</span><span class="o">.</span><span class="n">value</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">statusVar</span><span class="o">.</span><span class="n">get_lock</span><span class="p">(</span> <span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">statusVar</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="nb">type</span>
 
 
 </div>
-<div class="viewcode-block" id="Child.start"><a class="viewcode-back" href="../../sw.child.html#sw.child.Child.start">[docs]</a>    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span> <span class="bp">self</span> <span class="p">):</span>
+<div class="viewcode-block" id="Child.start"><a class="viewcode-back" href="../../sw.child.html#sw.child.Child.start">[docs]</a>    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">flag</span><span class="o">=</span><span class="n">DISP_LOAD</span> <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Starts our child process off properly, used after a restart typically.</span>
 <span class="sd">           </span>
+<span class="sd">           :param DISP_LOAD flag: A custom flag to change the display color of the child, if desired.</span>
 <span class="sd">           :return: None</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c"># Move our run number up since we are starting</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">run</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span> <span class="nb">int</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">run</span> <span class="p">)</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">)</span>
-
-        <span class="c"># Log directory, now just our top level folder.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baselog</span>
+        <span class="c"># Not stopped anymore</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">(</span> <span class="n">STARTING</span> <span class="p">)</span>
 
         <span class="c"># Create our path</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="p">):</span>
@@ -334,45 +365,66 @@
         <span class="c"># Open our handle</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">lh</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&#39;log-&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">num</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">),</span> <span class="s">&#39;.txt&#39;</span> <span class="p">]</span> <span class="p">)</span> <span class="p">),</span> <span class="s">&#39;a+&#39;</span> <span class="p">)</span>
 
-        <span class="c"># Our process        </span>
+        <span class="c"># Show loading</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">display</span><span class="p">(</span> <span class="n">flag</span> <span class="p">)</span>
+
+        <span class="c"># Our process </span>
         <span class="bp">self</span><span class="o">.</span><span class="n">proc</span> <span class="o">=</span> <span class="n">Process</span><span class="p">(</span> <span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">think</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span> <span class="p">)</span> <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="p">(</span> <span class="s">&quot;LOADING&quot;</span> <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">proc</span><span class="o">.</span><span class="n">start</span><span class="p">(</span> <span class="p">)</span>
 
 
 </div>
-<div class="viewcode-block" id="Child.restart"><a class="viewcode-back" href="../../sw.child.html#sw.child.Child.restart">[docs]</a>    <span class="k">def</span> <span class="nf">restart</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="o">=</span><span class="s">&quot;restarting&quot;</span> <span class="p">):</span>
+<div class="viewcode-block" id="Child.restart"><a class="viewcode-back" href="../../sw.child.html#sw.child.Child.restart">[docs]</a>    <span class="k">def</span> <span class="nf">restart</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="o">=</span><span class="s">&quot;restarting&quot;</span><span class="p">,</span> <span class="n">flag</span><span class="o">=</span><span class="bp">None</span> <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Restarts the child process and gets webdriver running again.</span>
 
 <span class="sd">           :param &quot;RESTARTING&quot; msg: A message to print out in parenenthesis.</span>
+<span class="sd">           :param None flag: A custom flag to change the display color of the child, if desired.</span>
+
 <span class="sd">           :return: None</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">stop</span><span class="p">(</span> <span class="n">msg</span> <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">(</span> <span class="p">)</span>
+        <span class="k">if</span> <span class="n">flag</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stop</span><span class="p">(</span> <span class="n">msg</span><span class="p">,</span> <span class="n">flag</span> <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">(</span> <span class="n">flag</span> <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stop</span><span class="p">(</span> <span class="n">msg</span> <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">(</span> <span class="p">)</span>
 
 
 </div>
-<div class="viewcode-block" id="Child.stop"><a class="viewcode-back" href="../../sw.child.html#sw.child.Child.stop">[docs]</a>    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="o">=</span><span class="s">&quot;&quot;</span> <span class="p">):</span>
+<div class="viewcode-block" id="Child.stop"><a class="viewcode-back" href="../../sw.child.html#sw.child.Child.stop">[docs]</a>    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="o">=</span><span class="s">&quot;&quot;</span><span class="p">,</span> <span class="n">flag</span><span class="o">=</span><span class="n">FINISHED</span><span class="p">,</span> <span class="n">disp_flag</span><span class="o">=</span><span class="n">DISP_DONE</span> <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Stops a child process properly and sets its self.proc to None. Optionally takes a message</span>
 <span class="sd">           to print out.</span>
 <span class="sd">        </span>
 <span class="sd">           :param &quot;&quot; msg: A message to show in parenthesis on the console next to ``Child #: STOPPING (msg)``.</span>
+<span class="sd">           :param FINISHED flag: A custom status flag for if the child is finished, paused, stopped, or whatever is desired.</span>
+<span class="sd">           :param DISP_DONE disp_flag: A custom display flag for the status of the child after stopping.</span>
+
 <span class="sd">           :return: None</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">proc</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
             <span class="k">return</span>
 
+        <span class="c"># Prevent the pool from trying to restart us</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">(</span> <span class="n">flag</span> <span class="p">)</span>
+
         <span class="k">if</span> <span class="n">msg</span> <span class="o">!=</span> <span class="s">&quot;&quot;</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Stopping child process: </span><span class="se">\&quot;</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="s">&quot;</span><span class="se">\&quot;</span><span class="s">&quot;</span> <span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;STOPPING (&quot;</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="s">&quot;)&quot;</span> <span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&quot;Stopping child process&quot;</span> <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="p">(</span> <span class="s">&quot;STOPPING&quot;</span> <span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">proc</span><span class="o">.</span><span class="n">terminate</span><span class="p">(</span> <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">proc</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">proc</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="c"># Kill our process</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">proc</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="s">&quot;posix&quot;</span><span class="p">:</span>
+                <span class="n">subprocess</span><span class="o">.</span><span class="n">call</span><span class="p">(</span> <span class="p">[</span> <span class="s">&#39;taskkill&#39;</span><span class="p">,</span> <span class="s">&#39;/F&#39;</span><span class="p">,</span> <span class="s">&#39;/T&#39;</span><span class="p">,</span> <span class="s">&#39;/PID&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">proc</span><span class="o">.</span><span class="n">pid</span> <span class="p">)</span> <span class="p">],</span> <span class="n">stdout</span><span class="o">=</span><span class="nb">open</span><span class="p">(</span> <span class="n">os</span><span class="o">.</span><span class="n">devnull</span><span class="p">,</span> <span class="s">&#39;wb&#39;</span> <span class="p">),</span> <span class="n">stderr</span><span class="o">=</span><span class="nb">open</span><span class="p">(</span> <span class="n">os</span><span class="o">.</span><span class="n">devnull</span><span class="p">,</span> <span class="s">&#39;wb&#39;</span> <span class="p">)</span> <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">subprocess</span><span class="o">.</span><span class="n">call</span><span class="p">(</span> <span class="p">[</span> <span class="s">&#39;pkill&#39;</span><span class="p">,</span> <span class="s">&#39;-TERM&#39;</span><span class="p">,</span> <span class="s">&#39;-P&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">proc</span><span class="o">.</span><span class="n">pid</span> <span class="p">)</span> <span class="p">],</span> <span class="n">stdout</span><span class="o">=</span><span class="nb">open</span><span class="p">(</span> <span class="n">os</span><span class="o">.</span><span class="n">devnull</span><span class="p">,</span> <span class="s">&#39;wb&#39;</span> <span class="p">),</span> <span class="n">stderr</span><span class="o">=</span><span class="nb">open</span><span class="p">(</span> <span class="n">os</span><span class="o">.</span><span class="n">devnull</span><span class="p">,</span> <span class="s">&#39;wb&#39;</span> <span class="p">)</span> <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">proc</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">proc</span> <span class="o">=</span> <span class="bp">None</span>
 
+        <span class="c"># Inform the TUI that we&#39;re done.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">display</span><span class="p">(</span> <span class="n">disp_flag</span> <span class="p">)</span>
+
+        <span class="c"># Close our log</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">lh</span><span class="o">.</span><span class="n">close</span><span class="p">(</span> <span class="p">)</span>
 
 

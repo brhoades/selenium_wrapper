@@ -166,32 +166,6 @@ it is enabled (can type into / click).</td>
 </dd></dl>
 
 <dl class="function">
-<dt id="sw.utils.jQCheck">
-<tt class="descclassname">sw.utils.</tt><tt class="descname">jQCheck</tt><big>(</big><em>driver</em>, <em>timeout=1</em><big>)</big><a class="reference internal" href="_modules/sw/utils.html#jQCheck"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.utils.jQCheck" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function takes our webdriver object in and checks if the current loaded page has jQuery on it.
-If it doesn&#8217;t, it tries to load it. It will pause the script for up to <cite>timeout</cite> seconds after loading,
-after that it just returns False so that the exists script will stop holding things up.</p>
-<div class="deprecated">
-<p><span class="versionmodified">Deprecated since version 0.1: </span>JavaScript is no longer used to check for elements before running webdriver checks.</p>
-</div>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><a class="reference internal" href="#common-params"><em>driver</em></a></li>
-<li><strong>timeout</strong> (<em>1</em>) &#8211; How long to wait for jQuery to load before continuing on.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Boolean, True if jQuery is loaded False if it did not load.</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
 <dt id="sw.utils.loadScript">
 <tt class="descclassname">sw.utils.</tt><tt class="descname">loadScript</tt><big>(</big><em>driver</em>, <em>js</em><big>)</big><a class="reference internal" href="_modules/sw/utils.html#loadScript"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.utils.loadScript" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a new script object and appends it to the header.</p>
