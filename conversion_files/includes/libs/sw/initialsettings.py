@@ -3,8 +3,17 @@ import urlparse, requests, json
 
 class InitialSettings:
     def __init__( self, stdscr, kwargs ):
-        """
+        """Initializing this class more or less handles every part of the initial settings menu.
+           There are no other parts of it which needs to be called, as the initialize function will go through
+           and call every function it needs in order. This function should be initialized with the wrapper for curses
+           around it with the kwargs passed to our wrapper function included.
+            
+           Initial settings presents the user with the default options (or whatever kwargs were included) and allows
+           them to go through either individually change or review every one, while at the same time validating them.
 
+           :param stdscr: Provided by the curses wrapper, just the screen object that will be printed to.
+           :param kwargs: The keyword arguments provided to :func:`sw.wrapper.main`
+           :returns InitialSettings: (self)
         """
         stdscr.nodelay( True )   # Don't wait on key presses
         curses.curs_set( 0 )     # Invisible Cursor
@@ -12,9 +21,9 @@ class InitialSettings:
         self.stdscr = stdscr
         self.kwargs = kwargs
 
-        self.kwarray = [ ]
-        self.kwcharmap = { }
-        self.kwmap = { }
+        self.kwarray = [ ]      # Contains our options to print out. This includes any titles and text after letters you see
+        self.kwmap = { }        # Maps a kwarg to an array [ default value string, default value ] ie [ 'None', '' ]
+        self.kwcharmap = { }    # Maps a key to kwarg text (ie 'a' => 'numJobs')
 
         curses.init_pair( 100, curses.COLOR_BLACK, curses.COLOR_RED )
         curses.init_pair( 101, curses.COLOR_BLACK, curses.COLOR_YELLOW )
@@ -54,8 +63,11 @@ class InitialSettings:
 
 
     def handleInput( self ):
-        """
+        """This method is a giant loop which calls most other functions. It waits for key presses,
+           validates them, then loops through getting input for what was pressed, validating the
+           input, then seeing if the user is ready to terminate... more or less.
 
+           :returns None:
         """
         first = True
         done = False
@@ -73,7 +85,7 @@ class InitialSettings:
 
                 out = ewin.gather( ).rstrip( )
                 win.clear( )
-                out = self.processEntry( out, res, key, win )
+                out = self.processEntry( out, key, win )
                 if out == -1:
                     continue
 
@@ -98,9 +110,21 @@ class InitialSettings:
 
 
 
-    def processEntry( self, out, res, key, win ):
-        """
+    def processEntry( self, out, key, win ):
+        """Called as part of :func:`handleInput`, this method checks for the type
+           of the default value and transforms the input to that... unless the default is
+           None, in which case it assumes String.
 
+           It will also check for specific kwargs, such as report, which upon entry it validates
+           it as being a real URL.
+
+           :param String out: Input given from the user to fill the field specified by key.
+           :param String key: The letter the user entered, which points to a kwarg and its default value.
+           :param win: A curses window object for the area where the value was written. It is often written back over
+             after the value is interpreted. For example, in a field where the default value for a kwarg is bool the field
+             evaluates anything not /f(alse)?/i or /no?/i as True and writes "True" to the field. 
+           
+           :returns None:
         """
         default = self.kwmap[key][1]    # the default value
 
@@ -157,8 +181,12 @@ class InitialSettings:
 
 
     def checkValues( self ):
-        """
-
+        """Checks values after the user enters a blank character (they ask to begin). The primary function this serves
+           is to check that the reporting server exists, if specified, by resolving the address, doing a handshake, and 
+           seeing what requirements, if any, the server has. Currently the only supported requirement is for the project
+           field to not be blank.
+           
+           :returns None:
         """
         r = None
         rep = self.kwargs.get( 'report', None )
@@ -202,8 +230,12 @@ class InitialSettings:
 
 
     def error( self, msg=None, type="Error" ):
-        """
+        """Prints an error in a standard way above the user input field. The default type, Error, results in a red message,
+           while any other value will print a yellow one.
 
+           :param msg: The message to print out as an error.
+           :param type: The type of error to print out, any value that's not Error will be yellow. This type will prefix msg.
+           :returns None:
         """
         if msg != None:
             self.error( ) # Clear ourselves
@@ -218,8 +250,11 @@ class InitialSettings:
 
 
     def setupDefaults( self ):
-        """
+        """This method loads into kwmap and kwarray the defaults for various kwargs as well as the titles to print
+           in front of them on the display screen. It does nothing more than just loading the values up, :func:`renderList`
+           does the dirty work.
 
+           :returns None:
         """
         self.kwarray.append( "Run Settings" )
         self.kwarray.append( 'children' )
@@ -250,8 +285,13 @@ class InitialSettings:
 
 
     def renderList( self ):
-        """
-
+        """Renders all values prepared from :func:`setupDefaults` on the screen, but only once. This method is never
+           called again, so it's assumed all the values are kept pristine. In addition to printing all the titles and
+           kwargs on screen, it adds into kwmap a 3rd index (kwmap[key][2]) which is a reference to the subwindow for
+           that kwarg's value. So, in the future, to modify f's display value::
+             self.kwmap['f'][2].addstr( 'New Value' )
+           
+           :returns None:
         """
         i = 0 
         off = 0
