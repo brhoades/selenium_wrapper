@@ -29,6 +29,7 @@ Module Reference
    sw.formatting
    sw.ui
    sw.report
+   sw.initialsettings
 
 
 ******************

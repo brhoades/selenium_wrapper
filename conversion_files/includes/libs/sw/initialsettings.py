@@ -2,19 +2,20 @@ import curses, curses.textpad, re
 import urlparse, requests, json
 
 class InitialSettings:
-    def __init__( self, stdscr, kwargs ):
-        """Initializing this class more or less handles every part of the initial settings menu.
-           There are no other parts of it which needs to be called, as the initialize function will go through
-           and call every function it needs in order. This function should be initialized with the wrapper for curses
-           around it with the kwargs passed to our wrapper function included.
-            
-           Initial settings presents the user with the default options (or whatever kwargs were included) and allows
-           them to go through either individually change or review every one, while at the same time validating them.
+    """Initializing this class more or less handles every part of the initial settings menu.
+       There are no other parts of it which needs to be called, as the initialize function will go through
+       and call every function it needs in order. This function should be initialized with the wrapper for curses
+       around it with the kwargs passed to our wrapper function included.
+        
+       Initial settings presents the user with the default options (or whatever kwargs were included) and allows
+       them to go through either individually change or review every one, while at the same time validating them.
 
-           :param stdscr: Provided by the curses wrapper, just the screen object that will be printed to.
-           :param kwargs: The keyword arguments provided to :func:`sw.wrapper.main`
-           :returns InitialSettings: (self)
-        """
+       :param stdscr: Provided by the curses wrapper, just the screen object that will be printed to.
+       :param kwargs: The keyword arguments provided to :func:`sw.wrapper.main`
+       :returns: InitialSettings (self)
+    """
+
+    def __init__( self, stdscr, kwargs ):
         stdscr.nodelay( True )   # Don't wait on key presses
         curses.curs_set( 0 )     # Invisible Cursor
 
@@ -67,7 +68,7 @@ class InitialSettings:
            validates them, then loops through getting input for what was pressed, validating the
            input, then seeing if the user is ready to terminate... more or less.
 
-           :returns None:
+           :returns: None
         """
         first = True
         done = False
@@ -124,7 +125,7 @@ class InitialSettings:
              after the value is interpreted. For example, in a field where the default value for a kwarg is bool the field
              evaluates anything not /f(alse)?/i or /no?/i as True and writes "True" to the field. 
            
-           :returns None:
+           :returns: None
         """
         default = self.kwmap[key][1]    # the default value
 
@@ -186,7 +187,7 @@ class InitialSettings:
            seeing what requirements, if any, the server has. Currently the only supported requirement is for the project
            field to not be blank.
            
-           :returns None:
+           :returns: None
         """
         r = None
         rep = self.kwargs.get( 'report', None )
@@ -235,7 +236,7 @@ class InitialSettings:
 
            :param msg: The message to print out as an error.
            :param type: The type of error to print out, any value that's not Error will be yellow. This type will prefix msg.
-           :returns None:
+           :returns: None
         """
         if msg != None:
             self.error( ) # Clear ourselves
@@ -254,7 +255,7 @@ class InitialSettings:
            in front of them on the display screen. It does nothing more than just loading the values up, :func:`renderList`
            does the dirty work.
 
-           :returns None:
+           :returns: None
         """
         self.kwarray.append( "Run Settings" )
         self.kwarray.append( 'children' )
@@ -291,7 +292,7 @@ class InitialSettings:
            that kwarg's value. So, in the future, to modify f's display value::
              self.kwmap['f'][2].addstr( 'New Value' )
            
-           :returns None:
+           :returns: None
         """
         i = 0 
         off = 0
