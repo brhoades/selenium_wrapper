@@ -7,13 +7,12 @@ class Report:
        server which then does further handling. The events are sent from the pool via calls to this instance's functions
        that in turn call :func:`send`.
 
-       Reporting can be disabled by excluding the report option from the kwargs of :func:`main`. This has the
+       Reporting can be disabled putting None (or a blank field) in the initial settings page. This has the
        same effect as not including the #report="url" option within the options header of a script before conversion. This URL
-       should point to the included sinatra server in reporting/ like so: "http://reporting-server.com:4567/report". 
+       should point to the included sinatra server in ``reporting/`` like so: ``http://reporting-server.com:4567/report``. 
 
-       Other options include a id="" option which allows you to specify a custom computer ID. Similarly, including run="" allows
-       you to choose a specific run to join. Note that the run will be created if it doesn't already exist and will be used for 
-       all subsequent script calls until removed.
+       The reporting class also takes in the custom ``id=""``, ``run=""``, and ``project=""`` from kwargs / initial settings. It 
+       uses these settings when communicating unstream with the reporting server. 
 
        :param pool: Reference to our owning pool. This is primarily to access pool.options and not used much elsewhere. 
 
@@ -131,7 +130,7 @@ class Report:
              }
 
           The JSON above is arranged and then attempts to open a HTTP request to the provided server. If it fails,
-          it tries 5 more times every 5 seconds with a timeout of 1 second. It attemps to send the JSON up via post
+          it tries 5 more times every 5 seconds with a timeout of 1 second. It attempts to send the JSON up via POST
           and then waits for an HTTP 200 or similar before considering it a success. If R_START was included in the 
           payload, the server will respond with a cid and a rid for the client which it then stores internally for 
           future reports.
