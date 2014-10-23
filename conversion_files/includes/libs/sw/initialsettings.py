@@ -3,8 +3,8 @@ import urlparse, requests, json
 
 class InitialSettings:
     def __init__( self, stdscr, kwargs ):
-        """Gets our prerun information. It first displays all information it's already loaded in, and 
-           asks if the user wishes to change anything.
+        """
+
         """
         stdscr.nodelay( True )   # Don't wait on key presses
         curses.curs_set( 0 )     # Invisible Cursor
@@ -54,6 +54,9 @@ class InitialSettings:
 
 
     def handleInput( self ):
+        """
+
+        """
         first = True
         done = False
         res = ""
@@ -64,62 +67,15 @@ class InitialSettings:
             elif not first:
                 key = self.kwcharmap[res]
                 win = self.kwmap[key][2]        # our setting's window
-                default = self.kwmap[key][1]    # the default value
-
                 ewin = curses.textpad.Textbox( win, insert_mode=True )
                 ewin.stripspaces = 1
                 ewin.edit( )
 
                 out = ewin.gather( ).rstrip( )
                 win.clear( )
-                try:
-                    if type( default ) is int:
-                        out = int( out ) 
-                    elif type( default ) is float:
-                        out = float( out )
-                    elif type( default ) is long:
-                        out = long( out )
-                    elif type( default ) is str:
-                        out = str( out )
-                    elif type( default ) is bool:
-                        if out == "False" or out == "false" or out == "f" \
-                                or out == "n" or out == "no" or out == "No":
-                            out = False
-                        out = bool( out )
-                    elif default is None or default == "auto":
-                        if out == "None" or out == "none" or out == "auto":
-                            out = None
-                        elif default == "auto":
-                            out = "auto"
-
-                    if ( default is None and not out is None ) or out != default:
-                        # Check everything out
-                        if key == 'project':
-                            reg = re.findall( r'([^0-9A-Za-z\-])', out )
-                            if reg:
-                                self.error( ''.join( [ "Project name cannot include ", reg[0] ] ) )
-                                continue
-                        elif key == 'report':
-                            o = bool( urlparse.urlparse( out ).netloc )
-                            if not o:
-                                self.error( "Reporting server must be a HTTP URL" )
-                                continue
-                        elif key == 'run':
-                            reg = re.findall( r'([^0-9A-Za-z\-\_])', out )
-                            if reg:
-                                self.error( ''.join( [ "Run name cannot include ", reg[0] ] ) )
-                                continue
-
-                    # Finally add it in and go on
-                    if default == "auto" and ( out == "auto" or out == "" ):
-                        self.kwargs[key] = None
-                        out = "auto"
-                    else:
-                        self.kwargs[key] = out
-                    win.addstr( str( out ) )
-                except Exception as e:
-                    win.addstr( str( self.kwargs.get( key, default ) ) )
-                    self.error( e )
+                out = self.processEntry( out, res, key, win )
+                if out == -1:
+                    continue
 
                 win.refresh( )
                 self.error( )
@@ -142,7 +98,68 @@ class InitialSettings:
 
 
 
+    def processEntry( self, out, res, key, win ):
+        """
+
+        """
+        default = self.kwmap[key][1]    # the default value
+
+        try:
+            if type( default ) is int:
+                out = int( out ) 
+            elif type( default ) is float:
+                out = float( out )
+            elif type( default ) is long:
+                out = long( out )
+            elif type( default ) is str:
+                out = str( out )
+            elif type( default ) is bool:
+                if out == "False" or out == "false" or out == "f" \
+                        or out == "n" or out == "no" or out == "No":
+                    out = False
+                out = bool( out )
+            elif default is None or default == "auto":
+                if out == "None" or out == "none" or out == "auto":
+                    out = None
+                elif default == "auto":
+                    out = "auto"
+
+            if ( default is None and not out is None ) or out != default:
+                # Check everything out
+                if key == 'project':
+                    reg = re.findall( r'([^0-9A-Za-z\-])', out )
+                    if reg:
+                        self.error( ''.join( [ "Project name cannot include ", reg[0] ] ) )
+                        return -1
+                elif key == 'report':
+                    o = bool( urlparse.urlparse( out ).netloc )
+                    if not o:
+                        self.error( "Reporting server must be a HTTP URL" )
+                        return -1
+                elif key == 'run':
+                    reg = re.findall( r'([^0-9A-Za-z\-\_])', out )
+                    if reg:
+                        self.error( ''.join( [ "Run name cannot include ", reg[0] ] ) )
+                        return -1
+
+            # Finally add it in and go on
+            if default == "auto" and ( out == "auto" or out == "" ):
+                self.kwargs[key] = None
+                out = "auto"
+            else:
+                self.kwargs[key] = out
+            win.addstr( str( out ) )
+        except Exception as e:
+            win.addstr( str( self.kwargs.get( key, default ) ) )
+            self.error( e )
+
+        return out
+
+
     def checkValues( self ):
+        """
+
+        """
         r = None
         rep = self.kwargs.get( 'report', None )
         run = self.kwargs.get( 'run', None )
@@ -185,6 +202,9 @@ class InitialSettings:
 
 
     def error( self, msg=None, type="Error" ):
+        """
+
+        """
         if msg != None:
             self.error( ) # Clear ourselves
             color = 100
@@ -198,6 +218,9 @@ class InitialSettings:
 
 
     def setupDefaults( self ):
+        """
+
+        """
         self.kwarray.append( "Run Settings" )
         self.kwarray.append( 'children' )
         self.kwmap['children'] = [ "# Children", 1 ]
@@ -227,6 +250,9 @@ class InitialSettings:
 
 
     def renderList( self ):
+        """
+
+        """
         i = 0 
         off = 0
         tab = 15
