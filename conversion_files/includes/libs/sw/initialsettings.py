@@ -7,9 +7,11 @@ class InitialSettings:
        and call every function it needs in order. This function should be initialized with the wrapper for curses
        around it with the kwargs passed to our wrapper function included.
         
-       Initial settings presents the user with the default options (or whatever kwargs were included) and allows
-       them to go through either individually change or review every one, while at the same time validating them.
-
+       Initial settings presents the user with the default options used by the script and allows
+       them to go through either individually change or review every one. If any special arguments were thrown into
+       the script from the script converter, it will automatically load them in place of the defaults. At the end,
+       the values are all validated.
+       
        :param stdscr: Provided by the curses wrapper, just the screen object that will be printed to.
        :param kwargs: The keyword arguments provided to :func:`sw.wrapper.main`
        :returns: InitialSettings (self)
