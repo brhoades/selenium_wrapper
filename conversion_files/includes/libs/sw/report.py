@@ -247,7 +247,8 @@ class Report:
 
         data = { 'error': error, 'childID': child }
 
-        if screenshot is not None:
+        if screenshot is not None and False:
+            self.pool.logMsg( "Screenshot: " + screenshot )
             with open( screenshot, "rb") as img:
                 data['screenshot'] = base64.b64encode( img.read( ) ) 
         

@@ -142,18 +142,18 @@ class Child:
                 self.func( self.driver )
             except TimeoutException as e:
                 self.display( DISP_ERROR )
-                self.logError( str( e ) )
+                screen = self.logError( str( e ) )
                 self.logMsg( ''.join( [ "Stack trace: ", traceback.format_exc( ) ] ), CRITICAL )
                 
-                cq.put( [ self.num, FAILED, ( time.time( ) - start ), str( e ) ] )
+                cq.put( [ self.num, FAILED, ( time.time( ) - start ), str( e ), screen ] )
                 self.logMsg( "Timeout when finding element." )
                 time.sleep( 1 )
             except Exception as e:
                 self.display( DISP_ERROR )
-                self.logError( str( e ) ) # Capture the exception and log it
+                screen = self.logError( str( e ) ) # Capture the exception and log it
                 self.logMsg( ''.join( [ "Stack trace: ", traceback.format_exc( ) ] ), CRITICAL )
 
-                cq.put( [ self.num, FAILED, ( time.time( ) - start ), str( e ) ] )
+                cq.put( [ self.num, FAILED, ( time.time( ) - start ), str( e ), screen ] )
                 time.sleep( 1 )
                 break
             else:
@@ -177,14 +177,14 @@ class Child:
 
            :param e: Unicode json-encoded string from a webdriver-thrown error.
            :param False noScreenshot: Whether or not to take a screenshot of the error.
-           :return: None
+           :return: String for screenshot location, if any.
         """
 
         o = pformat( formatError( e, "log" ) )
         self.logMsg( o, CRITICAL )
 
         if not noScreenshot:
-            self.screenshot( CRITICAL )
+            return self.screenshot( CRITICAL )
 
 
 
@@ -194,7 +194,7 @@ class Child:
            :param NOTICE level: This determines whether or not the error message will be logged according to the
                level set in self.level. The screenshot will print anyway. If this error is not greater or equal to the level specified in self.level,
                it is not printed. If it is, the message is printed into log.txt with the level specified by the timestamp.
-           :return: None
+           :return: String for screenshot location
         """
         fn = ""
         i = 0
@@ -211,6 +211,8 @@ class Child:
 
         self.driver.save_screenshot( fn ) 
         self.logMsg( ''.join( [ "Wrote screenshot to: ", fn ] ), level )
+
+        return fn
 
 
 
