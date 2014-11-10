@@ -82,6 +82,11 @@ class InitialSettings:
             elif not first:
                 key = self.kwcharmap[res]
                 win = self.kwmap[key][2]        # our setting's window
+
+                # Clear the password field since it's useless anyway
+                if key == "report_pass":
+                    win.clear( )
+
                 ewin = curses.textpad.Textbox( win, insert_mode=True )
                 ewin.stripspaces = 1
                 ewin.edit( )
