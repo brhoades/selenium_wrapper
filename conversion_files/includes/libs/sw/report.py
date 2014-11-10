@@ -1,4 +1,5 @@
-import json, time, os, getpass, socket, base64, traceback, splunklib.client
+import json, time, os, getpass, socket, base64, traceback
+import splunklib.client as client
 import Queue as Q
 from sw.const import * 
 
@@ -36,7 +37,7 @@ class Report:
 
         self.user = pool.options.get( 'report_user', None )
 
-        self.pass = pool.options.get( 'report_pass', None )
+        self.password = pool.options.get( 'report_pass', None )
         
         self.index = pool.options.get( 'report_index', None )
 
@@ -172,7 +173,7 @@ class Report:
                 r = None
                 d = data.pop( )
                 try:
-                    r = self.sendSplunk( d )
+                    r = self.sendSplunk( json.dumps( d ) )
                 except Exception as e:
                     self.pool.logMsg( "Fatal error with reporting, probably failed to connect: ", CRITICAL )
                     self.pool.logMsg( traceback.format_exc( ), CRITICAL )
@@ -193,7 +194,7 @@ class Report:
 
 
 
-    def sendSplunk( data ):
+    def sendSplunk( self, data ):
         """Sends data to a splunk server reading from kwargs for options.
 
            :param data: JSON of data to send to the splunk server.
@@ -202,7 +203,7 @@ class Report:
         splunk = client.connect( host=self.site, 
                 port=self.port, 
                 username=self.user, 
-                password=self.pass )
+                password=self.password )
         index = splunk.indexes[self.index]
         return index.submit( data, sourcetype='py-event' )
         

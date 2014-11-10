@@ -61,9 +61,6 @@ class Pool:
         # Our reporting object
         self.reporting = Report( self )
 
-        # Tell our server we're starting
-        self.reporting.start( )
-
         ####### Settings ########
 
         # Time between children spawning
@@ -301,8 +298,6 @@ class Pool:
 
         self.status = type 
         
-        self.reporting.stop( )
-
 
 
     def start( self ):
@@ -316,5 +311,3 @@ class Pool:
             self.reporting.newChild( c.num )
         
         self.status = RUNNING
-        
-        self.reporting.start( )

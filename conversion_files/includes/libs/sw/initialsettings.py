@@ -158,11 +158,6 @@ class InitialSettings:
                     if reg:
                         self.error( ''.join( [ "Project name cannot include ", reg[0] ] ) )
                         return -1
-                elif key == 'report':
-                    o = bool( urlparse.urlparse( out ).netloc )
-                    if not o:
-                        self.error( "Reporting server must be a HTTP URL" )
-                        return -1
                 elif key == 'run':
                     reg = re.findall( r'([^0-9A-Za-z\-\_])', out )
                     if reg:
@@ -196,31 +191,9 @@ class InitialSettings:
         run = self.kwargs.get( 'run', None )
         err = None
         if rep is not None:
-            try: 
-                r = requests.post( rep, data=json.dumps( { "HELLOAREYOUTHERE": None } ), timeout=1, headers={'content-type': 'application/json'} )
-            except Exception as e:
-                err = str( e ) 
-                if len( err ) > 30:
-                    err = ''.join( [ err[:27], "..." ] )
-            if r is None:
-                err = "Failure connecting to reporting server"
-            elif r.status_code != requests.codes.ok:
-                err = ''.join( [ "Received HTTP status code ", str( r.status_code ) ] )
-            else:
-                if r.text != None:
-                    try:
-                        response = r.json( )
-                        if "YESIAMHERE" in response:
-                            if response["projectRequired"]:
-                                if self.kwargs.get( 'project', None ) is None:
-                                    self.error( "Server explicity requires a project name" )
-                                    return False
-                    except Exception as e:
-                        if err is None:
-                            err = "Handshake failed; not a reporting server"
-                        pass
-                else:
-                    err = "Connection to reporting server failed"
+            if self.kwargs.get( 'project', None ) is None:
+                self.error( "Server explicity requires a project name" )
+                return False
             if run is None and self.kwargs.get( 'project', None ) is not None:
                 self.error( "Must include a run name with a project name" )
                 return False # Returns false because this cannot be ignored.
