@@ -75,6 +75,7 @@ class Pool:
         self.nextSpawn = time.time( )
 
         self.logMsg( "Pool starting" )
+        self.reporting.start( )
 
 
 
@@ -133,6 +134,7 @@ class Pool:
 
         c.stop( "Stopped by GUI", STOPPED )
         self.logMsg( ''.join( [ "Stopping child (#", str( c.num + 1 ), ")" ] ) )
+        self.reporting.stop( )
 
 
 
@@ -297,6 +299,7 @@ class Pool:
             self.endChild( c.num )
 
         self.status = type 
+        self.reporting.stop( )
         
 
 
@@ -311,3 +314,4 @@ class Pool:
             self.reporting.newChild( c.num )
         
         self.status = RUNNING
+        self.reporting.start( )

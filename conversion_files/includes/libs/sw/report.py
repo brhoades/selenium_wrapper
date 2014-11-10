@@ -53,12 +53,7 @@ class Report:
         # Set on an error transmitting
         self.nextSend = 0
 
-        self.pingFreq = 60
-
         self.tries = 5
-
-        # Ping Frequency
-        self.nextPing = time.time( ) + self.pingFreq
 
         # Our queue of things to submit to our server
         self.queue = Q.Queue( )
@@ -146,8 +141,6 @@ class Report:
         t = time.time( )
         if not self.enabled:
             return
-        if t > self.nextPing:
-            self.ping( ) 
         if self.nextSend != 0 and t < self.nextSend:
             return
         if self.queue.qsize( ) == 0:
@@ -208,6 +201,19 @@ class Report:
         return index.submit( data, sourcetype='py-event' )
         
 
+    def start( self ):
+        """Sends a start notification payload.
+            
+           :returns: None
+        """
+        self.send( { }, R_START )
+
+    def stop( self ):
+        """Sends a stop notification payload.
+            
+           :returns: None
+        """
+        self.send( { }, R_STOP )
 
     def jobStart( self, child ):
         """Sends a job start notification payload.
