@@ -168,6 +168,9 @@ class InitialSettings:
             if default == "auto" and ( out == "auto" or out == "" ):
                 self.kwargs[key] = None
                 out = "auto"
+            elif key == "report_pass":
+                self.kwargs[key] = out
+                out = "*" * len( out )
             else:
                 self.kwargs[key] = out
             win.addstr( str( out ) )
@@ -234,28 +237,36 @@ class InitialSettings:
         """
         self.kwarray.append( "Run Settings" )
         self.kwarray.append( 'children' )
-        self.kwmap['children'] = [ "# Children", 1 ]
-        self.kwmap['stagger']  = [ "Stagger Spawn", False ]
+        self.kwmap['children']      = [ "# Children", 1 ]
+        self.kwmap['stagger']       = [ "Stagger Spawn", False ]
         self.kwarray.append( 'stagger' )
-        self.kwmap['jobs']     = [ "# Jobs", 1 ]
+        self.kwmap['jobs']          = [ "# Jobs", 1 ]
         self.kwarray.append( 'jobs' )
         
         self.kwarray.append( "" )
         self.kwarray.append( "Pool Settings" )
-        self.kwmap['level']    = [ "Log Lvl (0-5)", 1 ]
+        self.kwmap['level']         = [ "Log Lvl (0-5)", 1 ]
         self.kwarray.append( 'level' )
-        self.kwmap['images']   = [ "Get Images", False ]
+        self.kwmap['images']        = [ "Get Images", False ]
         self.kwarray.append( 'images' )
         self.kwarray.append( "" )
 
         self.kwarray.append( "Reporting Settings" )
-        self.kwmap['report']   = [ "Server", None ]
+        self.kwmap['report']        = [ "Server", None ]
         self.kwarray.append( 'report' )
-        self.kwmap['run']      = [ "Run Name", "auto" ]
+        self.kwmap['report_port']   = [ "Port", 8089 ]
+        self.kwarray.append( 'report_port' )
+        self.kwmap['report_user']   = [ "User", None ]
+        self.kwarray.append( 'report_user' )
+        self.kwmap['report_pass']   = [ "Password", None ]
+        self.kwarray.append( 'report_pass' )
+        self.kwmap['report_index']  = [ "Index", None ]
+        self.kwarray.append( 'report_index' )
+        self.kwmap['run']           = [ "Run Name", None ]
         self.kwarray.append( 'run' )
-        self.kwmap['project']  = [ "Project Name", None ]
+        self.kwmap['project']       = [ "Project Name", None ]
         self.kwarray.append( 'project' )
-        self.kwmap['id']       = [ "Client Name", "auto" ]
+        self.kwmap['id']            = [ "Client Name", "auto" ]
         self.kwarray.append( 'id' )
 
 
@@ -290,6 +301,10 @@ class InitialSettings:
                     ( " "*( tab-size ) )
                     ] )
                 self.stdscr.addstr( y, x, s )
+
+                # Catch for passwords
+                if key == "report_pass" and val != None:
+                    val = "*" * len( val )
                 
                 # Now print our field
                 self.kwmap[key].append( self.stdscr.subwin( 1, 50, y, x + len( s ) ) )
