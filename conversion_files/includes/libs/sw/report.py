@@ -31,6 +31,14 @@ class Report:
         self.project = pool.options.get( 'project', None )
 
         self.site = pool.options.get( 'report', None )
+        
+        self.port = pool.options.get( 'report_port', 8089 )
+
+        self.user = pool.options.get( 'report_user', None )
+
+        self.pass = pool.options.get( 'report_pass', None )
+        
+        self.index = pool.options.get( 'report_index', None )
 
         self.enabled = self.site is not None
 
@@ -157,10 +165,6 @@ class Report:
             data.append( m )
 
         if len( data ) > 0:
-            # Preparing header for payload
-            payload['cid'] = self.cid
-            payload['rid'] = self.rid
-
             self.pool.logMsg( ' '.join( [ 'Sending', str( len( data ) ), 'payload(s) to server.' ] ), NOTICE )
 
             # Prepare a single event to fire off
@@ -186,6 +190,23 @@ class Report:
                     for m in data:
                         self.queue.put( m )
                     return
+
+
+
+    def sendSplunk( data ):
+        """Sends data to a splunk server reading from kwargs for options.
+
+           :param data: JSON of data to send to the splunk server.
+           :returns: The parsed splunk event on success.
+        """
+        splunk = client.connect( host=self.site, 
+                port=self.port, 
+                username=self.user, 
+                password=self.pass )
+        index = splunk.indexes[self.index]
+        return index.submit( data, sourcetype='py-event' )
+        
+
 
     def jobStart( self, child ):
         """Sends a job start notification payload.
