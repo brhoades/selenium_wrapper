@@ -1,4 +1,4 @@
-import json, requests, time, os, getpass, socket, base64, traceback
+import json, time, os, getpass, socket, base64, traceback, splunklib.client
 import Queue as Q
 from sw.const import * 
 
@@ -73,9 +73,6 @@ class Report:
            :param payload: A hash of information to send upstream to our reporting server.
            :param type: The R_* constant identifier for the type of payload included. 
         """
-        #FIXME: Remove duplicate header information and just have a identifying header at the top of all
-        #payloads.
-           
         if not self.enabled:
             return
 
@@ -160,70 +157,35 @@ class Report:
             data.append( m )
 
         if len( data ) > 0:
-            payload = { "payload": data }
-
             # Preparing header for payload
             payload['cid'] = self.cid
             payload['rid'] = self.rid
 
             self.pool.logMsg( ' '.join( [ 'Sending', str( len( data ) ), 'payload(s) to server.' ] ), NOTICE )
-            r = None
-            try:
-                r = requests.post( self.site, data=json.dumps( payload ), timeout=1, headers={'content-type': 'application/json'} )
-            except Exception as e:
-                self.pool.logMsg( "Fatal error with reporting, probably failed to connect: ", CRITICAL )
-                self.pool.logMsg( traceback.format_exc( ), CRITICAL )
-                if self.tries > 0:
-                    self.tries -= 1
-                    self.pool.logMsg( ''.join( [ "Disabling reporting after ", str( self.tries ), " more tries." ] ), CRITICAL )
-                    self.nextSend = t + 5
-                else:
-                    self.pool.logMsg( "Disabling reporting.", CRITICAL )
-                    self.enabled = False
+
+            # Prepare a single event to fire off
+            for i in range(len(data)):
+                r = None
+                d = data.pop( )
+                try:
+                    r = self.sendSplunk( d )
+                except Exception as e:
+                    self.pool.logMsg( "Fatal error with reporting, probably failed to connect: ", CRITICAL )
+                    self.pool.logMsg( traceback.format_exc( ), CRITICAL )
+                    if self.tries > 0:
+                        self.tries -= 1
+                        self.pool.logMsg( ''.join( [ "Disabling reporting after ", str( self.tries ), " more tries." ] ), CRITICAL )
+                        self.nextSend = t + 5
+                    else:
+                        self.pool.logMsg( "Disabling reporting.", CRITICAL )
+                        self.enabled = False
+                        return
+
+                    # Put our data back in the send queue
+                    self.queue.put( d )
+                    for m in data:
+                        self.queue.put( m )
                     return
-
-                # Put our data back in the send queue
-                for m in data:
-                    self.queue.put( m )
-                return
-
-            # There was a failure
-            if r.status_code != requests.codes.ok:
-                self.pool.logMsg( ''.join( [ "Payload failed to send with HTTP status code: ", str( r.status_code ) ] ), CRITICAL )
-                # Put our data back in the send queue
-                for m in data:
-                    self.queue.put( m )
-                # Wait 5 seconds before we try again
-                self.nextSend = t + 5
-            else:
-                self.pool.logMsg( ''.join( [ "Sent payload successfully with status ", str( r.status_code ) ] ) , INFO )
-                self.pool.logMsg( ''.join( [ "Response from server: ", str( r.text ) ] ) )
-        
-                response = r.json( )
-
-                if 'cid' in response:
-                    self.cid = response['cid']
-                if 'rid' in response:
-                    self.rid = response['rid']
-                self.tries = 5
-
-
-
-    # Individual reporting functions
-
-    def start( self ):
-        """Sends a start notification payload.
-
-           :returns: None
-        """
-        self.send( { }, R_START )
-
-    def stop( self ):
-        """Sends a stop notification payload.
-        
-           :returns: None
-        """
-        self.send( { }, R_STOP )
 
     def jobStart( self, child ):
         """Sends a job start notification payload.
@@ -279,15 +241,6 @@ class Report:
            :returns: None
         """
         self.send( { 'childID': child }, R_END_CHILD )
-
-    def ping( self ):
-        """Sends a keepalive notice to the server, effectively keeping this client and
-           its run from timing out.
-
-           :returns: None
-        """
-        self.nextPing = time.time( ) + self.pingFreq
-        self.send( { }, R_ALIVE )
 
     # Generators
     def id( self ):
