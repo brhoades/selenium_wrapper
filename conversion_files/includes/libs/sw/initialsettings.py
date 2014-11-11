@@ -1,5 +1,5 @@
-import curses, curses.textpad, re
-import urlparse, requests, json
+import curses, curses.textpad, re, json
+from splunklib import client
 
 class InitialSettings:
     """Initializing this class more or less handles every part of the initial settings menu.
@@ -61,7 +61,8 @@ class InitialSettings:
             if key not in self.kwargs:
                 if self.kwmap[key][1] == "auto" or self.kwmap[key][1] == "None":
                     self.kwmap[key][1] = None
-                self.kwargs[key] = self.kwmap[key][1]
+                elif key != 'report_pass':
+                    self.kwargs[key] = self.kwmap[key][1]
 
 
 
@@ -199,12 +200,25 @@ class InitialSettings:
         run = self.kwargs.get( 'run', None )
         err = None
         if rep is not None:
+            # Must have a project name if we are reporting (Splunk)
             if self.kwargs.get( 'project', None ) is None:
-                self.error( "Server explicity requires a project name" )
+                self.error( "A project name is required" )
                 return False
+            # Must have a run name if we specify a project name.
             if run is None and self.kwargs.get( 'project', None ) is not None:
                 self.error( "Must include a run name with a project name" )
                 return False # Returns false because this cannot be ignored.
+
+            # Attempt to use the splunk server
+            try: 
+                splunk = client.connect( host=self.kwargs['report'], 
+                         port=self.kwargs.get( 'report_port', self.kwmap['report_port'][1] ), 
+                         username=self.kwargs['report_user'], 
+                         password=self.kwargs['report_pass'] )
+                index = splunk.indexes[self.kwargs['report_index']]
+            except Exception as e: 
+                self.error( ''.join( [ "Error connecting: ", str( e ) ] ) )
+                return False
         if err is not None:
             self.error( ''.join( [ err, ", press enter again to ignore" ] ), "Warning" )
             return False
