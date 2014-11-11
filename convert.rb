@@ -295,10 +295,6 @@ def isSeleniumFile?( filename )
     if l =~ /^import .*unittest/
       unittest = true
     end
-
-    if i > 10
-      break
-    end
   end
 
   return unittest & selenium & webdriver
