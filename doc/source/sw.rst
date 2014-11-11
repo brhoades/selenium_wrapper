@@ -83,7 +83,7 @@ and now install the module for `Selenium <https://pypi.python.org/pypi/selenium>
 Now install the `curses extension package <http://www.lfd.uci.edu/~gohlke/pythonlibs/#curses>`_.
 
 Afterwards copy/move the Python folder that was just created to ``conversion_utils/python27``. 
-Extract the ``phantomjs-release.zip`` for Windows into the Python folder as well.
+Extract the ``phantomjs-release.zip`` for Windows and put the binary within the ``python27`` folder as well.
 
 Now run the conversion program::
 
