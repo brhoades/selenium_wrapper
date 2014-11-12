@@ -204,6 +204,10 @@ class InitialSettings:
             if self.kwargs.get( 'project', None ) is None:
                 self.error( "A project name is required" )
                 return False
+            # Moust have a script name
+            if self.kwargs.get( 'script', None ) is None:
+                self.error( "A script name is required" )
+                return False
             # Must have a run name if we specify a project name.
             if run is None and self.kwargs.get( 'project', None ) is not None:
                 self.error( "Must include a run name with a project name" )
@@ -281,10 +285,12 @@ class InitialSettings:
         self.kwarray.append( 'report_pass' )
         self.kwmap['report_index']  = [ "Index", None ]
         self.kwarray.append( 'report_index' )
-        self.kwmap['run']           = [ "Run Name", None ]
-        self.kwarray.append( 'run' )
         self.kwmap['project']       = [ "Project Name", None ]
         self.kwarray.append( 'project' )
+        self.kwmap['run']           = [ "Run Name", None ]
+        self.kwarray.append( 'run' )
+        self.kwmap['script']        = [ "Script Name", None ]
+        self.kwarray.append( 'script' )
         self.kwmap['id']            = [ "Client Name", "auto" ]
         self.kwarray.append( 'id' )
 
