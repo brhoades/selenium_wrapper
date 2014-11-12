@@ -31,6 +31,8 @@ class Report:
 
         self.project = pool.options.get( 'project', None )
 
+        self.script = pool.options.get( 'script', None )
+
         self.site = pool.options.get( 'report', None )
         
         self.port = pool.options.get( 'report_port', 8089 )
@@ -82,10 +84,9 @@ class Report:
 
         # Encode identifying information and the time
         payload['id']   = self.id( )
-        if self.project is not None:
-            payload['run']  = ''.join( [ self.project, '_', self.run ] )
-        else:
-            payload['run'] = self.run
+        payload['Project'] = self.project
+        payload['Script'] = self.script
+        payload['Run'] = self.run
         payload['func'] = self.func
         payload['time'] = time.time( )
         payload['type'] = type
