@@ -152,7 +152,7 @@ class InitialSettings:
                     out = False
                 out = bool( out )
             elif default is None or default == "auto":
-                if out == "None" or out == "none" or out == "auto":
+                if out == "None" or out == "none" or out == "auto" or out == "":
                     out = None
                 elif default == "auto":
                     out = "auto"
@@ -174,6 +174,9 @@ class InitialSettings:
             if default == "auto" and ( out == "auto" or out == "" ):
                 self.kwargs[key] = None
                 out = "auto"
+            elif default is None and ( out == "" or out == "none" or out == "None" ):
+                self.kwargs[key] = None
+                out = "None"
             elif key == "report_pass":
                 self.kwargs[key] = out
                 out = "*" * len( out )
