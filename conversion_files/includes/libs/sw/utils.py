@@ -38,8 +38,8 @@ def exists( driver, element, type, **kwargs ):
        :return: Boolean if doesn't exist, :py:class:`~selenium.webdriver.remote.webelement.WebElement` if it does.
     """
 
-    lightConfirm = kwargs.get( 'lightConfirm', False )
-    cache        = kwargs.get( 'cache', True )
+    lightConfirm = kwargs.get( 'lightConfirm', self.pool.options.get( 'lightconfirm', False ) )
+    cache        = kwargs.get( 'cache', self.pool.options.get( 'cache', True ) )
     current_url  = kwargs.get( 'url', driver.current_url )
 
     e = None
@@ -91,8 +91,8 @@ def sleepwait( driver, element, type, **kwargs ):
     """
     start        = time.time( )
     timeout      = kwargs.get( 'timeout', 15 )
-    lightConfirm = kwargs.get( 'lightConfirm', False )
-    cache        = kwargs.get( 'cache', True )
+    lightConfirm = kwargs.get( 'lightConfirm', self.pool.options.get( 'lightConfirm', False ) )
+    cache        = kwargs.get( 'cache', self.pool.options.get( 'cache', True ) )
     url          = kwargs.get( 'url', driver.current_url )
     die          = kwargs.get( 'die', True )
     thinkTime = kwargs.get( 'thinkTime', driver.child.sleepTime )

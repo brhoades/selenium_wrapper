@@ -251,12 +251,22 @@ Available options:
       - Run name to send to the reporting server. This is another defining characteristic that is used in conjunction with script name to specify parts of a larger project. Default: None
     - ``#p script="Script Name"``
       - Script name which is used in reporting to distinguish different runs in a project.
+
   - Selenium Configuration
-    - ``#p cache``
+
+    - ``#p cache=True/False``
+      - Case sensitive for True or False. Specify whether found elements in PhantomJS should be cached. In pages with a great deal of AJAX this is recommended to save CPU resources searching for elements. Default: True
+    - ``#p childsleeptime=#``
+      - Amount of time in seconds waited inbetween searches for an element on a page. Low numbers increase CPU usage. Default: 1 
+    - ``#p lightconfirm=True/False``
+      - Case sensitive for True or False. If True, when checking if an element exists there will be no check for visibility or clickibility. This is practical for individual function usage in a script, globally False is the most acceptable option. Default: False
+
   - General
+
     - ``#p level=-1-9``
-  - ``#import module``
-    - Includes this import in the output (wrapped) script. This is useful for including, for example, random to randomly choose a user from a table.
+      - Logging level, where -1 is all errors including debugging, 0 is all errors, and 1 is notices. A full list of options can be found in const.py in the selenium module directory. Default: 1 
+    - ``#import module``
+      - Includes this import in the output (wrapped) script. This is useful for including, for example, random to randomly choose a user from a table.
   
 
 

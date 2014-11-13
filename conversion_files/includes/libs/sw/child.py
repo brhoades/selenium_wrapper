@@ -55,7 +55,7 @@ class Child:
         self.func  = None
 
         # How long we sleep in loops
-        self.sleepTime = 1
+        self.sleepTime = self.options.get( 'childsleeptime', 1 )
 
         # Our per page element cache.
         self.cache = ElementCache( )
