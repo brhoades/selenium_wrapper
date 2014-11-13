@@ -1,5 +1,0 @@
-db:
-  name: reports         # database name
-  host: localhost       # host name
-  user: selenium_report # db user
-  pass: pass            # db user password 
