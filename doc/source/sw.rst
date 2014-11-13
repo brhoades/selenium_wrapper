@@ -272,9 +272,11 @@ Available options:
     - ``#p children=#``
       - Custom number of children to have initially. Default: 1
     - ``#p stagger=True/False``
-      - Determines if children spawnining will be staggered over time. Default: False
+      - Case sensitive for True/False. Determines if children spawnining will be staggered over time. Default: False
     - ``#p staggertime=#``
       - How far apart to stagger child launching in seconds. Default: 5
+    - ``#p initsettings=True/False``
+      - Case sensitive for True/False. If False, the initial settings wizard will be skipped. Error checking on provided parameters is skipped. Default: True
     - ``#import module``
       - Includes this import in the output (wrapped) script. This is useful for including, for example, random to randomly choose a user from a table.
   

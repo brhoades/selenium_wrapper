@@ -77,7 +77,7 @@ class InitialSettings:
         done = False
         res = ""
 
-        while not done:
+        while not done and self.kwargs.get( 'initsettings', True ):
             if not res in self.kwcharmap and not first:
                 self.error( ''.join( [ "Invalid Selection '", res, "'" ] ) )
             elif not first:
