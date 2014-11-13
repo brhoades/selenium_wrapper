@@ -213,7 +213,8 @@ By including at the top of your script ``#OPTIONS`` with a following comment blo
   #import module
 
 Available options:
-  - Ghostdriver:
+  - Ghostdriver
+
     - ``#p proxy="string"``
       - Specifies a custom proxy server for Ghostdriver to route all PhantomJS traffic through. Default: ""
     - ``#p proxy-type="type"``
@@ -226,7 +227,30 @@ Available options:
       - Specifies whether to ignore errors about an invalid or expired SSL certificate. Default: "yes"
     - ``#p ghostdriverlog="filename"``
       - Specifies the name of the log file for ghostdriver. Default: "ghostdriver.log"
-  -  
+
+  - Splunk Connection
+
+    - ``#p report="server FQDN or IP"``
+      - This parameter toggles reporting. If this parameter is left to the default (blank) reporting will not happen. Default: ""
+    - ``#p report_port=8089``
+      - The port to connect to the reporting Splunk server at. Default: 8089
+    - ``#p report_user="username""``
+      - The username to authenticate with with Splunk, must be an admin or have permission to run remote commands. Default: None
+    - ``#p report_pass="password"``
+      - The password for the username used to connect to Splunk. Default: None
+    - ``#p report_index="testing"``
+      - The index to insert all data into within Splunk. Default: None
+
+  - Reporting Details
+
+    - ``#p id="auto"``
+      - Machine name used to report to the reporting server. If left at the default, it's generated in the format ``user@hostname``. Default: "auto"
+    - ``#p project="Project Name"``
+      - Project name, usually used in reporting to group together a bunch of common runs. Default: None
+    - ``#p run="Run Name"``
+      - Run name to send to the reporting server. This is another defining characteristic that is used in conjunction with script name to specify parts of a larger project. Default: None
+    - ``#p script="Script Name"``
+      - Script name which is used in reporting to distinguish different runs in a project.
   - ``#import module``
     - Includes this import in the output (wrapped) script. This is useful for including, for example, random to randomly choose a user from a table.
   
