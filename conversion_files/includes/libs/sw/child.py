@@ -83,15 +83,18 @@ class Child:
         wq = self.wq
         cq = self.cq
 
-        # This changes our useragent to something that shouldn't trigger websense
-        DesiredCapabilities.PHANTOMJS['phantomjs.page.settings.userAgent'] = \
-            'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; Trident/4.0)'
-
         # Monkeypatch our PhantomJS class in, which disables images
         webdriver.phantomjs.webdriver.Service = PhantomJSNoImages
 
+        dcaps =  dict( DesiredCapabilities.PHANTOMJS )
+
+        # This changes our useragent to something that shouldn't trigger websense
+        dcaps['phantomjs.page.settings.userAgent'] = \
+            'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; Trident/4.0)'
+
         sargs = [ ''.join( [ '--load-images=', str( self.options['images'] ).lower( ) ] ),
                   ''.join( [ '--disk-cache=', str( self.options.get( 'browsercache', "true" ) ).lower( ) ] ),
+                  ''.join( [ '--web-security=', str( self.options.get( 'ignoresslerrors', "yes" ) ) ] ), 
                   ''.join( [ '--ignore-ssl-errors=', str( self.options.get( 'ignoresslerrors', "yes" ) ) ] ) ]
 
         if 'proxy' in self.options:
@@ -101,7 +104,7 @@ class Child:
 
         try: 
             # Initialize our driver with our custom log directories and preferences (capabilities)
-            self.driver = webdriver.PhantomJS( service_log_path=os.path.join( self.log, self.options.get( 'ghostdriverlog', "ghostdriver.log" ) ), service_args=sargs )
+            self.driver = webdriver.PhantomJS( service_log_path=os.path.join( self.log, self.options.get( 'ghostdriverlog', "ghostdriver.log" ) ), service_args=sargs, desired_capabilities=dcaps )
         except Exception as e:
             self.logMsg( ''.join( [ "Webdriver failed to load: ", str( e ), "\n", traceback.format_exc( ) ] ), CRITICAL )
             try: 

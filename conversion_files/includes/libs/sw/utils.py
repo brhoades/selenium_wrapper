@@ -38,8 +38,8 @@ def exists( driver, element, type, **kwargs ):
        :return: Boolean if doesn't exist, :py:class:`~selenium.webdriver.remote.webelement.WebElement` if it does.
     """
 
-    lightConfirm = kwargs.get( 'lightConfirm', self.pool.options.get( 'lightconfirm', False ) )
-    cache        = kwargs.get( 'cache', self.pool.options.get( 'cache', True ) )
+    lightConfirm = kwargs.get( 'lightConfirm', driver.child.options.get( 'lightconfirm', False ) )
+    cache        = kwargs.get( 'cache', driver.child.options.get( 'cache', True ) )
     current_url  = kwargs.get( 'url', driver.current_url )
 
     e = None
@@ -60,6 +60,7 @@ def exists( driver, element, type, **kwargs ):
             elif type == "css_selector":
                 e = driver.find_element_by_css_selector( element )
         except Exception as e:
+            driver.child.logMsg( ''.join( [ "Error received when checking for existence: ", str( e ) ] ), DEBUG )
             return False
 
     if cache:
@@ -91,8 +92,8 @@ def sleepwait( driver, element, type, **kwargs ):
     """
     start        = time.time( )
     timeout      = kwargs.get( 'timeout', 15 )
-    lightConfirm = kwargs.get( 'lightConfirm', self.pool.options.get( 'lightConfirm', False ) )
-    cache        = kwargs.get( 'cache', self.pool.options.get( 'cache', True ) )
+    lightConfirm = kwargs.get( 'lightConfirm', driver.child.options.get( 'lightconfirm', False ) )
+    cache        = kwargs.get( 'cache', driver.child.options.get( 'cache', True ) )
     url          = kwargs.get( 'url', driver.current_url )
     die          = kwargs.get( 'die', True )
     thinkTime = kwargs.get( 'thinkTime', driver.child.sleepTime )
