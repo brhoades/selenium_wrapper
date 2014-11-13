@@ -221,7 +221,7 @@ Available options:
       - Specify the type of proxy. Possible options are socks5 and http. Default: ""
     - ``#p images=True/False``
       - Case sensitive for True or False. Specifies whether Ghostdriver loads images. Default: False
-    - ``#p diskcache=True/False``
+    - ``#p browsercache=True/False``
       - Case sensitive for True or False. Specifies whether to cache web content such as images on the disk (rather than in the RAM for a short period of time). Default: True
     - ``#p ignoresslerrors="yes"/"no"``
       - Specifies whether to ignore errors about an invalid or expired SSL certificate. Default: "yes"
@@ -231,7 +231,7 @@ Available options:
   - Splunk Connection
 
     - ``#p report="server FQDN or IP"``
-      - This parameter toggles reporting. If this parameter is left to the default (blank) reporting will not happen. Default: ""
+      - This parameter toggles reporting. If this parameter is left to the default (blank) reporting will not happen. Default: None
     - ``#p report_port=8089``
       - The port to connect to the reporting Splunk server at. Default: 8089
     - ``#p report_user="username""``
@@ -251,6 +251,10 @@ Available options:
       - Run name to send to the reporting server. This is another defining characteristic that is used in conjunction with script name to specify parts of a larger project. Default: None
     - ``#p script="Script Name"``
       - Script name which is used in reporting to distinguish different runs in a project.
+  - Selenium Configuration
+    - ``#p cache``
+  - General
+    - ``#p level=-1-9``
   - ``#import module``
     - Includes this import in the output (wrapped) script. This is useful for including, for example, random to randomly choose a user from a table.
   

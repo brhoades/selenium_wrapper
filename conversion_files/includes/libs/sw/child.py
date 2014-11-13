@@ -98,7 +98,7 @@ class Child:
             dcaps['acceptSslCerts'] = False
 
         sargs = [ ''.join( [ '--load-images=', str( self.options['images'] ).lower( ) ] ),
-                  '--disk-cache=', str( self.options.get( 'diskcache', True ) ),
+                  '--disk-cache=', str( self.options.get( 'browsercache', True ) ),
                   '--ignore-ssl-errors=', str( self.options.get( 'ignoresslerrors', "yes" ) ) ]
 
         if 'proxy' in self.options:
