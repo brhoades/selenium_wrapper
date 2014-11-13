@@ -76,9 +76,9 @@ Excluding lib-tk, documentation, and testing suites will streamline things.
 This folder will later be copied to the correct spot.
 
 Install `pip <https://pip.pypa.io/en/latest/installing.html>`_ into your Python installation
-and now install the module for `Selenium <https://pypi.python.org/pypi/selenium>`_::
+and now install the module for `Selenium <https://pypi.python.org/pypi/selenium>`_ and `Splunklib <https://github.com/splunk/splunk-sdk-python>`_::
 
-  pip install selenium
+  pip install selenium splunklib
 
 Now install the `curses extension package <http://www.lfd.uci.edu/~gohlke/pythonlibs/#curses>`_.
 
@@ -94,23 +94,22 @@ Converter Distribution
 ^^^^^^^^^^^^^^^^^^^^^^
 
 To ease other's usage of the converter, consider packaging it into an exe using 
-`OCRA <https://github.com/larsch/ocra>`_. The following will install the gem and run the compiler::
+`OCRA <https://github.com/larsch/ocra>`_. ORCA will convert the ruby file into a preinterpreted format
+which does not require a ruby installation to run. The following will install the gem and run the compiler::
 
   gem install ocra
   ocra_compile.bat
-
-This will automatically generate a portable version of the converter in an exe.
 
 ================
 Script Converter
 ================
 
-Conversion will take a while. It will initialize a new directory, copy a slimmed down Python 
+Conversion will take a while in Windows. It will initialize a new directory, copy a slimmed down Python 
 install into it, and then convert the script into a form which utilizes the included Selenium 
 wrapper. Once finished, it will prompt you to tell you so. Progress can be monitored in the 
 black terminal that opened when the exe/script was initially ran.
 
-Conversion will automatically strip any assertions or possibly useless code from the script provided. 
+Assertions or known useless code will be automatically stripped from the script provided. 
 Assertions are not currently supported as the wrapper does not currently wrap itself in a 
 unit testing suite. Most functions used in the script will be replaced with in house functions,
 such as ``driver.find_element_by(...).send_keys( "text" )`` which is wrapped 
@@ -144,7 +143,7 @@ After selecting your input Python file and (optionally) your output folder, hit 
 Usage - CLI
 ***********
 
-Running main.rb with --help returns command line usage information::
+Running ``main.rb`` with ``--help`` returns command line usage information::
 
   Usage: main.rb [options] script.py
       -m, --[no-]images                Exported script should load images.
@@ -155,6 +154,11 @@ Running main.rb with --help returns command line usage information::
       -i, --script [SCRIPT]            Script to convert, UI isn't launched if thi
   s is specified
       -h, --help                       Show this message.
+
+Typical usage will always include the options ``-poi`` followed by a script. For example::
+  ruby main.rb -poi in/test_script.py
+
+This will package Python into the folder ``out/test_script/`` and drop the converted script in there as well.
 
 **********
 Directives
@@ -201,19 +205,32 @@ Available Directives:
 ******************
 Options Directives
 ******************
-By including at the top of your script ``#OPTIONS`` with a following comment block, the converter will parse options into the output script::
+
+By including at the top of your script ``#OPTIONS`` with a following comment block, the converter will parse options into the output script. These options will appear in the defaults for initial settings.::
 
   #OPTIONS
-  #gd option="text"
+  #p option="text"
   #import module
 
 Available options:
-  - ``#gd option="text"``
-    - Passes the string ``option="text"`` directly to GhostDriver's desired capabilities. Currently only the following are supported:
-    - ``#gd proxy="google.com:443"``
-    - ``#gd proxy-type="http"``
+  - Ghostdriver:
+    - ``#p proxy="string"``
+      - Specifies a custom proxy server for Ghostdriver to route all PhantomJS traffic through. Default: ""
+    - ``#p proxy-type="type"``
+      - Specify the type of proxy. Possible options are socks5 and http. Default: ""
+    - ``#p images=True/False``
+      - Case sensitive for True or False. Specifies whether Ghostdriver loads images. Default: False
+    - ``#p diskcache=True/False``
+      - Case sensitive for True or False. Specifies whether to cache web content such as images on the disk (rather than in the RAM for a short period of time). Default: True
+    - ``#p ignoresslerrors="yes"/"no"``
+      - Specifies whether to ignore errors about an invalid or expired SSL certificate. Default: "yes"
+    - ``#p ghostdriverlog="filename"``
+      - Specifies the name of the log file for ghostdriver. Default: "ghostdriver.log"
+  -  
   - ``#import module``
     - Includes this import in the output (wrapped) script. This is useful for including, for example, random to randomly choose a user from a table.
+  
+
 
 =======
 Wrapper

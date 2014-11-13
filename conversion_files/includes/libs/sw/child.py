@@ -91,11 +91,15 @@ class Child:
         webdriver.phantomjs.webdriver.Service = PhantomJSNoImages
 
         # Workaround for internal SSL woes
-        dcaps = { 'acceptSslCerts': True }
+        dcaps = { 'acceptSslCerts': self.options.get( 'ignoresslerrors', True ) }
+        if dcaps['acceptSslCerts'] == "yes":
+            dcaps['acceptSslCerts'] = True
+        else:
+            dcaps['acceptSslCerts'] = False
 
         sargs = [ ''.join( [ '--load-images=', str( self.options['images'] ).lower( ) ] ),
-                  '--disk-cache=true',
-                  '--ignore-ssl-errors=yes' ]
+                  '--disk-cache=', str( self.options.get( 'diskcache', True ) ),
+                  '--ignore-ssl-errors=', str( self.options.get( 'ignoresslerrors', "yes" ) ) ]
 
         if 'proxy' in self.options:
             sargs.append( ''.join( [ '--proxy=', self.options['proxy'] ] ) )
@@ -104,7 +108,7 @@ class Child:
 
         try: 
             # Initialize our driver with our custom log directories and preferences (capabilities)
-            self.driver = webdriver.PhantomJS( desired_capabilities=dcaps, service_log_path=os.path.join( self.log, "ghostdriver.log" ), \
+            self.driver = webdriver.PhantomJS( desired_capabilities=dcaps, service_log_path=os.path.join( self.log, self.options.get( 'ghostdriverlog', "ghostdriver.log" ) ), \
                                                service_args=sargs )
         except Exception as e:
             self.logMsg( ''.join( [ "Webdriver failed to load: ", str( e ), "\n", traceback.format_exc( ) ] ), CRITICAL )
