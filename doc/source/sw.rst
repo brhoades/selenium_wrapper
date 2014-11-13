@@ -255,7 +255,7 @@ Available options:
   - Selenium Configuration
 
     - ``#p cache=True/False``
-      - Case sensitive for True or False. Specify whether found elements in PhantomJS should be cached. In pages with a great deal of AJAX this is recommended to save CPU resources searching for elements. Default: True
+      - Case sensitive for True or False. Specify whether found elements in PhantomJS should be cached. In pages with a great deal of AJAX this is recommended to save CPU resources searching for elements. There has not been any noticeable drawback to this option in testing. Default: True
     - ``#p childsleeptime=#``
       - Amount of time in seconds waited inbetween searches for an element on a page. Low numbers increase CPU usage. Default: 1 
     - ``#p lightconfirm=True/False``
@@ -265,6 +265,16 @@ Available options:
 
     - ``#p level=-1-9``
       - Logging level, where -1 is all errors including debugging, 0 is all errors, and 1 is notices. A full list of options can be found in const.py in the selenium module directory. Default: 1 
+    - ``#p logformat="DATESTR"``
+      - Custom folder names for the log folder. Default: "%Y-%m-%d_%H-%M-%S"
+    - ``#p jobs=#``
+      - Custom number of jobs to run initially. Default: 1
+    - ``#p children=#``
+      - Custom number of children to have initially. Default: 1
+    - ``#p stagger=True/False``
+      - Determines if children spawnining will be staggered over time. Default: False
+    - ``#p staggertime=#``
+      - How far apart to stagger child launching in seconds. Default: 5
     - ``#import module``
       - Includes this import in the output (wrapped) script. This is useful for including, for example, random to randomly choose a user from a table.
   

@@ -43,7 +43,7 @@ class Pool:
         self.func = func
 
         # General log directory, shared by all children
-        self.log = os.path.join( os.path.dirname( os.path.abspath( file ) ), "logs", datetime.datetime.now( ).strftime( "%Y-%m-%d_%H-%M-%S" ) ) 
+        self.log = os.path.join( os.path.dirname( os.path.abspath( file ) ), "logs", datetime.datetime.now( ).strftime( self.options.get( "logformat", "%Y-%m-%d_%H-%M-%S" ) ) ) 
         os.makedirs( self.log )
 
         # Marks our start time, set when first child sends starting
@@ -64,7 +64,7 @@ class Pool:
         ####### Settings ########
 
         # Time between children spawning
-        self.staggeredTime = 5
+        self.staggeredTime = self.options.get( 'staggertime', 5 )
 
         ####### One Offs ########
         # Populate our work queue
