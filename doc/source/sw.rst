@@ -54,9 +54,9 @@ Python version. Now `install Python <https://www.python.org/download/releases/2.
 for the correct platform. 
 
 Use `pip <https://pip.pypa.io/en/latest/installing.html>`_ to install 
-`Selenium <https://pypi.python.org/pypi/selenium>`_:: 
+`Selenium <https://pypi.python.org/pypi/selenium>`_ and `Splunklib <https://github.com/splunk/splunk-sdk-python>`_:: 
 
-  pip install selenium
+  pip install selenium splunklib
 
 Also install the latest version of `PhantomJS <http://phantomjs.org/download.html>`_ for your 
 platform.
@@ -105,9 +105,24 @@ This will automatically generate a portable version of the converter in an exe.
 Script Converter
 ================
 
-*****
-Usage
-*****
+Conversion will take a while. It will initialize a new directory, copy a slimmed down Python 
+install into it, and then convert the script into a form which utilizes the included Selenium 
+wrapper. Once finished, it will prompt you to tell you so. Progress can be monitored in the 
+black terminal that opened when the exe/script was initially ran.
+
+Conversion will automatically strip any assertions or possibly useless code from the script provided. 
+Assertions are not currently supported as the wrapper does not currently wrap itself in a 
+unit testing suite. Most functions used in the script will be replaced with in house functions,
+such as ``driver.find_element_by(...).send_keys( "text" )`` which is wrapped 
+into a :py:func:`sw.utils.sendKeys` function. This eliminates the need for a .clear( ) 
+statement and saves time. Conversion also replaces any ``find_element_by_`` segments with 
+:py:func:`sw.utils.sleepwait` which is a controlled (and CPU-optimized) function to wait for an 
+element.
+
+
+***********
+Usage - GUI
+***********
 
 The converter ``main.rb`` or ``selenium_convert.exe`` will launch after about 15 seconds 
 (results may vary). This converter has the files necessary to create a portable Python 
@@ -125,18 +140,21 @@ script. There are several options which will augment the way the wrapper runs.
 
 After selecting your input Python file and (optionally) your output folder, hit convert.
 
-Conversion will take a while. It will initialize a new directory, copy a slimmed down Python 
-install into it, and then convert the script into a form which utilizes the included Selenium 
-wrapper. Once finished, it will prompt you to tell you so. Progress can be monitored in the 
-black terminal that opened when the exe/script was initially ran.
+***********
+Usage - CLI
+***********
 
-Conversion will automatically strip any assertions or clears from the script provided. 
-Assertions are not currently supported as the wrapper does not currently wrap itself in a 
-unit testing suite. Any ``driver.find_element_by(...).send_keys( "text" )`` is wrapped 
-into a :py:func:`sw.utils.sendKeys` function. This eliminates the need for a .clear( ) 
-statement and saves time. Conversion also replaces any ``find_element_by_`` segments with 
-:py:func:`sw.utils.sleepwait` which is a controlled (and CPU-optimized) function to wait for an 
-element.
+Running main.rb with --help returns command line usage information::
+
+  Usage: main.rb [options] script.py
+      -m, --[no-]images                Exported script should load images.
+      -o, --[no-]overwrite             Overwrite any conflicting files on output.
+      -c, --[no-]recopy                Recopy missing or different files.
+      -p, --[no-]python                Include python in installation (Windows onl
+  y).
+      -i, --script [SCRIPT]            Script to convert, UI isn't launched if thi
+  s is specified
+      -h, --help                       Show this message.
 
 **********
 Directives
