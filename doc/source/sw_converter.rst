@@ -69,22 +69,22 @@ as the converter turns the directives into functions after conversion.
 
 Available Directives:
   - ``#log message``
-    - This will write to our child's log ``message``. Directly calls :py:func:`~sw.child.logMsg`
+    - This will write to our child's log ``message``. Directly calls :py:func:`~sw.child.Child.logMsg`
   - ``#wait element kwargs``
     - This calls :py:func:`~sw.utils.waitToDisappear` and takes any of the kwargs as the second argument. Please reference that function for further details about its arguments and other options.
 
-    - ``#wait overlay type=id``: waits for the element with ``id=overlay`` to disappear.
+    - ``#wait overlay type=id`` - waits for the element with ``id=overlay`` to disappear.
 
-    - ``#wait overlay type=name, stayGone=3``: waits for the element with ``name=overlay`` to disappear and waits an additional 3 seconds for it to not come back.
+    - ``#wait overlay type=name, stayGone=3`` - waits for the element with ``name=overlay`` to disappear and waits an additional 3 seconds for it to not come back.
 
-    - ``#wait blurydiv timeout=5``: waits for ``id=blurydiv`` to disappear. If it doesn't after ``5`` seconds, returns.
+    - ``#wait blurydiv timeout=5`` - waits for ``id=blurydiv`` to disappear. If it doesn't after ``5`` seconds, returns.
 
-    - ``#wait blurydiv waitTimeout=5``: waits for ``id=blurydiv`` to disappear. Gives the element ``5`` seconds to appear first before waiting for it to disappear. Default time to appear is 1 second.
+    - ``#wait blurydiv waitTimeout=5`` - waits for ``id=blurydiv`` to disappear. Gives the element ``5`` seconds to appear first before waiting for it to disappear. Default time to appear is 1 second.
 
   - ``#error message``
-    - Throws an error, which takes a screenshot, logs the screenshot name, and logs "message" to the log. Calls :py:func:`~sw.child.logMsg` with ``level=CRITICAL``.
+    - Throws an error, which takes a screenshot, logs the screenshot name, and logs "message" to the log. Calls :py:func:`~sw.child.Child.logMsg` with ``level=CRITICAL``.
   - ``#screenshot``
-    - Takes a screenshot which appears as ``error_#.png`` within the child's log directory. The log references the file name when this is called. Calls :py:func:`~sw.child.screenshot`
+    - Takes a screenshot which appears as ``error_#.png`` within the child's log directory. The log references the file name when this is called. Calls :py:func:`~sw.child.Child.screenshot`
 
 .. _options-directives:
 
