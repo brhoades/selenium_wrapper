@@ -304,6 +304,7 @@ class InitialSettings:
            called again, so it's assumed all the values are kept pristine. In addition to printing all the titles and
            kwargs on screen, it adds into kwmap a 3rd index (kwmap[key][2]) which is a reference to the subwindow for
            that kwarg's value. So, in the future, to modify f's display value::
+
              self.kwmap['f'][2].addstr( 'New Value' )
            
            :returns: None
