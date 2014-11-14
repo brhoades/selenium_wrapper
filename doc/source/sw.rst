@@ -285,91 +285,59 @@ Available options:
 =======
 Wrapper
 =======
-The wrapper is automatically applied to the source script when the converter finishes. It is
-intended to be as transparent as possible after conversion, requiring minimal user interaction
-to get it running. Below is a real test run of a script::
 
-  .../out/example_script>run.bat
-  You may press enter to use the default values in parenthesis.
-  Number of Children (3): 3
-  Number of Jobs to Run (3): 3
-  Stagger Children Spawning (n): n
+The wrapper can be launched by using ``run.bat`` in Windows or ``python run_test.py`` in Unix-like systems. 
+Everything is automatically prepared, so upon launch the first screen is the initial settings wizard.
 
-  Libraries loaded!
+****************
+Initial Settings
+****************
 
+.. image:: images/initialsettings.png
 
+The initial settings wizard allows configuration and validation of settings before running. Each option has a respective
+options directive seen in `Options Directives`_ including the option to disable the initial settings wizard entirely. 
 
-  ========================================
-  Preparing 3 children to do 3 jobs.
-  Child #1: LOADING
-  Child #2: LOADING
-  Child #3: LOADING
-  Child #3: STARTING
-  Child #2: STARTING
-  Child #1: STARTING
-
-  ========================================
-  Successful: 0   Failed: 0
-  Total: 0   Remaining: 3
-  Children (peak): 3   Children (active): 3
-  No data to extrapolate or average from
-  ========================================
-
-  Child #2: DONE (141.88s)
-  Child #2: STOPPING (DONE)
-  Child #3: DONE (142.62s)
-  Child #3: STOPPING (DONE)
-  Child #1: DONE (149.2s)
-  Child #1: STOPPING
-
-  ========================================
-  Successful: 3   Failed: 0
-  Total: 3   Remaining: 0
-  Children (peak): 3   Children (active): 0
-  Failure Rate: 0.0%
-  Average / Estimates:
-    Time per job: 144.57s
-    Jobs/s: 0.02   Jobs/m: 1.21   Jobs/hr: 72.35   Jobs/day: 1736.39
-  ========================================
-
-  Press any key to continue . . .
-
-Running ``run.bat`` on Windows will present the user with questions for how the script will operate. 
-It simply passes arguments on to ``run_test.py``, with the order discussed below.
+^^^^^^^^^^^^
+Run Settings
+^^^^^^^^^^^^
 
 .. code-block:: none
 
-  Number of Children (3): 3
+   a) # Children:     1
+   b) Stagger Spawn:  False
+   c) # Jobs:         1
 
-The number of children determines the number of concurrent `PhantomJS` processes the script will run.
-Although the default number is 3, users with a more powerful processor will find themselves capable 
-of running over 20, though this varies wildly with the script ran. This is largely dependent on processing
-power but about 50-70 Mb of RAM is used as well.
+**# Children** determines the number of concurrent `PhantomJS` processes the script will run.
+Although the default number is 1, users with a more powerful processor will find themselves capable 
+of running over 20, though this varies wildly with the script ran. Scripts with a great deal of waiting on page elements
+can run with more concurrent instances than those which are actively clicking or navigating.
 
-.. code-block:: none
+**Stagger Spawn**, which is short for staggered child spawning, is intended to distribute load throughout a site more evenly. 
+Without staggering and with a high number of children, the load will be very pinpointed at an exact point
+of the site consistently, at least at the beginning. This options spawns children 5 seconds apart by default but can be configured
+using `staggertime <Options Directives>`_.
 
-  Number of Jobs to Run (3): 3
-
-The jobs option determines the number of times the recorded script will run. Every child process 
+**# Jobs** determines the number of times the recorded script will run. Every child process 
 will pull from a job queue (of this length) when it starts and will do so until the queue is empty 
 
+
+^^^^^^^^^^^^^
+Pool Settings
+^^^^^^^^^^^^^
+
 .. code-block:: none
 
-  Stagger Children Spawning (n): n
+   Pool Settings
+   d) Log Lvl (0-5):  -1
+   e) Get Images:     False
 
-The last option, staggered child spawning, is intended to distribute load throughout a site more evenly. 
-Without staggering and with a high number of children, the load will be very pinpointed at an exact point
-of the site consistently, at least at the beginning. This options spawns children 5 seconds apart.
+**Log Level (0-5)**
+See `Logging`_
 
-The options used in the example are equivalent to just running this::
-
-  python out/example_script.py
-
-It pulls the default options internally for the script.
-
-Standard argument order and format is like so::
-
-  python out/example_script.py <number of jobs> <number of children> <staggered (y/n)>
+**Get Images**
+Determines whether PhantomJS will bother to download images. If during recording an image was clicked on, it must either have 
+an alt tag for this option to be false.
 
 *******
 Logging

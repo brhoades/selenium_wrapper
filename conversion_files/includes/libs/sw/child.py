@@ -1,7 +1,6 @@
 from multiprocessing import Process, Queue, Value
 from selenium import webdriver
 from selenium.webdriver.phantomjs.service import Service as PhantomJSService
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from sw.const import * # Constants
 from sw.formatting import formatError, errorLevelToStr
 from sw.cache import ElementCache 
