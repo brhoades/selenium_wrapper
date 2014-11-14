@@ -79,8 +79,8 @@ Reporting Settings
 
 **Server, Port, User, Password, Index**
 These options are all Splunk installation specific. Splunk must allow remote connections from the client's host on a port, default is 8089
-via the `REST API <http://docs.splunk.com/Documentation/Splunk/latest/RESTAPI/RESTcontents>`. Details about the Splunklib module and how it is used
-can be found in `~sw.reporting` and official documentation `on Splunk's website <http://docs.splunk.com/DocumentationStatic/PythonSDK/1.1/client.html>`.
+via the `REST API <http://docs.splunk.com/Documentation/Splunk/latest/RESTAPI/RESTcontents>`_. Details about the Splunklib module and how it is used
+can be found in :mod:`sw.report` and official documentation `on Splunk's website <http://docs.splunk.com/DocumentationStatic/PythonSDK/1.1/client.html>`_.
 
 **Project Name**
 is a layer of abstraction on individual recorded runs with various scripts. It is considered to be the highest level of abstraction to group together these runs, spanning over
