@@ -50,15 +50,15 @@ Wrapper Setup
 ^^^^^^^^^^^^^
 
 Prepare a python installation for the converter program. Python 2.7.8 is the supported 
-Python version. Now `install Python <https://www.python.org/download/releases/2.7.8/>`_ 
+Python version. Now `Install Python <https://www.python.org/download/releases/2.7.8/>`_ 
 for the correct platform. 
 
-Use `pip <https://pip.pypa.io/en/latest/installing.html>`_ to install 
-`Selenium <https://pypi.python.org/pypi/selenium>`_ and `Splunklib <https://github.com/splunk/splunk-sdk-python>`_:: 
+Use `pip <https://pip.pypa.io/en/latest/installing.html>`_ to install the
+`Selenium Library <https://pypi.python.org/pypi/selenium>`_ and `Splunklib <https://github.com/splunk/splunk-sdk-python>`_:: 
 
   pip install selenium splunklib
 
-Also install the latest version of `PhantomJS <http://phantomjs.org/download.html>`_ for your 
+Also install the latest version of the `PhantomJS binary <http://phantomjs.org/download.html>`_ for your 
 platform.
 
 Currently a distributed setup where a separate install of Python is shipped with each script
@@ -70,22 +70,21 @@ installation on every machine participating. For these other operating systems e
 Windows Setup
 """""""""""""
 
-Perform an installation of `Python <https://www.python.org/download/releases/2.7.8/>`_ 
-into the default folder. The fewer modules that are included, the better. 
-Excluding lib-tk, documentation, and testing suites will streamline things. 
+`Install Python`_ into the default folder. The fewer modules that are included, the better. 
+Excluding ``lib-tk``, documentation, and testing suites will streamline things. 
 This folder will later be copied to the correct spot.
 
-Install `pip <https://pip.pypa.io/en/latest/installing.html>`_ into your Python installation
-and now install the module for `Selenium <https://pypi.python.org/pypi/selenium>`_ and `Splunklib <https://github.com/splunk/splunk-sdk-python>`_::
+Install `pip`_ into your Python installation. Afterwards, use pip to install the `Selenium Library`_ 
+and `Splunklib <https://github.com/splunk/splunk-sdk-python>`_::
 
   pip install selenium splunklib
 
 Now install the `curses extension package <http://www.lfd.uci.edu/~gohlke/pythonlibs/#curses>`_.
 
-Afterwards copy/move the Python folder that was just created to ``conversion_utils/python27``. 
+Finally copy/move the Python folder that was just created to ``conversion_utils/python27``. 
 Extract the ``phantomjs-release.zip`` for Windows and put the binary within the ``python27`` folder as well.
 
-Now run the conversion program::
+To run the conversion program::
 
   ruby main.rb
 
@@ -94,7 +93,7 @@ Converter Distribution
 ^^^^^^^^^^^^^^^^^^^^^^
 
 To ease other's usage of the converter, consider packaging it into an exe using 
-`OCRA <https://github.com/larsch/ocra>`_. ORCA will convert the ruby file into a preinterpreted format
+`OCRA <https://github.com/larsch/ocra>`_. `ORCA`_ will convert the ruby file into a preinterpreted format
 which does not require a ruby installation to run. The following will install the gem and run the compiler::
 
   gem install ocra
@@ -202,6 +201,8 @@ Available Directives:
     - Takes a screenshot which appears as error_#.png within the child's log directory. The log 
       references the file name when this is called. Calls :py:func:`sw.child.screenshot`
 
+.. _options-directives:
+
 ******************
 Options Directives
 ******************
@@ -308,7 +309,7 @@ Run Settings
    b) Stagger Spawn:  False
    c) # Jobs:         1
 
-**# Children** determines the number of concurrent `PhantomJS` processes the script will run.
+**# Children** determines the number of concurrent `PhantomJS`_ processes the script will run.
 Although the default number is 1, users with a more powerful processor will find themselves capable 
 of running over 20, though this varies wildly with the script ran. Scripts with a great deal of waiting on page elements
 can run with more concurrent instances than those which are actively clicking or navigating.
@@ -316,7 +317,7 @@ can run with more concurrent instances than those which are actively clicking or
 **Stagger Spawn**, which is short for staggered child spawning, is intended to distribute load throughout a site more evenly. 
 Without staggering and with a high number of children, the load will be very pinpointed at an exact point
 of the site consistently, at least at the beginning. This options spawns children 5 seconds apart by default but can be configured
-using `staggertime <Options Directives>`_.
+using :ref:`staggertime <options-directives>`.
 
 **# Jobs** determines the number of times the recorded script will run. Every child process 
 will pull from a job queue (of this length) when it starts and will do so until the queue is empty 
@@ -344,20 +345,17 @@ Logging
 *******
 
 Logging is automatically performed and there is currently not an option to turn it off. All logs
-are within a timestamped folder in ``logs/``. Each child will create its own log in 
+are within a timestamped folder in ``logs/``. Each child then create its own log in in that subfolder with the format
 ``logs/<timestamp>/log-#.log``, where the number is the child's number printed to the console. This 
-log will contain detailed information about errors, time taken, and the status of the script. Logging
-level is not currently easily configurable, but can be seen in ``conversion_files/includes/libs/sw/child.py``:
+log will contain detailed information about errors, time taken, and the status of the script.
 
-.. literalinclude:: sw/child.py
-   :language: python
-   :lines: 51-58 
-   :emphasize-lines: 5 
+Logging levels can be configured with the :ref:`level <options-directives>` directive or within the initial settings wizard. 
+Possible levels are as follows: 
 
 There are several levels as seen in ``conversion_files/includes/libs/sw/const.py``:
 
 .. literalinclude:: sw/const.py
-   :lines: 35-45 
+   :lines: 38-49 
    :language: python
 
 With the lowest log level, ``INFO``, this is an example of a log that is prepared:
@@ -429,5 +427,5 @@ encountered:
     TypeError: sleepwait() takes exactly 3 arguments (4 given)
   [14:16:08] (NOTICE)   Stopping child process: "RESTARTING"  
 
-The highlighted line shows where the screenshot was written to, ``error_#.png``. Every new error increases #.
+The highlighted line shows where the screenshot was written to, ``error_#.png``. Every new error increments this number.
  
