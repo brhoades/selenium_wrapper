@@ -98,46 +98,33 @@ class Report:
 
 
 
-    # Thinking
     def think( self ):
-        """The think function called by our pool periodically. If enabled, it checks for the need to ping
-           (keepalive) or if the next payload is ready to send. This function also handles the transmission of
-           our payload.
+        """The think function called by our pool periodically. It handles the transmission of
+           our payload (many individual reports) to the Splunk server.
 
            If our report.queue has content in it, it prepares to send everything upstream. The payload is transmitted
            in JSON with the following general format::
+
              { 
                 "cid" => #, // Our client ID assigned by the server, nil if we don't have one yet.
                 "rid" => #, // Our run ID assined by the server, ^
-                "payload" => 
-                    [
-                        { 
-                            "type" => R_START,    // For example, this is the type of payload here.
-                            "time" => UNIX_EPOCH, // Since sometimes the Queue has a delay in transmission, each
-                                                  // payload contains it own timestamp.
-                            // Some miscellaneous identifying information goes in here that's deprecated
-                            // and unused.
+                "type" => R_START,    // For example, this is the type of payload here.
+                "time" => UNIX_EPOCH, // Since sometimes the Queue has a delay in transmission, each
+                                      // payload contains it own timestamp.
+                // Some miscellaneous identifying information goes in here that's deprecated
+                // and unused.
 
-                            // If the type involves a child:
-                            "ChildID" => #, // The index of our child in pool.children / pool.data
+                // If the type involves a child:
+                "ChildID" => #, // The index of our child in pool.children / pool.data
 
-                            // If the type involves a job:
-                            "timetaken" => UNIX_EPOCH //The time the job took to complete.
-                        },
-                        
-                        //{  another here },
-                        ...
-                    ]
-
+                // If the type involves a job:
+                "timetaken" => UNIX_EPOCH //The time the job took to complete.
              }
 
-          The JSON above is arranged and then attempts to open a HTTP request to the provided server. If it fails,
-          it tries 5 more times every 5 seconds with a timeout of 1 second. It attempts to send the JSON up via POST
-          and then waits for an HTTP 200 or similar before considering it a success. If R_START was included in the 
-          payload, the server will respond with a cid and a rid for the client which it then stores internally for 
-          future reports.
+            This module attempts to send the payload upstream 5 times, waiting 5 seconds between reattempts. On the fifth failure
+            it never tries again. It is noted in the log when it gives up.
 
-          :returns: None
+            :returns: None
         """
         t = time.time( )
         if not self.enabled:
