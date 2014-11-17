@@ -23,3 +23,4 @@ WebDriver script and convert it for usage with the wrapper, the second component
 is as described above, a framework making load testing possible with Selenium. The converter 
 creates a folder which contains the wrapped script and can be transported between any number of 
 computers. 
+

@@ -59,7 +59,7 @@ Pool Settings
 See `Logging`_
 
 **Get Images**
-Determines whether PhantomJS will bother to download images. If during recording an image was clicked on, it must either have 
+Determines whether PhantomJS will bother to download images. If during recording an image was clicked on, it must have 
 an alt tag for this option to be false.
 
 ^^^^^^^^^^^^^^^^^^
