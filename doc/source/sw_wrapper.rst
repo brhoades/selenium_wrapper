@@ -152,6 +152,32 @@ result is greatly skewed by simply adding/disabling children. It is named ideal 
 Controls Section
 ^^^^^^^^^^^^^^^^
 
+The controls section shows the 4 primary keys used to control pool operation. Keys are broken into three categories: designators, modifiers, and executors. 
+``c`` and ``j`` are designators. Designators give a command to be modified by a modifier. Any number entered is a valid modifier as long as the window has space for it.
+Executors are ``q``, ``s``, ``p``, ``-``, and ``+``. Executors will take any valid modifiers and then perform an action. ``q``, ``s``, and ``p`` accept no modifiers or designators,
+if any are provided they are discarded. 
+
+As you type, commands are visible in the bottom right corner of the controls section.
+
+It is easiest to show valid usage for ``c``/``j`` with examples:
+
+Add a child to the pool: 
+  - ``c+``. The executor + defaults to one if no number is specified.
+Remove a child:
+  - ``c-``. The executor - has the same behavior.
+Add 50 jobs to the pool:
+  - ``j50+``. Modifiers can be placed between designators and executors to increase action's payloads.
+  - ``50j+``. Modifiers are not location specific as long as they are before an executor.
+Remove 20 jobs from the pool:
+  - ``j10-10j-``. The moment an executor is inserted, the command buffer is cleared.
+  - ``20j-``. These functions behave identically.
+Stop a pool:
+  - ``q``. Stops a pool and turns all children off. This sends a reporting notification off if reporting is enabled.
+Start a pool:
+  - ``s``. Starts a pool anew and sends a reporting notification off if enabled. This appears identical to a new launch to a reporting
+    server.
+(un)Pause a pool:
+  - ``p``. This is functionally similar to ``q`` and ``s`` however no events are sent off.
 
 *******
 Logging
