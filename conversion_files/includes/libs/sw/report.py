@@ -5,12 +5,11 @@ from sw.const import *
 
 class Report:
     """Report handles all the reporting events sent from the Pool, currently it exclusively sends these upstream to a
-       server which then does further handling. The events are sent from the pool via calls to this instance's functions
+       Splunk server which then does further handling. The events are sent from the pool via calls to this instance's functions
        that in turn call :func:`send`.
 
        Reporting can be disabled putting None (or a blank field) in the initial settings page. This has the
-       same effect as not including the #report="url" option within the options header of a script before conversion. This URL
-       should point to the included sinatra server in ``reporting/`` like so: ``http://reporting-server.com:4567/report``. 
+       same effect as not including the #report="url" option within the options header of a script before conversion.
 
        The reporting class also takes in the custom ``id=""``, ``run=""``, and ``project=""`` from kwargs / initial settings. It 
        uses these settings when communicating unstream with the reporting server. 
@@ -18,6 +17,10 @@ class Report:
        :param pool: Reference to our owning pool. This is primarily to access pool.options and not used much elsewhere. 
 
        :return: Report (self)
+
+       .. seealso::
+        
+          :ref:`reporting-terms`
     """
 
     def __init__( self, pool ):
@@ -176,7 +179,7 @@ class Report:
 
 
     def sendSplunk( self, data ):
-        """Sends data to a splunk server reading from kwargs for options.
+        """Sends data to a Splunk sever encoded in JSON.
 
            :param data: JSON of data to send to the splunk server.
            :returns: The parsed splunk event on success.
