@@ -3,8 +3,8 @@
 Wrapper
 =======
 
-The wrapper can be launched by using ``run.bat`` in Windows or ``python run_test.py`` in Unix-like systems. 
-Everything is automatically prepared, so upon launch the first screen is the initial settings wizard.
+The wrapper can be launched by using ``run.bat`` in Windows or ``python run_test.py`` on any system with Python setup and configured in its path. 
+Everything is automatically prepared, an optional initial settings wizard is shown on startup.
 
 ****************
 Initial Settings
@@ -17,6 +17,11 @@ Initial Settings
 
 The initial settings wizard allows configuration and validation of settings before running. Each option has a respective
 options directive seen in :ref:`options-directives` including the option to disable the initial settings wizard entirely. 
+To select an option enter the letter to the left of the label and then hit enter. Any entered text or numbers will be converted
+to the required type (for example, for the port an integer) upon hitting enter.
+To restore an option to its default, remove all text from the field and hit enter. 
+When complete, hit enter with no selection and your settings will be validated. If there are no issues with your settings,
+the script will begin.
 
 ^^^^^^^^^^^^
 Run Settings
@@ -61,6 +66,8 @@ See `Logging`_
 **Get Images**
 Determines whether PhantomJS will bother to download images. If during recording an image was clicked on, it must have 
 an alt tag for this option to be false.
+
+.. _reporting-terms:
 
 ^^^^^^^^^^^^^^^^^^
 Reporting Settings
@@ -162,9 +169,9 @@ As you type, commands are visible in the bottom right corner of the controls sec
 It is easiest to show valid usage for ``c``/``j`` with examples:
 
 Add a child to the pool: 
-  - ``c+``. The executor + defaults to one if no number is specified.
+  - ``c+``. The executor ``+`` defaults to one if no number is specified.
 Remove a child:
-  - ``c-``. The executor - has the same behavior.
+  - ``c-``. The executor ``-`` has the same behavior.
 Add 50 jobs to the pool:
   - ``j50+``. Modifiers can be placed between designators and executors to increase action's payloads.
   - ``50j+``. Modifiers are not location specific as long as they are before an executor.
@@ -178,6 +185,8 @@ Start a pool:
     server.
 (un)Pause a pool:
   - ``p``. This is functionally similar to ``q`` and ``s`` however no events are sent off.
+
+.. _logging:
 
 *******
 Logging

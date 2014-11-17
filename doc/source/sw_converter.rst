@@ -4,8 +4,8 @@ Script Converter
 ================
 
 Conversion will take a while in Windows. It will initialize a new directory, copy a slimmed down Python 
-install into it, and then convert the script into a form which utilizes the included Selenium 
-wrapper. Once finished, it will prompt you to tell you so. Progress can be monitored in the 
+install into it, and then convert the script into a form which utilizes Selenium 
+Wrapper. Once finished, it will prompt with a notification. Progress can be monitored in the 
 black terminal that opened when the exe/script was initially ran.
 
 Assertions or known useless code will be automatically stripped from the script provided. 
@@ -29,8 +29,8 @@ installation with Selenium and PhantomJS.
 .. image:: images/converter_main.png
 
 Browsing to a file will automatically choose a directory with the matching name to output to in 
-``out/``. If the file is properly exported from selenium, it will be converted into a wrapped 
-script. There are several options which will augment the way the wrapper runs. 
+``out/``. If the file is properly exported from Selenium, it will be converted into a wrapped 
+script. There are several options which will augment the way the wrapper runs.
 
 - Images (*off*) will enable loading images in the headless browser.
 - Python (*on*) will copy the included python installation to the output directory.
@@ -70,22 +70,22 @@ as the converter turns the directives into functions after conversion.
 
 Available Directives:
   - ``#log message``
-    - This will write to our child's log ``message``. Directly calls :py:func:`~sw.child.Child.logMsg`
+    - This will write to our child's log ``message``. This directly calls :py:func:`~sw.child.Child.logMsg`.
   - ``#wait element kwargs``
-    - This calls :py:func:`~sw.utils.waitToDisappear` and takes any of the kwargs as the second argument. Please reference that function for further details about its arguments and other options.
+    - This calls :py:func:`~sw.utils.waitToDisappear` and takes any of the kwargs as the second argument. Please reference that function for further details about its arguments and other options. Examples:
 
     - ``#wait overlay type=id`` - waits for the element with ``id=overlay`` to disappear.
 
-    - ``#wait overlay type=name, stayGone=3`` - waits for the element with ``name=overlay`` to disappear and waits an additional 3 seconds for it to not come back.
+    - ``#wait overlay type=name, stayGone=3`` - waits for the element with ``name=overlay`` to disappear and waits an additional 3 seconds for it to not reappear.
 
-    - ``#wait blurydiv timeout=5`` - waits for ``id=blurydiv`` to disappear. If it doesn't after ``5`` seconds, returns.
+    - ``#wait blurydiv timeout=5`` - waits for ``id=blurydiv`` to disappear. If it does not after ``5`` seconds, returns.
 
     - ``#wait blurydiv waitTimeout=5`` - waits for ``id=blurydiv`` to disappear. Gives the element ``5`` seconds to appear first before waiting for it to disappear. Default time to appear is 1 second.
 
   - ``#error message``
     - Throws an error, which takes a screenshot, logs the screenshot name, and logs "message" to the log. Calls :py:func:`~sw.child.Child.logMsg` with ``level=CRITICAL``.
   - ``#screenshot``
-    - Takes a screenshot which appears as ``error_#.png`` within the child's log directory. The log references the file name when this is called. Calls :py:func:`~sw.child.Child.screenshot`
+    - Takes a screenshot which appears as ``error_#.png`` within the child's log directory. The log references the file name when this is called. This is a direct call to :py:func:`~sw.child.Child.screenshot`.
 
 .. _options-directives:
 
@@ -93,7 +93,11 @@ Available Directives:
 Options Directives
 ******************
 
-By including at the top of your script ``#OPTIONS`` with a following comment block, the converter will parse options into the output script. These options will appear in the defaults for initial settings.::
+Including an options block at the top (line 1) of your preconverted script will allow simpler option setting. The idea behind the options block is to make it easy to set defaults
+for a script which can then be passed out to several (possibly clueless) users. Those users then do not need to know what options to plug in, or what keys to manipulate to control the pool. These options will
+appear in initial settings, but even initial settings can be disabled. An example of a simple options block is provided.
+
+.. code::
 
   #OPTIONS
   #p option="text"
@@ -113,12 +117,12 @@ Available options:
     - ``#p ignoresslerrors="yes"/"no"``
       - Specifies whether to ignore errors about an invalid or expired SSL certificate. Default: "yes"
     - ``#p ghostdriverlog="filename"``
-      - Specifies the name of the log file for ghostdriver. Default: "ghostdriver.log"
+      - Specifies the name of the log file for Ghostdriver. Default: "ghostdriver.log"
 
   - Splunk Connection
 
     - ``#p report="server FQDN or IP"``
-      - This parameter toggles reporting. If this parameter is left to the default (blank) reporting will not happen. Default: None
+      - This parameter toggles reporting. If this parameter is left to the default (None) reporting will not happen. If other options are not properly set and this option is not blank, there may be spontaneous crashes when it fails to connect. Default: None
     - ``#p report_port=8089``
       - The port to connect to the reporting Splunk server at. Default: 8089
     - ``#p report_user="username""``
@@ -128,7 +132,7 @@ Available options:
     - ``#p report_index="testing"``
       - The index to insert all data into within Splunk. Default: None
 
-  - Reporting Details
+  - Reporting Details (see also: :ref:`reporting-terms`)
 
     - ``#p id="auto"``
       - Machine name used to report to the reporting server. If left at the default, it's generated in the format ``user@hostname``. Default: "auto"
@@ -142,16 +146,16 @@ Available options:
   - Selenium Configuration
 
     - ``#p cache=True/False``
-      - Case sensitive for True or False. Specify whether found elements in PhantomJS should be cached. In pages with a great deal of AJAX this is recommended to save CPU resources searching for elements. There has not been any noticeable drawback to this option in testing. Default: True
+      - Case sensitive for True or False. Specify whether found elements in PhantomJS should be cached. In pages with a great deal of AJAX this is recommended to save CPU resources searching for elements. There have not been any noticeable drawbacks to this option in extensive testing. Default: True
     - ``#p childsleeptime=#``
-      - Amount of time in seconds waited inbetween searches for an element on a page. Low numbers increase CPU usage. Default: 1 
+      - Amount of time in seconds waited in between searches for an element on a page. Low numbers increase CPU usage. 0 is equivalent to stock WebDriver. Default: 1 
     - ``#p lightconfirm=True/False``
-      - Case sensitive for True or False. If True, when checking if an element exists there will be no check for visibility or clickibility. This is practical for individual function usage in a script, globally False is the most acceptable option. Default: False
+      - Case sensitive for True or False. If True, when checking if an element exists there will be no check for visibility or clickibility. This is practical for individual function usage in a script, globally False is the most acceptable option. If enabled globally, there will often be function calls to objects that "are not visible". Default: False
 
   - General
 
     - ``#p level=-1-9``
-      - Logging level, where -1 is all errors including debugging, 0 is all errors, and 1 is notices. A full list of options can be found in const.py in the selenium module directory. Default: 1 
+      - Logging level, where -1 is all errors including debugging, 0 is all errors, and 1 is notices. See also: :ref:`logging`. Default: 1 
     - ``#p logformat="DATESTR"``
       - Custom folder names for the log folder. Default: "%Y-%m-%d_%H-%M-%S"
     - ``#p jobs=#``
