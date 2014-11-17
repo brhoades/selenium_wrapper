@@ -12,8 +12,8 @@ Assertions or known useless code will be automatically stripped from the script 
 Assertions are not currently supported as the wrapper does not currently wrap itself in a 
 unit testing suite. Most functions used in the script will be replaced with in house functions,
 such as ``driver.find_element_by(...).send_keys( "text" )`` which is wrapped 
-into a :py:func:`sw.utils.sendKeys` function. This eliminates the need for a .clear( ) 
-statement and saves time. Conversion also replaces any ``find_element_by_`` segments with 
+into a :py:func:`sw.utils.sendKeys` function. This eliminates the need for extraneous function calls
+and, in this case, is much faster as typing is instant. Conversion also replaces any ``find_element_by_`` segments with 
 :py:func:`sw.utils.sleepwait` which is a controlled (and CPU-optimized) function to wait for an 
 element.
 
@@ -55,6 +55,7 @@ Running ``main.rb`` with ``--help`` returns command line usage information::
       -h, --help                       Show this message.
 
 Typical usage will always include the options ``-poi`` followed by a script. For example::
+
   ruby main.rb -poi in/test_script.py
 
 This will package Python into the folder ``out/test_script/`` and drop the converted script in there as well.
