@@ -13,7 +13,10 @@ Usage Documentation
 .. toctree::
    :maxdepth: 3 
 
-   sw
+   sw_overview
+   sw_install
+   sw_converter
+   sw_wrapper
 
 ****************
 Module Reference

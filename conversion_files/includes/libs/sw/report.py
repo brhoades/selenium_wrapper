@@ -1,4 +1,5 @@
-import json, requests, time, os, getpass, socket, base64, traceback
+import json, time, os, getpass, socket, base64, traceback
+import splunklib.client as client
 import Queue as Q
 from sw.const import * 
 
@@ -7,13 +8,12 @@ class Report:
        server which then does further handling. The events are sent from the pool via calls to this instance's functions
        that in turn call :func:`send`.
 
-       Reporting can be disabled by excluding the report option from the kwargs of :func:`main`. This has the
+       Reporting can be disabled putting None (or a blank field) in the initial settings page. This has the
        same effect as not including the #report="url" option within the options header of a script before conversion. This URL
-       should point to the included sinatra server in reporting/ like so: "http://reporting-server.com:4567/report". 
+       should point to the included sinatra server in ``reporting/`` like so: ``http://reporting-server.com:4567/report``. 
 
-       Other options include a id="" option which allows you to specify a custom computer ID. Similarly, including run="" allows
-       you to choose a specific run to join. Note that the run will be created if it doesn't already exist and will be used for 
-       all subsequent script calls until removed.
+       The reporting class also takes in the custom ``id=""``, ``run=""``, and ``project=""`` from kwargs / initial settings. It 
+       uses these settings when communicating unstream with the reporting server. 
 
        :param pool: Reference to our owning pool. This is primarily to access pool.options and not used much elsewhere. 
 
@@ -31,7 +31,17 @@ class Report:
 
         self.project = pool.options.get( 'project', None )
 
+        self.script = pool.options.get( 'script', None )
+
         self.site = pool.options.get( 'report', None )
+        
+        self.port = pool.options.get( 'report_port', 8089 )
+
+        self.user = pool.options.get( 'report_user', None )
+
+        self.password = pool.options.get( 'report_pass', None )
+        
+        self.index = pool.options.get( 'report_index', None )
 
         self.enabled = self.site is not None
 
@@ -45,12 +55,7 @@ class Report:
         # Set on an error transmitting
         self.nextSend = 0
 
-        self.pingFreq = 60
-
         self.tries = 5
-
-        # Ping Frequency
-        self.nextPing = time.time( ) + self.pingFreq
 
         # Our queue of things to submit to our server
         self.queue = Q.Queue( )
@@ -74,18 +79,14 @@ class Report:
            :param payload: A hash of information to send upstream to our reporting server.
            :param type: The R_* constant identifier for the type of payload included. 
         """
-        #FIXME: Remove duplicate header information and just have a identifying header at the top of all
-        #payloads.
-           
         if not self.enabled:
             return
 
         # Encode identifying information and the time
         payload['id']   = self.id( )
-        if self.project is not None:
-            payload['run']  = ''.join( [ self.project, '_', self.run ] )
-        else:
-            payload['run'] = self.run
+        payload['Project'] = self.project
+        payload['Script'] = self.script
+        payload['Run'] = self.run
         payload['func'] = self.func
         payload['time'] = time.time( )
         payload['type'] = type
@@ -131,7 +132,7 @@ class Report:
              }
 
           The JSON above is arranged and then attempts to open a HTTP request to the provided server. If it fails,
-          it tries 5 more times every 5 seconds with a timeout of 1 second. It attemps to send the JSON up via post
+          it tries 5 more times every 5 seconds with a timeout of 1 second. It attempts to send the JSON up via POST
           and then waits for an HTTP 200 or similar before considering it a success. If R_START was included in the 
           payload, the server will respond with a cid and a rid for the client which it then stores internally for 
           future reports.
@@ -141,8 +142,6 @@ class Report:
         t = time.time( )
         if not self.enabled:
             return
-        if t > self.nextPing:
-            self.ping( ) 
         if self.nextSend != 0 and t < self.nextSend:
             return
         if self.queue.qsize( ) == 0:
@@ -161,67 +160,58 @@ class Report:
             data.append( m )
 
         if len( data ) > 0:
-            payload = { "payload": data }
-
-            # Preparing header for payload
-            payload['cid'] = self.cid
-            payload['rid'] = self.rid
-
             self.pool.logMsg( ' '.join( [ 'Sending', str( len( data ) ), 'payload(s) to server.' ] ), NOTICE )
-            r = None
-            try:
-                r = requests.post( self.site, data=json.dumps( payload ), timeout=1, headers={'content-type': 'application/json'} )
-            except Exception as e:
-                self.pool.logMsg( "Fatal error with reporting, probably failed to connect: ", CRITICAL )
-                self.pool.logMsg( traceback.format_exc( ), CRITICAL )
-                if self.tries > 0:
-                    self.tries -= 1
-                    self.pool.logMsg( ''.join( [ "Disabling reporting after ", str( self.tries ), " more tries." ] ), CRITICAL )
-                    self.nextSend = t + 5
-                else:
-                    self.pool.logMsg( "Disabling reporting.", CRITICAL )
-                    self.enabled = False
+
+            # Prepare a single event to fire off
+            for i in range(len(data)):
+                r = None
+                d = data.pop( )
+                try:
+                    r = self.sendSplunk( json.dumps( d ) )
+                except Exception as e:
+                    self.pool.logMsg( "Fatal error with reporting, probably failed to connect: ", CRITICAL )
+                    self.pool.logMsg( traceback.format_exc( ), CRITICAL )
+                    if self.tries > 0:
+                        self.tries -= 1
+                        self.pool.logMsg( ''.join( [ "Disabling reporting after ", str( self.tries ), " more tries." ] ), CRITICAL )
+                        self.nextSend = t + 5
+                    else:
+                        self.pool.logMsg( "Disabling reporting.", CRITICAL )
+                        self.enabled = False
+                        return
+
+                    # Put our data back in the send queue
+                    self.queue.put( d )
+                    for m in data:
+                        self.queue.put( m )
                     return
 
-                # Put our data back in the send queue
-                for m in data:
-                    self.queue.put( m )
-                return
 
-            # There was a failure
-            if r.status_code != requests.codes.ok:
-                self.pool.logMsg( ''.join( [ "Payload failed to send with HTTP status code: ", str( r.status_code ) ] ), CRITICAL )
-                # Put our data back in the send queue
-                for m in data:
-                    self.queue.put( m )
-                # Wait 5 seconds before we try again
-                self.nextSend = t + 5
-            else:
-                self.pool.logMsg( ''.join( [ "Sent payload successfully with status ", str( r.status_code ) ] ) , INFO )
-                self.pool.logMsg( ''.join( [ "Response from server: ", str( r.text ) ] ) )
+
+    def sendSplunk( self, data ):
+        """Sends data to a splunk server reading from kwargs for options.
+
+           :param data: JSON of data to send to the splunk server.
+           :returns: The parsed splunk event on success.
+        """
+        splunk = client.connect( host=self.site, 
+                port=self.port, 
+                username=self.user, 
+                password=self.password )
+        index = splunk.indexes[self.index]
+        return index.submit( data, sourcetype='py-event' )
         
-                response = r.json( )
-
-                if 'cid' in response:
-                    self.cid = response['cid']
-                if 'rid' in response:
-                    self.rid = response['rid']
-                self.tries = 5
-
-
-
-    # Individual reporting functions
 
     def start( self ):
         """Sends a start notification payload.
-
+            
            :returns: None
         """
         self.send( { }, R_START )
 
     def stop( self ):
         """Sends a stop notification payload.
-        
+            
            :returns: None
         """
         self.send( { }, R_STOP )
@@ -258,7 +248,8 @@ class Report:
 
         data = { 'error': error, 'childID': child }
 
-        if screenshot is not None:
+        if screenshot is not None and False:
+            self.pool.logMsg( "Screenshot: " + screenshot )
             with open( screenshot, "rb") as img:
                 data['screenshot'] = base64.b64encode( img.read( ) ) 
         
@@ -280,15 +271,6 @@ class Report:
            :returns: None
         """
         self.send( { 'childID': child }, R_END_CHILD )
-
-    def ping( self ):
-        """Sends a keepalive notice to the server, effectively keeping this client and
-           its run from timing out.
-
-           :returns: None
-        """
-        self.nextPing = time.time( ) + self.pingFreq
-        self.send( { }, R_ALIVE )
 
     # Generators
     def id( self ):

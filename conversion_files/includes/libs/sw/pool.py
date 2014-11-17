@@ -43,7 +43,7 @@ class Pool:
         self.func = func
 
         # General log directory, shared by all children
-        self.log = os.path.join( os.path.dirname( os.path.abspath( file ) ), "logs", datetime.datetime.now( ).strftime( "%Y-%m-%d_%H-%M-%S" ) ) 
+        self.log = os.path.join( os.path.dirname( os.path.abspath( file ) ), "logs", datetime.datetime.now( ).strftime( self.options.get( "logformat", "%Y-%m-%d_%H-%M-%S" ) ) ) 
         os.makedirs( self.log )
 
         # Marks our start time, set when first child sends starting
@@ -61,13 +61,10 @@ class Pool:
         # Our reporting object
         self.reporting = Report( self )
 
-        # Tell our server we're starting
-        self.reporting.start( )
-
         ####### Settings ########
 
         # Time between children spawning
-        self.staggeredTime = 5
+        self.staggeredTime = self.options.get( 'staggertime', 5 )
 
         ####### One Offs ########
         # Populate our work queue
@@ -78,6 +75,7 @@ class Pool:
         self.nextSpawn = time.time( )
 
         self.logMsg( "Pool starting" )
+        self.reporting.start( )
 
 
 
@@ -136,6 +134,7 @@ class Pool:
 
         c.stop( "Stopped by GUI", STOPPED )
         self.logMsg( ''.join( [ "Stopping child (#", str( c.num + 1 ), ")" ] ) )
+        self.reporting.stop( )
 
 
 
@@ -201,7 +200,7 @@ class Pool:
                 curses.flash( )
 
                 self.data[i][FAILURES] += 1
-                self.reporting.jobFail( r[ERROR], i )
+                self.reporting.jobFail( r[ERROR], i, r[EXTRA1] )
 
                 # When we get a failure we put the job back on the queue
                 self.workQueue.put( self.func )
@@ -300,9 +299,8 @@ class Pool:
             self.endChild( c.num )
 
         self.status = type 
-        
         self.reporting.stop( )
-
+        
 
 
     def start( self ):
@@ -316,5 +314,4 @@ class Pool:
             self.reporting.newChild( c.num )
         
         self.status = RUNNING
-        
         self.reporting.start( )

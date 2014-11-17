@@ -33,6 +33,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.viewcode',
     'sphinx.ext.intersphinx',
+    'sphinx.ext.pngmath'
 ]
 
 intersphinx_mapping = { 'webdriver': ( 'http://selenium-python.readthedocs.org/en/latest/', None ) }

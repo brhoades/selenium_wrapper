@@ -92,7 +92,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">func</span> <span class="o">=</span> <span class="n">func</span>
 
         <span class="c"># General log directory, shared by all children</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span> <span class="nb">file</span> <span class="p">)</span> <span class="p">),</span> <span class="s">&quot;logs&quot;</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span> <span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span> <span class="s">&quot;%Y-%m-</span><span class="si">%d</span><span class="s">_%H-%M-%S&quot;</span> <span class="p">)</span> <span class="p">)</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span> <span class="nb">file</span> <span class="p">)</span> <span class="p">),</span> <span class="s">&quot;logs&quot;</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span> <span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&quot;logformat&quot;</span><span class="p">,</span> <span class="s">&quot;%Y-%m-</span><span class="si">%d</span><span class="s">_%H-%M-%S&quot;</span> <span class="p">)</span> <span class="p">)</span> <span class="p">)</span> 
         <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="p">)</span>
 
         <span class="c"># Marks our start time, set when first child sends starting</span>
@@ -110,13 +110,10 @@
         <span class="c"># Our reporting object</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">reporting</span> <span class="o">=</span> <span class="n">Report</span><span class="p">(</span> <span class="bp">self</span> <span class="p">)</span>
 
-        <span class="c"># Tell our server we&#39;re starting</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">reporting</span><span class="o">.</span><span class="n">start</span><span class="p">(</span> <span class="p">)</span>
-
         <span class="c">####### Settings ########</span>
 
         <span class="c"># Time between children spawning</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">staggeredTime</span> <span class="o">=</span> <span class="mi">5</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">staggeredTime</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&#39;staggertime&#39;</span><span class="p">,</span> <span class="mi">5</span> <span class="p">)</span>
 
         <span class="c">####### One Offs ########</span>
         <span class="c"># Populate our work queue</span>
@@ -127,6 +124,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">nextSpawn</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&quot;Pool starting&quot;</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reporting</span><span class="o">.</span><span class="n">start</span><span class="p">(</span> <span class="p">)</span>
 
 
 
@@ -185,6 +183,7 @@
 
         <span class="n">c</span><span class="o">.</span><span class="n">stop</span><span class="p">(</span> <span class="s">&quot;Stopped by GUI&quot;</span><span class="p">,</span> <span class="n">STOPPED</span> <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Stopping child (#&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span> <span class="n">c</span><span class="o">.</span><span class="n">num</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">),</span> <span class="s">&quot;)&quot;</span> <span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reporting</span><span class="o">.</span><span class="n">stop</span><span class="p">(</span> <span class="p">)</span>
 
 
 </div>
@@ -250,7 +249,7 @@
                 <span class="n">curses</span><span class="o">.</span><span class="n">flash</span><span class="p">(</span> <span class="p">)</span>
 
                 <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">FAILURES</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">reporting</span><span class="o">.</span><span class="n">jobFail</span><span class="p">(</span> <span class="n">r</span><span class="p">[</span><span class="n">ERROR</span><span class="p">],</span> <span class="n">i</span> <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">reporting</span><span class="o">.</span><span class="n">jobFail</span><span class="p">(</span> <span class="n">r</span><span class="p">[</span><span class="n">ERROR</span><span class="p">],</span> <span class="n">i</span><span class="p">,</span> <span class="n">r</span><span class="p">[</span><span class="n">EXTRA1</span><span class="p">]</span> <span class="p">)</span>
 
                 <span class="c"># When we get a failure we put the job back on the queue</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">workQueue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span> <span class="p">)</span>
@@ -349,9 +348,8 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">endChild</span><span class="p">(</span> <span class="n">c</span><span class="o">.</span><span class="n">num</span> <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="nb">type</span> 
-        
         <span class="bp">self</span><span class="o">.</span><span class="n">reporting</span><span class="o">.</span><span class="n">stop</span><span class="p">(</span> <span class="p">)</span>
-
+        
 
 </div>
 <div class="viewcode-block" id="Pool.start"><a class="viewcode-back" href="../../sw.pool.html#sw.pool.Pool.start">[docs]</a>    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span> <span class="bp">self</span> <span class="p">):</span>
@@ -365,7 +363,6 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">reporting</span><span class="o">.</span><span class="n">newChild</span><span class="p">(</span> <span class="n">c</span><span class="o">.</span><span class="n">num</span> <span class="p">)</span>
         
         <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">RUNNING</span>
-        
         <span class="bp">self</span><span class="o">.</span><span class="n">reporting</span><span class="o">.</span><span class="n">start</span><span class="p">(</span> <span class="p">)</span></div></div>
 </pre></div>
 
@@ -406,7 +403,7 @@
     </div>
     <div class="footer">
         &copy; Copyright 2014, Billy Rhoades.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
     </div>
   </body>
 </html>

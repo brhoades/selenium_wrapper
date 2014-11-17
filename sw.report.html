@@ -62,12 +62,11 @@
 <dd><p>Report handles all the reporting events sent from the Pool, currently it exclusively sends these upstream to a
 server which then does further handling. The events are sent from the pool via calls to this instance&#8217;s functions
 that in turn call <a class="reference internal" href="#sw.report.Report.send" title="sw.report.Report.send"><tt class="xref py py-func docutils literal"><span class="pre">send()</span></tt></a>.</p>
-<p>Reporting can be disabled by excluding the report option from the kwargs of <tt class="xref py py-func docutils literal"><span class="pre">main()</span></tt>. This has the
+<p>Reporting can be disabled putting None (or a blank field) in the initial settings page. This has the
 same effect as not including the #report=&#8221;url&#8221; option within the options header of a script before conversion. This URL
-should point to the included sinatra server in reporting/ like so: &#8220;<a class="reference external" href="http://reporting-server.com:4567/report">http://reporting-server.com:4567/report</a>&#8221;.</p>
-<p>Other options include a id=&#8221;&#8221; option which allows you to specify a custom computer ID. Similarly, including run=&#8221;&#8221; allows
-you to choose a specific run to join. Note that the run will be created if it doesn&#8217;t already exist and will be used for 
-all subsequent script calls until removed.</p>
+should point to the included sinatra server in <tt class="docutils literal"><span class="pre">reporting/</span></tt> like so: <tt class="docutils literal"><span class="pre">http://reporting-server.com:4567/report</span></tt>.</p>
+<p>The reporting class also takes in the custom <tt class="docutils literal"><span class="pre">id=&quot;&quot;</span></tt>, <tt class="docutils literal"><span class="pre">run=&quot;&quot;</span></tt>, and <tt class="docutils literal"><span class="pre">project=&quot;&quot;</span></tt> from kwargs / initial settings. It 
+uses these settings when communicating unstream with the reporting server.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -188,21 +187,6 @@ is restarted.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="sw.report.Report.ping">
-<tt class="descname">ping</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sw/report.html#Report.ping"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.report.Report.ping" title="Permalink to this definition">¶</a></dt>
-<dd><p>Sends a keepalive notice to the server, effectively keeping this client and
-its run from timing out.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">None</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
 <dt id="sw.report.Report.send">
 <tt class="descname">send</tt><big>(</big><em>payload</em>, <em>type</em><big>)</big><a class="reference internal" href="_modules/sw/report.html#Report.send"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.report.Report.send" title="Permalink to this definition">¶</a></dt>
 <dd><p>Send enables a payload to be parsed and added into our local queue for transmission
@@ -221,6 +205,22 @@ except for further stressing network bandwidth and the JSON parser.</p>
 <li><strong>type</strong> &#8211; The R_* constant identifier for the type of payload included.</li>
 </ul>
 </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sw.report.Report.sendSplunk">
+<tt class="descname">sendSplunk</tt><big>(</big><em>data</em><big>)</big><a class="reference internal" href="_modules/sw/report.html#Report.sendSplunk"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.report.Report.sendSplunk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sends data to a splunk server reading from kwargs for options.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>data</strong> &#8211; JSON of data to send to the splunk server.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The parsed splunk event on success.</td>
 </tr>
 </tbody>
 </table>
@@ -292,7 +292,7 @@ in JSON with the following general format:</p>
 </dd>
 </dl>
 <p>The JSON above is arranged and then attempts to open a HTTP request to the provided server. If it fails,
-it tries 5 more times every 5 seconds with a timeout of 1 second. It attemps to send the JSON up via post
+it tries 5 more times every 5 seconds with a timeout of 1 second. It attempts to send the JSON up via POST
 and then waits for an HTTP 200 or similar before considering it a success. If R_START was included in the 
 payload, the server will respond with a cid and a rid for the client which it then stores internally for 
 future reports.</p>
@@ -373,7 +373,7 @@ future reports.</p>
     </div>
     <div class="footer">
         &copy; Copyright 2014, Billy Rhoades.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
     </div>
   </body>
 </html>

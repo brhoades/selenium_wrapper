@@ -1,0 +1,285 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Script Converter &mdash; selenium_wrapper 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="selenium_wrapper 0.1 documentation" href="index.html" />
+    <link rel="next" title="Wrapper" href="sw_wrapper.html" />
+    <link rel="prev" title="Installation" href="sw_install.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="sw_wrapper.html" title="Wrapper"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="sw_install.html" title="Installation"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">selenium_wrapper 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="script-converter">
+<h1>Script Converter<a class="headerlink" href="#script-converter" title="Permalink to this headline">¶</a></h1>
+<p>Conversion will take a while in Windows. It will initialize a new directory, copy a slimmed down Python
+install into it, and then convert the script into a form which utilizes Selenium
+Wrapper. Once finished, it will prompt with a notification. Progress can be monitored in the
+black terminal that opened when the exe/script was initially ran.</p>
+<p>Assertions or known useless code will be automatically stripped from the script provided.
+Assertions are not currently supported as the wrapper does not currently wrap itself in a
+unit testing suite. Most functions used in the script will be replaced with in house functions,
+such as <tt class="docutils literal"><span class="pre">driver.find_element_by(...).send_keys(</span> <span class="pre">&quot;text&quot;</span> <span class="pre">)</span></tt> which is wrapped
+into a <a class="reference internal" href="sw.utils.html#sw.utils.sendKeys" title="sw.utils.sendKeys"><tt class="xref py py-func docutils literal"><span class="pre">sw.utils.sendKeys()</span></tt></a> function. This eliminates the need for extraneous function calls
+and, in this case, is much faster as typing is instant. Conversion also replaces any <tt class="docutils literal"><span class="pre">find_element_by_</span></tt> segments with
+<a class="reference internal" href="sw.utils.html#sw.utils.sleepwait" title="sw.utils.sleepwait"><tt class="xref py py-func docutils literal"><span class="pre">sw.utils.sleepwait()</span></tt></a> which is a controlled (and CPU-optimized) function to wait for an
+element.</p>
+<div class="section" id="usage-gui">
+<h2>Usage - GUI<a class="headerlink" href="#usage-gui" title="Permalink to this headline">¶</a></h2>
+<p>The converter <tt class="docutils literal"><span class="pre">main.rb</span></tt> or <tt class="docutils literal"><span class="pre">selenium_convert.exe</span></tt> will launch after about 15 seconds
+(results may vary). This converter has the files necessary to create a portable Python
+installation with Selenium and PhantomJS.</p>
+<img alt="_images/converter_main.png" src="_images/converter_main.png" />
+<p>Browsing to a file will automatically choose a directory with the matching name to output to in
+<tt class="docutils literal"><span class="pre">out/</span></tt>. If the file is properly exported from Selenium, it will be converted into a wrapped
+script. There are several options which will augment the way the wrapper runs.</p>
+<ul class="simple">
+<li>Images (<em>off</em>) will enable loading images in the headless browser.</li>
+<li>Python (<em>on</em>) will copy the included python installation to the output directory.</li>
+<li>Overwrite (<em>off</em>) will overwrite the output directory without prompting.</li>
+</ul>
+<p>After selecting your input Python file and (optionally) your output folder, hit convert.</p>
+</div>
+<div class="section" id="usage-cli">
+<h2>Usage - CLI<a class="headerlink" href="#usage-cli" title="Permalink to this headline">¶</a></h2>
+<p>Running <tt class="docutils literal"><span class="pre">main.rb</span></tt> with <tt class="docutils literal"><span class="pre">--help</span></tt> returns command line usage information:</p>
+<div class="highlight-python"><div class="highlight"><pre>Usage: main.rb [options] script.py
+    -m, --[no-]images                Exported script should load images.
+    -o, --[no-]overwrite             Overwrite any conflicting files on output.
+    -c, --[no-]recopy                Recopy missing or different files.
+    -p, --[no-]python                Include python in installation (Windows onl
+y).
+    -i, --script [SCRIPT]            Script to convert, UI isn&#39;t launched if thi
+s is specified
+    -h, --help                       Show this message.
+</pre></div>
+</div>
+<p>Typical usage will always include the options <tt class="docutils literal"><span class="pre">-poi</span></tt> followed by a script. For example:</p>
+<div class="highlight-python"><div class="highlight"><pre>ruby main.rb -poi in/test_script.py
+</pre></div>
+</div>
+<p>This will package Python into the folder <tt class="docutils literal"><span class="pre">out/test_script/</span></tt> and drop the converted script in there as well.</p>
+</div>
+<div class="section" id="script-directives">
+<h2>Script Directives<a class="headerlink" href="#script-directives" title="Permalink to this headline">¶</a></h2>
+<p>There are directives which may be inserted into the source script&#8217;s function which will be
+parsed by the converter into wrapper functions. Variables can be used in their arguments
+as the converter turns the directives into functions after conversion.</p>
+<dl class="docutils">
+<dt>Available Directives:</dt>
+<dd><ul class="first last simple">
+<li><tt class="docutils literal"><span class="pre">#log</span> <span class="pre">message</span></tt>
+- This will write to our child&#8217;s log <tt class="docutils literal"><span class="pre">message</span></tt>. This directly calls <a class="reference internal" href="sw.child.html#sw.child.Child.logMsg" title="sw.child.Child.logMsg"><tt class="xref py py-func docutils literal"><span class="pre">logMsg()</span></tt></a>.</li>
+<li><tt class="docutils literal"><span class="pre">#wait</span> <span class="pre">element</span> <span class="pre">kwargs</span></tt>
+- This calls <a class="reference internal" href="sw.utils.html#sw.utils.waitToDisappear" title="sw.utils.waitToDisappear"><tt class="xref py py-func docutils literal"><span class="pre">waitToDisappear()</span></tt></a> and takes any of the kwargs as the second argument. Please reference that function for further details about its arguments and other options. Examples:<ul>
+<li><tt class="docutils literal"><span class="pre">#wait</span> <span class="pre">overlay</span> <span class="pre">type=id</span></tt> - waits for the element with <tt class="docutils literal"><span class="pre">id=overlay</span></tt> to disappear.</li>
+<li><tt class="docutils literal"><span class="pre">#wait</span> <span class="pre">overlay</span> <span class="pre">type=name,</span> <span class="pre">stayGone=3</span></tt> - waits for the element with <tt class="docutils literal"><span class="pre">name=overlay</span></tt> to disappear and waits an additional 3 seconds for it to not reappear.</li>
+<li><tt class="docutils literal"><span class="pre">#wait</span> <span class="pre">blurydiv</span> <span class="pre">timeout=5</span></tt> - waits for <tt class="docutils literal"><span class="pre">id=blurydiv</span></tt> to disappear. If it does not after <tt class="docutils literal"><span class="pre">5</span></tt> seconds, returns.</li>
+<li><tt class="docutils literal"><span class="pre">#wait</span> <span class="pre">blurydiv</span> <span class="pre">waitTimeout=5</span></tt> - waits for <tt class="docutils literal"><span class="pre">id=blurydiv</span></tt> to disappear. Gives the element <tt class="docutils literal"><span class="pre">5</span></tt> seconds to appear first before waiting for it to disappear. Default time to appear is 1 second.</li>
+</ul>
+</li>
+<li><tt class="docutils literal"><span class="pre">#error</span> <span class="pre">message</span></tt>
+- Throws an error, which takes a screenshot, logs the screenshot name, and logs &#8220;message&#8221; to the log. Calls <a class="reference internal" href="sw.child.html#sw.child.Child.logMsg" title="sw.child.Child.logMsg"><tt class="xref py py-func docutils literal"><span class="pre">logMsg()</span></tt></a> with <tt class="docutils literal"><span class="pre">level=CRITICAL</span></tt>.</li>
+<li><tt class="docutils literal"><span class="pre">#screenshot</span></tt>
+- Takes a screenshot which appears as <tt class="docutils literal"><span class="pre">error_#.png</span></tt> within the child&#8217;s log directory. The log references the file name when this is called. This is a direct call to <a class="reference internal" href="sw.child.html#sw.child.Child.screenshot" title="sw.child.Child.screenshot"><tt class="xref py py-func docutils literal"><span class="pre">screenshot()</span></tt></a>.</li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="options-directives">
+<span id="id1"></span><h2>Options Directives<a class="headerlink" href="#options-directives" title="Permalink to this headline">¶</a></h2>
+<p>Including an options block at the top (line 1) of your preconverted script will allow simpler option setting. The idea behind the options block is to make it easy to set defaults
+for a script which can then be passed out to several (possibly clueless) users. Those users then do not need to know what options to plug in, or what keys to manipulate to control the pool. These options will
+appear in initial settings, but even initial settings can be disabled. An example of a simple options block is provided.</p>
+<div class="code highlight-python"><div class="highlight"><pre><span class="c">#OPTIONS</span>
+<span class="c">#p option=&quot;text&quot;</span>
+<span class="c">#import module</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Available options:</dt>
+<dd><ul class="first last simple">
+<li>Ghostdriver<ul>
+<li><tt class="docutils literal"><span class="pre">#p</span> <span class="pre">proxy=&quot;string&quot;</span></tt>
+- Specifies a custom proxy server for Ghostdriver to route all PhantomJS traffic through. Default: &#8220;&#8221;</li>
+<li><tt class="docutils literal"><span class="pre">#p</span> <span class="pre">proxy-type=&quot;type&quot;</span></tt>
+- Specify the type of proxy. Possible options are socks5 and http. Default: &#8220;&#8221;</li>
+<li><tt class="docutils literal"><span class="pre">#p</span> <span class="pre">images=True/False</span></tt>
+- Case sensitive for True or False. Specifies whether Ghostdriver loads images. Default: False</li>
+<li><tt class="docutils literal"><span class="pre">#p</span> <span class="pre">browsercache=True/False</span></tt>
+- Case sensitive for True or False. Specifies whether to cache web content such as images on the disk (rather than in the RAM for a short period of time). Default: True</li>
+<li><tt class="docutils literal"><span class="pre">#p</span> <span class="pre">ignoresslerrors=&quot;yes&quot;/&quot;no&quot;</span></tt>
+- Specifies whether to ignore errors about an invalid or expired SSL certificate. Default: &#8220;yes&#8221;</li>
+<li><tt class="docutils literal"><span class="pre">#p</span> <span class="pre">ghostdriverlog=&quot;filename&quot;</span></tt>
+- Specifies the name of the log file for Ghostdriver. Default: &#8220;ghostdriver.log&#8221;</li>
+</ul>
+</li>
+<li>Splunk Connection<ul>
+<li><tt class="docutils literal"><span class="pre">#p</span> <span class="pre">report=&quot;server</span> <span class="pre">FQDN</span> <span class="pre">or</span> <span class="pre">IP&quot;</span></tt>
+- This parameter toggles reporting. If this parameter is left to the default (None) reporting will not happen. If other options are not properly set and this option is not blank, there may be spontaneous crashes when it fails to connect. Default: None</li>
+<li><tt class="docutils literal"><span class="pre">#p</span> <span class="pre">report_port=8089</span></tt>
+- The port to connect to the reporting Splunk server at. Default: 8089</li>
+<li><tt class="docutils literal"><span class="pre">#p</span> <span class="pre">report_user=&quot;username&quot;&quot;</span></tt>
+- The username to authenticate with with Splunk, must be an admin or have permission to run remote commands. Default: None</li>
+<li><tt class="docutils literal"><span class="pre">#p</span> <span class="pre">report_pass=&quot;password&quot;</span></tt>
+- The password for the username used to connect to Splunk. Default: None</li>
+<li><tt class="docutils literal"><span class="pre">#p</span> <span class="pre">report_index=&quot;testing&quot;</span></tt>
+- The index to insert all data into within Splunk. Default: None</li>
+</ul>
+</li>
+<li>Reporting Details (see also: <a class="reference internal" href="sw_wrapper.html#reporting-terms"><em>Reporting Settings</em></a>)<ul>
+<li><tt class="docutils literal"><span class="pre">#p</span> <span class="pre">id=&quot;auto&quot;</span></tt>
+- Machine name used to report to the reporting server. If left at the default, it&#8217;s generated in the format <tt class="docutils literal"><span class="pre">user&#64;hostname</span></tt>. Default: &#8220;auto&#8221;</li>
+<li><tt class="docutils literal"><span class="pre">#p</span> <span class="pre">project=&quot;Project</span> <span class="pre">Name&quot;</span></tt>
+- Project name, usually used in reporting to group together a bunch of common runs. Default: None</li>
+<li><tt class="docutils literal"><span class="pre">#p</span> <span class="pre">run=&quot;Run</span> <span class="pre">Name&quot;</span></tt>
+- Run name to send to the reporting server. This is another defining characteristic that is used in conjunction with script name to specify parts of a larger project. Default: None</li>
+<li><tt class="docutils literal"><span class="pre">#p</span> <span class="pre">script=&quot;Script</span> <span class="pre">Name&quot;</span></tt>
+- Script name which is used in reporting to distinguish different runs in a project.</li>
+</ul>
+</li>
+<li>Selenium Configuration<ul>
+<li><tt class="docutils literal"><span class="pre">#p</span> <span class="pre">cache=True/False</span></tt>
+- Case sensitive for True or False. Specify whether found elements in PhantomJS should be cached. In pages with a great deal of AJAX this is recommended to save CPU resources searching for elements. There have not been any noticeable drawbacks to this option in extensive testing. Default: True</li>
+<li><tt class="docutils literal"><span class="pre">#p</span> <span class="pre">childsleeptime=#</span></tt>
+- Amount of time in seconds waited in between searches for an element on a page. Low numbers increase CPU usage. 0 is equivalent to stock WebDriver. Default: 1</li>
+<li><tt class="docutils literal"><span class="pre">#p</span> <span class="pre">lightconfirm=True/False</span></tt>
+- Case sensitive for True or False. If True, when checking if an element exists there will be no check for visibility or clickibility. This is practical for individual function usage in a script, globally False is the most acceptable option. If enabled globally, there will often be function calls to objects that &#8220;are not visible&#8221;. Default: False</li>
+</ul>
+</li>
+<li>General<ul>
+<li><tt class="docutils literal"><span class="pre">#p</span> <span class="pre">level=-1-9</span></tt>
+- Logging level, where -1 is all errors including debugging, 0 is all errors, and 1 is notices. See also: <a class="reference internal" href="sw_wrapper.html#logging"><em>Logging</em></a>. Default: 1</li>
+<li><tt class="docutils literal"><span class="pre">#p</span> <span class="pre">logformat=&quot;DATESTR&quot;</span></tt>
+- Custom folder names for the log folder. Default: &#8220;%Y-%m-%d_%H-%M-%S&#8221;</li>
+<li><tt class="docutils literal"><span class="pre">#p</span> <span class="pre">jobs=#</span></tt>
+- Custom number of jobs to run initially. Default: 1</li>
+<li><tt class="docutils literal"><span class="pre">#p</span> <span class="pre">children=#</span></tt>
+- Custom number of children to have initially. Default: 1</li>
+<li><tt class="docutils literal"><span class="pre">#p</span> <span class="pre">stagger=True/False</span></tt>
+- Case sensitive for True/False. Determines if children spawnining will be staggered over time. Default: False</li>
+<li><tt class="docutils literal"><span class="pre">#p</span> <span class="pre">staggertime=#</span></tt>
+- How far apart to stagger child launching in seconds. Default: 5</li>
+<li><tt class="docutils literal"><span class="pre">#p</span> <span class="pre">initsettings=True/False</span></tt>
+- Case sensitive for True/False. If False, the initial settings wizard will be skipped. Error checking on provided parameters is skipped. Default: True</li>
+<li><tt class="docutils literal"><span class="pre">#import</span> <span class="pre">module</span></tt>
+- Includes this import in the output (wrapped) script. This is useful for including, for example, random to randomly choose a user from a table.</li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Script Converter</a><ul>
+<li><a class="reference internal" href="#usage-gui">Usage - GUI</a></li>
+<li><a class="reference internal" href="#usage-cli">Usage - CLI</a></li>
+<li><a class="reference internal" href="#script-directives">Script Directives</a></li>
+<li><a class="reference internal" href="#options-directives">Options Directives</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="sw_install.html"
+                        title="previous chapter">Installation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="sw_wrapper.html"
+                        title="next chapter">Wrapper</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/sw_converter.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="sw_wrapper.html" title="Wrapper"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="sw_install.html" title="Installation"
+             >previous</a> |</li>
+        <li><a href="index.html">selenium_wrapper 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Billy Rhoades.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

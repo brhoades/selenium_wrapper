@@ -30,6 +30,7 @@ NUMBER         = 0
 RESULT         = 1 
 TIME           = 2
 ERROR          = 3
+EXTRA1         = 4
 ####################################################################################################
 
 
@@ -81,12 +82,11 @@ DISP_DEAD      = 10
 
 ####################################################################################################
 # Reporting Constants
-R_START             = 0
-R_JOB_START         = 1
-R_JOB_COMPLETE      = 2 
-R_JOB_FAIL          = 3 
-R_STOP              = 4
-R_ALIVE             = 5
-R_NEW_CHILD         = 6
-R_END_CHILD         = 7
+R_START             = "POOL START"
+R_JOB_START         = "JOB START"
+R_JOB_COMPLETE      = "JOB FINISH"
+R_JOB_FAIL          = "JOB ERROR"
+R_STOP              = "POOL STOP"
+R_NEW_CHILD         = "NEW CHILD"
+R_END_CHILD         = "END CHILD"
 ####################################################################################################

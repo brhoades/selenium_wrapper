@@ -47,7 +47,7 @@
           <div class="body">
             
   <h1>Source code for sw.ui</h1><div class="highlight"><pre>
-<span class="kn">import</span> <span class="nn">time</span><span class="o">,</span> <span class="nn">curses</span>
+<span class="kn">import</span> <span class="nn">time</span><span class="o">,</span> <span class="nn">curses</span><span class="o">,</span> <span class="nn">datetime</span>
 <span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="kn">from</span> <span class="nn">sw.formatting</span> <span class="kn">import</span> <span class="o">*</span>
 
@@ -156,7 +156,6 @@
             <span class="n">i</span> <span class="o">+=</span> <span class="mi">2</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">scr</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span> <span class="p">)</span>
-
 
 </div>
 <div class="viewcode-block" id="Ui.think"><a class="viewcode-back" href="../../sw.ui.html#sw.ui.Ui.think">[docs]</a>    <span class="k">def</span> <span class="nf">think</span><span class="p">(</span> <span class="bp">self</span> <span class="p">):</span>
@@ -365,19 +364,30 @@
             <span class="c"># Number of Failed Jobs</span>
             <span class="n">statstrs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Failed: &quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">failed</span><span class="p">(</span> <span class="p">)</span> <span class="p">)</span> <span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
 
+
             <span class="c"># Average Job Time</span>
             <span class="n">times</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">timeTaken</span><span class="p">(</span> <span class="p">)</span>
             <span class="n">avgtime</span> <span class="o">=</span> <span class="n">avg</span><span class="p">(</span> <span class="n">times</span> <span class="p">)</span>
             <span class="n">statstrs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Avg Job: &quot;</span><span class="p">,</span> <span class="n">format</span><span class="p">(</span> <span class="n">avgtime</span> <span class="p">),</span> <span class="s">&quot;s&quot;</span> <span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+            <span class="n">totaltime</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span> <span class="n">times</span> <span class="p">)</span>
 
             <span class="c"># Jobs per minute</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span> <span class="n">times</span> <span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">jpm</span> <span class="o">=</span> <span class="p">(</span> <span class="mi">60</span> <span class="o">/</span> <span class="n">avgtime</span> <span class="p">)</span>
+                <span class="n">jps_ideal</span> <span class="o">=</span> <span class="p">(</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">avgtime</span> <span class="p">)</span> <span class="o">*</span> <span class="n">numactive</span>
 
-                <span class="k">if</span> <span class="n">jpm</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-                    <span class="n">jpstr</span> <span class="o">=</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Jobs/m: &quot;</span><span class="p">,</span> <span class="n">format</span><span class="p">(</span> <span class="n">jpm</span> <span class="p">)</span> <span class="p">]</span> <span class="p">)</span>
+                <span class="k">if</span> <span class="n">jps_ideal</span> <span class="o">&lt;</span> <span class="mf">0.25</span><span class="p">:</span>
+                    <span class="n">jpstr</span> <span class="o">=</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Ideal JPM: &quot;</span><span class="p">,</span> <span class="n">format</span><span class="p">(</span> <span class="n">jps_ideal</span> <span class="o">*</span> <span class="mi">60</span> <span class="p">)</span> <span class="p">]</span> <span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="n">jpstr</span> <span class="o">=</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Jobs/s: &quot;</span><span class="p">,</span> <span class="n">format</span><span class="p">(</span> <span class="n">jpm</span> <span class="o">/</span> <span class="mi">60</span> <span class="p">)</span> <span class="p">]</span> <span class="p">)</span>
+                    <span class="n">jpstr</span> <span class="o">=</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Ideal JPS: &quot;</span><span class="p">,</span> <span class="n">format</span><span class="p">(</span> <span class="n">jps_ideal</span> <span class="p">)</span> <span class="p">]</span> <span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span> <span class="n">times</span> <span class="p">)</span> <span class="o">&gt;</span> <span class="mi">5</span> <span class="ow">and</span> <span class="n">totaltime</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">jps_true</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">successful</span><span class="p">(</span> <span class="p">)</span> <span class="o">/</span> <span class="p">(</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">started</span> <span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">jps_true</span> <span class="o">&lt;</span> <span class="mf">0.25</span><span class="p">:</span>
+                    <span class="n">statstrs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;True JPM: &quot;</span><span class="p">,</span> <span class="n">format</span><span class="p">(</span> <span class="n">jps_true</span> <span class="o">*</span> <span class="mi">60</span> <span class="p">)</span> <span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">statstrs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;True JPS: &quot;</span><span class="p">,</span> <span class="n">format</span><span class="p">(</span> <span class="n">jps_true</span> <span class="p">)</span> <span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+
                 
             <span class="k">if</span> <span class="n">jpstr</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
                 <span class="n">statstrs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">jpstr</span> <span class="p">)</span>
@@ -482,7 +492,7 @@
     </div>
     <div class="footer">
         &copy; Copyright 2014, Billy Rhoades.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
     </div>
   </body>
 </html>

@@ -1,7 +1,6 @@
 from multiprocessing import Process, Queue, Value
 from selenium import webdriver
 from selenium.webdriver.phantomjs.service import Service as PhantomJSService
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from sw.const import * # Constants
 from sw.formatting import formatError, errorLevelToStr
 from sw.cache import ElementCache 
@@ -55,7 +54,7 @@ class Child:
         self.func  = None
 
         # How long we sleep in loops
-        self.sleepTime = 1
+        self.sleepTime = self.options.get( 'childsleeptime', 1 )
 
         # Our per page element cache.
         self.cache = ElementCache( )
@@ -83,19 +82,12 @@ class Child:
         wq = self.wq
         cq = self.cq
 
-        # This changes our useragent to something that shouldn't trigger websense
-        DesiredCapabilities.PHANTOMJS['phantomjs.page.settings.userAgent'] = \
-            'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; Trident/4.0)'
-
         # Monkeypatch our PhantomJS class in, which disables images
         webdriver.phantomjs.webdriver.Service = PhantomJSNoImages
 
-        # Workaround for internal SSL woes
-        dcaps = { 'acceptSslCerts': True }
-
         sargs = [ ''.join( [ '--load-images=', str( self.options['images'] ).lower( ) ] ),
-                  '--disk-cache=true',
-                  '--ignore-ssl-errors=yes' ]
+                  ''.join( [ '--disk-cache=', str( self.options.get( 'browsercache', "true" ) ).lower( ) ] ),
+                  ''.join( [ '--ignore-ssl-errors=', str( self.options.get( 'ignoresslerrors', "yes" ) ).lower( ) ] ) ]
 
         if 'proxy' in self.options:
             sargs.append( ''.join( [ '--proxy=', self.options['proxy'] ] ) )
@@ -104,8 +96,7 @@ class Child:
 
         try: 
             # Initialize our driver with our custom log directories and preferences (capabilities)
-            self.driver = webdriver.PhantomJS( desired_capabilities=dcaps, service_log_path=os.path.join( self.log, "ghostdriver.log" ), \
-                                               service_args=sargs )
+            self.driver = webdriver.PhantomJS( service_log_path=os.path.join( self.log, self.options.get( 'ghostdriverlog', "ghostdriver.log" ) ), service_args=sargs )
         except Exception as e:
             self.logMsg( ''.join( [ "Webdriver failed to load: ", str( e ), "\n", traceback.format_exc( ) ] ), CRITICAL )
             try: 
@@ -142,18 +133,18 @@ class Child:
                 self.func( self.driver )
             except TimeoutException as e:
                 self.display( DISP_ERROR )
-                self.logError( str( e ) )
+                screen = self.logError( str( e ) )
                 self.logMsg( ''.join( [ "Stack trace: ", traceback.format_exc( ) ] ), CRITICAL )
                 
-                cq.put( [ self.num, FAILED, ( time.time( ) - start ), str( e ) ] )
+                cq.put( [ self.num, FAILED, ( time.time( ) - start ), str( e ), screen ] )
                 self.logMsg( "Timeout when finding element." )
                 time.sleep( 1 )
             except Exception as e:
                 self.display( DISP_ERROR )
-                self.logError( str( e ) ) # Capture the exception and log it
+                screen = self.logError( str( e ) ) # Capture the exception and log it
                 self.logMsg( ''.join( [ "Stack trace: ", traceback.format_exc( ) ] ), CRITICAL )
 
-                cq.put( [ self.num, FAILED, ( time.time( ) - start ), str( e ) ] )
+                cq.put( [ self.num, FAILED, ( time.time( ) - start ), str( e ), screen ] )
                 time.sleep( 1 )
                 break
             else:
@@ -177,14 +168,14 @@ class Child:
 
            :param e: Unicode json-encoded string from a webdriver-thrown error.
            :param False noScreenshot: Whether or not to take a screenshot of the error.
-           :return: None
+           :return: String for screenshot location, if any.
         """
 
         o = pformat( formatError( e, "log" ) )
         self.logMsg( o, CRITICAL )
 
         if not noScreenshot:
-            self.screenshot( CRITICAL )
+            return self.screenshot( CRITICAL )
 
 
 
@@ -194,7 +185,7 @@ class Child:
            :param NOTICE level: This determines whether or not the error message will be logged according to the
                level set in self.level. The screenshot will print anyway. If this error is not greater or equal to the level specified in self.level,
                it is not printed. If it is, the message is printed into log.txt with the level specified by the timestamp.
-           :return: None
+           :return: String for screenshot location
         """
         fn = ""
         i = 0
@@ -211,6 +202,8 @@ class Child:
 
         self.driver.save_screenshot( fn ) 
         self.logMsg( ''.join( [ "Wrote screenshot to: ", fn ] ), level )
+
+        return fn
 
 
 

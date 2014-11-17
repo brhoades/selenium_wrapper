@@ -59,8 +59,10 @@
 There are no other parts of it which needs to be called, as the initialize function will go through
 and call every function it needs in order. This function should be initialized with the wrapper for curses
 around it with the kwargs passed to our wrapper function included.</p>
-<p>Initial settings presents the user with the default options (or whatever kwargs were included) and allows
-them to go through either individually change or review every one, while at the same time validating them.</p>
+<p>Initial settings presents the user with the default options used by the script and allows
+them to go through either individually change or review every one. If any special arguments were thrown into
+the script from the script converter, it will automatically load them in place of the defaults. At the end,
+the values are all validated.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -256,7 +258,7 @@ does the dirty work.</p>
     </div>
     <div class="footer">
         &copy; Copyright 2014, Billy Rhoades.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
     </div>
   </body>
 </html>

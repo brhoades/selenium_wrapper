@@ -47,7 +47,8 @@
           <div class="body">
             
   <h1>Source code for sw.report</h1><div class="highlight"><pre>
-<span class="kn">import</span> <span class="nn">json</span><span class="o">,</span> <span class="nn">requests</span><span class="o">,</span> <span class="nn">time</span><span class="o">,</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">getpass</span><span class="o">,</span> <span class="nn">socket</span><span class="o">,</span> <span class="nn">base64</span><span class="o">,</span> <span class="nn">traceback</span>
+<span class="kn">import</span> <span class="nn">json</span><span class="o">,</span> <span class="nn">time</span><span class="o">,</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">getpass</span><span class="o">,</span> <span class="nn">socket</span><span class="o">,</span> <span class="nn">base64</span><span class="o">,</span> <span class="nn">traceback</span>
+<span class="kn">import</span> <span class="nn">splunklib.client</span> <span class="kn">as</span> <span class="nn">client</span>
 <span class="kn">import</span> <span class="nn">Queue</span> <span class="kn">as</span> <span class="nn">Q</span>
 <span class="kn">from</span> <span class="nn">sw.const</span> <span class="kn">import</span> <span class="o">*</span> 
 
@@ -56,13 +57,12 @@
 <span class="sd">       server which then does further handling. The events are sent from the pool via calls to this instance&#39;s functions</span>
 <span class="sd">       that in turn call :func:`send`.</span>
 
-<span class="sd">       Reporting can be disabled by excluding the report option from the kwargs of :func:`main`. This has the</span>
+<span class="sd">       Reporting can be disabled putting None (or a blank field) in the initial settings page. This has the</span>
 <span class="sd">       same effect as not including the #report=&quot;url&quot; option within the options header of a script before conversion. This URL</span>
-<span class="sd">       should point to the included sinatra server in reporting/ like so: &quot;http://reporting-server.com:4567/report&quot;. </span>
+<span class="sd">       should point to the included sinatra server in ``reporting/`` like so: ``http://reporting-server.com:4567/report``. </span>
 
-<span class="sd">       Other options include a id=&quot;&quot; option which allows you to specify a custom computer ID. Similarly, including run=&quot;&quot; allows</span>
-<span class="sd">       you to choose a specific run to join. Note that the run will be created if it doesn&#39;t already exist and will be used for </span>
-<span class="sd">       all subsequent script calls until removed.</span>
+<span class="sd">       The reporting class also takes in the custom ``id=&quot;&quot;``, ``run=&quot;&quot;``, and ``project=&quot;&quot;`` from kwargs / initial settings. It </span>
+<span class="sd">       uses these settings when communicating unstream with the reporting server. </span>
 
 <span class="sd">       :param pool: Reference to our owning pool. This is primarily to access pool.options and not used much elsewhere. </span>
 
@@ -80,7 +80,17 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">project</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&#39;project&#39;</span><span class="p">,</span> <span class="bp">None</span> <span class="p">)</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">script</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&#39;script&#39;</span><span class="p">,</span> <span class="bp">None</span> <span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">site</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&#39;report&#39;</span><span class="p">,</span> <span class="bp">None</span> <span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&#39;report_port&#39;</span><span class="p">,</span> <span class="mi">8089</span> <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">user</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&#39;report_user&#39;</span><span class="p">,</span> <span class="bp">None</span> <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">password</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&#39;report_pass&#39;</span><span class="p">,</span> <span class="bp">None</span> <span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span> <span class="s">&#39;report_index&#39;</span><span class="p">,</span> <span class="bp">None</span> <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">enabled</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">site</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span>
 
@@ -94,12 +104,7 @@
         <span class="c"># Set on an error transmitting</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">nextSend</span> <span class="o">=</span> <span class="mi">0</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">pingFreq</span> <span class="o">=</span> <span class="mi">60</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">tries</span> <span class="o">=</span> <span class="mi">5</span>
-
-        <span class="c"># Ping Frequency</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">nextPing</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">pingFreq</span>
 
         <span class="c"># Our queue of things to submit to our server</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">queue</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">Queue</span><span class="p">(</span> <span class="p">)</span>
@@ -123,18 +128,14 @@
 <span class="sd">           :param payload: A hash of information to send upstream to our reporting server.</span>
 <span class="sd">           :param type: The R_* constant identifier for the type of payload included. </span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c">#FIXME: Remove duplicate header information and just have a identifying header at the top of all</span>
-        <span class="c">#payloads.</span>
-           
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">enabled</span><span class="p">:</span>
             <span class="k">return</span>
 
         <span class="c"># Encode identifying information and the time</span>
         <span class="n">payload</span><span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">(</span> <span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">project</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="n">payload</span><span class="p">[</span><span class="s">&#39;run&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="bp">self</span><span class="o">.</span><span class="n">project</span><span class="p">,</span> <span class="s">&#39;_&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">run</span> <span class="p">]</span> <span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">payload</span><span class="p">[</span><span class="s">&#39;run&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run</span>
+        <span class="n">payload</span><span class="p">[</span><span class="s">&#39;Project&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">project</span>
+        <span class="n">payload</span><span class="p">[</span><span class="s">&#39;Script&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">script</span>
+        <span class="n">payload</span><span class="p">[</span><span class="s">&#39;Run&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run</span>
         <span class="n">payload</span><span class="p">[</span><span class="s">&#39;func&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span>
         <span class="n">payload</span><span class="p">[</span><span class="s">&#39;time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">)</span>
         <span class="n">payload</span><span class="p">[</span><span class="s">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">type</span>
@@ -180,7 +181,7 @@
 <span class="sd">             }</span>
 
 <span class="sd">          The JSON above is arranged and then attempts to open a HTTP request to the provided server. If it fails,</span>
-<span class="sd">          it tries 5 more times every 5 seconds with a timeout of 1 second. It attemps to send the JSON up via post</span>
+<span class="sd">          it tries 5 more times every 5 seconds with a timeout of 1 second. It attempts to send the JSON up via POST</span>
 <span class="sd">          and then waits for an HTTP 200 or similar before considering it a success. If R_START was included in the </span>
 <span class="sd">          payload, the server will respond with a cid and a rid for the client which it then stores internally for </span>
 <span class="sd">          future reports.</span>
@@ -190,8 +191,6 @@
         <span class="n">t</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">enabled</span><span class="p">:</span>
             <span class="k">return</span>
-        <span class="k">if</span> <span class="n">t</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">nextPing</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">ping</span><span class="p">(</span> <span class="p">)</span> 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nextSend</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">t</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">nextSend</span><span class="p">:</span>
             <span class="k">return</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">queue</span><span class="o">.</span><span class="n">qsize</span><span class="p">(</span> <span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -210,67 +209,58 @@
             <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">m</span> <span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span> <span class="n">data</span> <span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">payload</span> <span class="o">=</span> <span class="p">{</span> <span class="s">&quot;payload&quot;</span><span class="p">:</span> <span class="n">data</span> <span class="p">}</span>
-
-            <span class="c"># Preparing header for payload</span>
-            <span class="n">payload</span><span class="p">[</span><span class="s">&#39;cid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cid</span>
-            <span class="n">payload</span><span class="p">[</span><span class="s">&#39;rid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rid</span>
-
             <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&#39;Sending&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span> <span class="nb">len</span><span class="p">(</span> <span class="n">data</span> <span class="p">)</span> <span class="p">),</span> <span class="s">&#39;payload(s) to server.&#39;</span> <span class="p">]</span> <span class="p">),</span> <span class="n">NOTICE</span> <span class="p">)</span>
-            <span class="n">r</span> <span class="o">=</span> <span class="bp">None</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span> <span class="n">payload</span> <span class="p">),</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;content-type&#39;</span><span class="p">:</span> <span class="s">&#39;application/json&#39;</span><span class="p">}</span> <span class="p">)</span>
-            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&quot;Fatal error with reporting, probably failed to connect: &quot;</span><span class="p">,</span> <span class="n">CRITICAL</span> <span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">(</span> <span class="p">),</span> <span class="n">CRITICAL</span> <span class="p">)</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tries</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">tries</span> <span class="o">-=</span> <span class="mi">1</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Disabling reporting after &quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">tries</span> <span class="p">),</span> <span class="s">&quot; more tries.&quot;</span> <span class="p">]</span> <span class="p">),</span> <span class="n">CRITICAL</span> <span class="p">)</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">nextSend</span> <span class="o">=</span> <span class="n">t</span> <span class="o">+</span> <span class="mi">5</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&quot;Disabling reporting.&quot;</span><span class="p">,</span> <span class="n">CRITICAL</span> <span class="p">)</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">enabled</span> <span class="o">=</span> <span class="bp">False</span>
+
+            <span class="c"># Prepare a single event to fire off</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)):</span>
+                <span class="n">r</span> <span class="o">=</span> <span class="bp">None</span>
+                <span class="n">d</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span> <span class="p">)</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sendSplunk</span><span class="p">(</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span> <span class="n">d</span> <span class="p">)</span> <span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&quot;Fatal error with reporting, probably failed to connect: &quot;</span><span class="p">,</span> <span class="n">CRITICAL</span> <span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">(</span> <span class="p">),</span> <span class="n">CRITICAL</span> <span class="p">)</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tries</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">tries</span> <span class="o">-=</span> <span class="mi">1</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Disabling reporting after &quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">tries</span> <span class="p">),</span> <span class="s">&quot; more tries.&quot;</span> <span class="p">]</span> <span class="p">),</span> <span class="n">CRITICAL</span> <span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">nextSend</span> <span class="o">=</span> <span class="n">t</span> <span class="o">+</span> <span class="mi">5</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&quot;Disabling reporting.&quot;</span><span class="p">,</span> <span class="n">CRITICAL</span> <span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">enabled</span> <span class="o">=</span> <span class="bp">False</span>
+                        <span class="k">return</span>
+
+                    <span class="c"># Put our data back in the send queue</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span> <span class="n">d</span> <span class="p">)</span>
+                    <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span> <span class="n">m</span> <span class="p">)</span>
                     <span class="k">return</span>
 
-                <span class="c"># Put our data back in the send queue</span>
-                <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span> <span class="n">m</span> <span class="p">)</span>
-                <span class="k">return</span>
 
-            <span class="c"># There was a failure</span>
-            <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="n">requests</span><span class="o">.</span><span class="n">codes</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Payload failed to send with HTTP status code: &quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span> <span class="p">)</span> <span class="p">]</span> <span class="p">),</span> <span class="n">CRITICAL</span> <span class="p">)</span>
-                <span class="c"># Put our data back in the send queue</span>
-                <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span> <span class="n">m</span> <span class="p">)</span>
-                <span class="c"># Wait 5 seconds before we try again</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">nextSend</span> <span class="o">=</span> <span class="n">t</span> <span class="o">+</span> <span class="mi">5</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Sent payload successfully with status &quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span> <span class="p">)</span> <span class="p">]</span> <span class="p">)</span> <span class="p">,</span> <span class="n">INFO</span> <span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="s">&quot;Response from server: &quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span> <span class="n">r</span><span class="o">.</span><span class="n">text</span> <span class="p">)</span> <span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Report.sendSplunk"><a class="viewcode-back" href="../../sw.report.html#sw.report.Report.sendSplunk">[docs]</a>    <span class="k">def</span> <span class="nf">sendSplunk</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">data</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sends data to a splunk server reading from kwargs for options.</span>
+
+<span class="sd">           :param data: JSON of data to send to the splunk server.</span>
+<span class="sd">           :returns: The parsed splunk event on success.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">splunk</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span> <span class="n">host</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">site</span><span class="p">,</span> 
+                <span class="n">port</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">,</span> 
+                <span class="n">username</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> 
+                <span class="n">password</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">password</span> <span class="p">)</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">splunk</span><span class="o">.</span><span class="n">indexes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">index</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span> <span class="n">data</span><span class="p">,</span> <span class="n">sourcetype</span><span class="o">=</span><span class="s">&#39;py-event&#39;</span> <span class="p">)</span>
         
-                <span class="n">response</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">(</span> <span class="p">)</span>
-
-                <span class="k">if</span> <span class="s">&#39;cid&#39;</span> <span class="ow">in</span> <span class="n">response</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">cid</span> <span class="o">=</span> <span class="n">response</span><span class="p">[</span><span class="s">&#39;cid&#39;</span><span class="p">]</span>
-                <span class="k">if</span> <span class="s">&#39;rid&#39;</span> <span class="ow">in</span> <span class="n">response</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">rid</span> <span class="o">=</span> <span class="n">response</span><span class="p">[</span><span class="s">&#39;rid&#39;</span><span class="p">]</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">tries</span> <span class="o">=</span> <span class="mi">5</span>
-
-
-
-    <span class="c"># Individual reporting functions</span>
 </div>
 <div class="viewcode-block" id="Report.start"><a class="viewcode-back" href="../../sw.report.html#sw.report.Report.start">[docs]</a>    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span> <span class="bp">self</span> <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Sends a start notification payload.</span>
-
+<span class="sd">            </span>
 <span class="sd">           :returns: None</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span> <span class="p">{</span> <span class="p">},</span> <span class="n">R_START</span> <span class="p">)</span>
 </div>
 <div class="viewcode-block" id="Report.stop"><a class="viewcode-back" href="../../sw.report.html#sw.report.Report.stop">[docs]</a>    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span> <span class="bp">self</span> <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Sends a stop notification payload.</span>
-<span class="sd">        </span>
+<span class="sd">            </span>
 <span class="sd">           :returns: None</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span> <span class="p">{</span> <span class="p">},</span> <span class="n">R_STOP</span> <span class="p">)</span>
@@ -307,7 +297,8 @@
 
         <span class="n">data</span> <span class="o">=</span> <span class="p">{</span> <span class="s">&#39;error&#39;</span><span class="p">:</span> <span class="n">error</span><span class="p">,</span> <span class="s">&#39;childID&#39;</span><span class="p">:</span> <span class="n">child</span> <span class="p">}</span>
 
-        <span class="k">if</span> <span class="n">screenshot</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">screenshot</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="bp">False</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">logMsg</span><span class="p">(</span> <span class="s">&quot;Screenshot: &quot;</span> <span class="o">+</span> <span class="n">screenshot</span> <span class="p">)</span>
             <span class="k">with</span> <span class="nb">open</span><span class="p">(</span> <span class="n">screenshot</span><span class="p">,</span> <span class="s">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">img</span><span class="p">:</span>
                 <span class="n">data</span><span class="p">[</span><span class="s">&#39;screenshot&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64encode</span><span class="p">(</span> <span class="n">img</span><span class="o">.</span><span class="n">read</span><span class="p">(</span> <span class="p">)</span> <span class="p">)</span> 
         
@@ -329,15 +320,6 @@
 <span class="sd">           :returns: None</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span> <span class="p">{</span> <span class="s">&#39;childID&#39;</span><span class="p">:</span> <span class="n">child</span> <span class="p">},</span> <span class="n">R_END_CHILD</span> <span class="p">)</span>
-</div>
-<div class="viewcode-block" id="Report.ping"><a class="viewcode-back" href="../../sw.report.html#sw.report.Report.ping">[docs]</a>    <span class="k">def</span> <span class="nf">ping</span><span class="p">(</span> <span class="bp">self</span> <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Sends a keepalive notice to the server, effectively keeping this client and</span>
-<span class="sd">           its run from timing out.</span>
-
-<span class="sd">           :returns: None</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">nextPing</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(</span> <span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">pingFreq</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span> <span class="p">{</span> <span class="p">},</span> <span class="n">R_ALIVE</span> <span class="p">)</span>
 
     <span class="c"># Generators</span></div>
 <div class="viewcode-block" id="Report.id"><a class="viewcode-back" href="../../sw.report.html#sw.report.Report.id">[docs]</a>    <span class="k">def</span> <span class="nf">id</span><span class="p">(</span> <span class="bp">self</span> <span class="p">):</span>
@@ -393,7 +375,7 @@
     </div>
     <div class="footer">
         &copy; Copyright 2014, Billy Rhoades.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
     </div>
   </body>
 </html>

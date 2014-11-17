@@ -1,5 +1,5 @@
-import curses, curses.textpad, re
-import urlparse, requests, json
+import curses, curses.textpad, re, json
+from splunklib import client
 
 class InitialSettings:
     """Initializing this class more or less handles every part of the initial settings menu.
@@ -7,9 +7,11 @@ class InitialSettings:
        and call every function it needs in order. This function should be initialized with the wrapper for curses
        around it with the kwargs passed to our wrapper function included.
         
-       Initial settings presents the user with the default options (or whatever kwargs were included) and allows
-       them to go through either individually change or review every one, while at the same time validating them.
-
+       Initial settings presents the user with the default options used by the script and allows
+       them to go through either individually change or review every one. If any special arguments were thrown into
+       the script from the script converter, it will automatically load them in place of the defaults. At the end,
+       the values are all validated.
+       
        :param stdscr: Provided by the curses wrapper, just the screen object that will be printed to.
        :param kwargs: The keyword arguments provided to :func:`sw.wrapper.main`
        :returns: InitialSettings (self)
@@ -59,7 +61,8 @@ class InitialSettings:
             if key not in self.kwargs:
                 if self.kwmap[key][1] == "auto" or self.kwmap[key][1] == "None":
                     self.kwmap[key][1] = None
-                self.kwargs[key] = self.kwmap[key][1]
+                elif key != 'report_pass':
+                    self.kwargs[key] = self.kwmap[key][1]
 
 
 
@@ -74,12 +77,17 @@ class InitialSettings:
         done = False
         res = ""
 
-        while not done:
+        while not done and self.kwargs.get( 'initsettings', True ):
             if not res in self.kwcharmap and not first:
                 self.error( ''.join( [ "Invalid Selection '", res, "'" ] ) )
             elif not first:
                 key = self.kwcharmap[res]
                 win = self.kwmap[key][2]        # our setting's window
+
+                # Clear the password field since it's useless anyway
+                if key == "report_pass":
+                    win.clear( )
+
                 ewin = curses.textpad.Textbox( win, insert_mode=True )
                 ewin.stripspaces = 1
                 ewin.edit( )
@@ -144,7 +152,7 @@ class InitialSettings:
                     out = False
                 out = bool( out )
             elif default is None or default == "auto":
-                if out == "None" or out == "none" or out == "auto":
+                if out == "None" or out == "none" or out == "auto" or out == "":
                     out = None
                 elif default == "auto":
                     out = "auto"
@@ -156,11 +164,6 @@ class InitialSettings:
                     if reg:
                         self.error( ''.join( [ "Project name cannot include ", reg[0] ] ) )
                         return -1
-                elif key == 'report':
-                    o = bool( urlparse.urlparse( out ).netloc )
-                    if not o:
-                        self.error( "Reporting server must be a HTTP URL" )
-                        return -1
                 elif key == 'run':
                     reg = re.findall( r'([^0-9A-Za-z\-\_])', out )
                     if reg:
@@ -171,6 +174,12 @@ class InitialSettings:
             if default == "auto" and ( out == "auto" or out == "" ):
                 self.kwargs[key] = None
                 out = "auto"
+            elif default is None and ( out == "" or out == "none" or out == "None" ):
+                self.kwargs[key] = None
+                out = "None"
+            elif key == "report_pass":
+                self.kwargs[key] = out
+                out = "*" * len( out )
             else:
                 self.kwargs[key] = out
             win.addstr( str( out ) )
@@ -194,34 +203,29 @@ class InitialSettings:
         run = self.kwargs.get( 'run', None )
         err = None
         if rep is not None:
-            try: 
-                r = requests.post( rep, data=json.dumps( { "HELLOAREYOUTHERE": None } ), timeout=1, headers={'content-type': 'application/json'} )
-            except Exception as e:
-                err = str( e ) 
-                if len( err ) > 30:
-                    err = ''.join( [ err[:27], "..." ] )
-            if r is None:
-                err = "Failure connecting to reporting server"
-            elif r.status_code != requests.codes.ok:
-                err = ''.join( [ "Received HTTP status code ", str( r.status_code ) ] )
-            else:
-                if r.text != None:
-                    try:
-                        response = r.json( )
-                        if "YESIAMHERE" in response:
-                            if response["projectRequired"]:
-                                if self.kwargs.get( 'project', None ) is None:
-                                    self.error( "Server explicity requires a project name" )
-                                    return False
-                    except Exception as e:
-                        if err is None:
-                            err = "Handshake failed; not a reporting server"
-                        pass
-                else:
-                    err = "Connection to reporting server failed"
+            # Must have a project name if we are reporting (Splunk)
+            if self.kwargs.get( 'project', None ) is None:
+                self.error( "A project name is required" )
+                return False
+            # Moust have a script name
+            if self.kwargs.get( 'script', None ) is None:
+                self.error( "A script name is required" )
+                return False
+            # Must have a run name if we specify a project name.
             if run is None and self.kwargs.get( 'project', None ) is not None:
                 self.error( "Must include a run name with a project name" )
                 return False # Returns false because this cannot be ignored.
+
+            # Attempt to use the splunk server
+            try: 
+                splunk = client.connect( host=self.kwargs['report'], 
+                         port=self.kwargs.get( 'report_port', self.kwmap['report_port'][1] ), 
+                         username=self.kwargs['report_user'], 
+                         password=self.kwargs['report_pass'] )
+                index = splunk.indexes[self.kwargs['report_index']]
+            except Exception as e: 
+                self.error( ''.join( [ "Error connecting: ", str( e ) ] ) )
+                return False
         if err is not None:
             self.error( ''.join( [ err, ", press enter again to ignore" ] ), "Warning" )
             return False
@@ -259,28 +263,38 @@ class InitialSettings:
         """
         self.kwarray.append( "Run Settings" )
         self.kwarray.append( 'children' )
-        self.kwmap['children'] = [ "# Children", 1 ]
-        self.kwmap['stagger']  = [ "Stagger Spawn", False ]
+        self.kwmap['children']      = [ "# Children", 1 ]
+        self.kwmap['stagger']       = [ "Stagger Spawn", False ]
         self.kwarray.append( 'stagger' )
-        self.kwmap['jobs']     = [ "# Jobs", 1 ]
+        self.kwmap['jobs']          = [ "# Jobs", 1 ]
         self.kwarray.append( 'jobs' )
         
         self.kwarray.append( "" )
         self.kwarray.append( "Pool Settings" )
-        self.kwmap['level']    = [ "Log Lvl (0-5)", 1 ]
+        self.kwmap['level']         = [ "Log Lvl (0-5)", 1 ]
         self.kwarray.append( 'level' )
-        self.kwmap['images']   = [ "Get Images", False ]
+        self.kwmap['images']        = [ "Get Images", False ]
         self.kwarray.append( 'images' )
         self.kwarray.append( "" )
 
         self.kwarray.append( "Reporting Settings" )
-        self.kwmap['report']   = [ "Server", None ]
+        self.kwmap['report']        = [ "Server", None ]
         self.kwarray.append( 'report' )
-        self.kwmap['run']      = [ "Run Name", "auto" ]
-        self.kwarray.append( 'run' )
-        self.kwmap['project']  = [ "Project Name", None ]
+        self.kwmap['report_port']   = [ "Port", 8089 ]
+        self.kwarray.append( 'report_port' )
+        self.kwmap['report_user']   = [ "User", None ]
+        self.kwarray.append( 'report_user' )
+        self.kwmap['report_pass']   = [ "Password", None ]
+        self.kwarray.append( 'report_pass' )
+        self.kwmap['report_index']  = [ "Index", None ]
+        self.kwarray.append( 'report_index' )
+        self.kwmap['project']       = [ "Project Name", None ]
         self.kwarray.append( 'project' )
-        self.kwmap['id']       = [ "Client Name", "auto" ]
+        self.kwmap['run']           = [ "Run Name", None ]
+        self.kwarray.append( 'run' )
+        self.kwmap['script']        = [ "Script Name", None ]
+        self.kwarray.append( 'script' )
+        self.kwmap['id']            = [ "Client Name", "auto" ]
         self.kwarray.append( 'id' )
 
 
@@ -290,6 +304,7 @@ class InitialSettings:
            called again, so it's assumed all the values are kept pristine. In addition to printing all the titles and
            kwargs on screen, it adds into kwmap a 3rd index (kwmap[key][2]) which is a reference to the subwindow for
            that kwarg's value. So, in the future, to modify f's display value::
+
              self.kwmap['f'][2].addstr( 'New Value' )
            
            :returns: None
@@ -315,6 +330,10 @@ class InitialSettings:
                     ( " "*( tab-size ) )
                     ] )
                 self.stdscr.addstr( y, x, s )
+
+                # Catch for passwords
+                if key == "report_pass" and val != None:
+                    val = "*" * len( val )
                 
                 # Now print our field
                 self.kwmap[key].append( self.stdscr.subwin( 1, 50, y, x + len( s ) ) )

@@ -1,0 +1,189 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Installation &mdash; selenium_wrapper 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="selenium_wrapper 0.1 documentation" href="index.html" />
+    <link rel="next" title="Script Converter" href="sw_converter.html" />
+    <link rel="prev" title="Selenium Wrapper" href="sw_overview.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="sw_converter.html" title="Script Converter"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="sw_overview.html" title="Selenium Wrapper"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">selenium_wrapper 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<p>When initializing a brand new installation and not having a prepackaged converter, first checkout
+the repository:</p>
+<div class="highlight-python"><div class="highlight"><pre>git clone https://github.com/brhoades/selenium_wrapper.git
+</pre></div>
+</div>
+<div class="section" id="converter-setup">
+<h2>Converter Setup<a class="headerlink" href="#converter-setup" title="Permalink to this headline">¶</a></h2>
+<p>Install <a class="reference external" href="https://www.ruby-lang.org/en/">Ruby</a> and then the appropriate
+<a class="reference external" href="http://www.activestate.com/activetcl/downloads">ActiveTCL</a> library for your version.
+After installing, navigate to the directory cloned into and run:</p>
+<div class="highlight-python"><div class="highlight"><pre>bundle install
+</pre></div>
+</div>
+<p>This will install the Ruby gems required for the converter to function.</p>
+</div>
+<div class="section" id="wrapper-setup">
+<h2>Wrapper Setup<a class="headerlink" href="#wrapper-setup" title="Permalink to this headline">¶</a></h2>
+<p>Prepare a python installation for the converter program. Python 2.7.8 is the supported
+Python version. Now <a class="reference external" href="https://www.python.org/download/releases/2.7.8/">Install Python</a>
+for the correct platform.</p>
+<p>Use <a class="reference external" href="https://pip.pypa.io/en/latest/installing.html">pip</a> to install the
+<a class="reference external" href="https://pypi.python.org/pypi/selenium">Selenium Library</a> and <a class="reference external" href="https://github.com/splunk/splunk-sdk-python">Splunklib</a>:</p>
+<div class="highlight-python"><div class="highlight"><pre>pip install selenium splunklib
+</pre></div>
+</div>
+<p>Also install the latest version of the <a class="reference external" href="http://phantomjs.org/download.html">PhantomJS binary</a> for your
+platform.</p>
+<p>Currently a distributed setup where a separate install of Python is shipped with each script
+is only possible for Windows. For other operating systems, there will need to be a system wide
+installation on every machine participating. For these other operating systems ensure that the
+&#8220;Python&#8221; option is unchecked on the converter.</p>
+<div class="section" id="windows-setup">
+<h3>Windows Setup<a class="headerlink" href="#windows-setup" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference external" href="https://www.python.org/download/releases/2.7.8/">Install Python</a> into the default folder. The fewer modules that are included, the better.
+Excluding <tt class="docutils literal"><span class="pre">lib-tk</span></tt>, documentation, and testing suites will streamline things.
+This folder will later be copied to the correct spot.</p>
+<p>Install <a class="reference external" href="https://pip.pypa.io/en/latest/installing.html">pip</a> into your Python installation. Afterwards, use pip to install the <a class="reference external" href="https://pypi.python.org/pypi/selenium">Selenium Library</a>
+and <a class="reference external" href="https://github.com/splunk/splunk-sdk-python">Splunklib</a>:</p>
+<div class="highlight-python"><div class="highlight"><pre>pip install selenium splunklib
+</pre></div>
+</div>
+<p>Now install the <a class="reference external" href="http://www.lfd.uci.edu/~gohlke/pythonlibs/#curses">curses extension package</a>.</p>
+<p>Finally copy/move the Python folder that was just created to <tt class="docutils literal"><span class="pre">conversion_utils/python27</span></tt>.
+Extract the <tt class="docutils literal"><span class="pre">phantomjs-release.zip</span></tt> for Windows and put the binary within the <tt class="docutils literal"><span class="pre">python27</span></tt> folder as well.</p>
+<p>To run the conversion program:</p>
+<div class="highlight-python"><div class="highlight"><pre>ruby main.rb
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="converter-distribution">
+<h2>Converter Distribution<a class="headerlink" href="#converter-distribution" title="Permalink to this headline">¶</a></h2>
+<p>To ease other&#8217;s usage of the converter, consider packaging it into an exe using
+<a class="reference external" href="https://github.com/larsch/ocra">OCRA</a>. <a class="reference external" href="https://github.com/larsch/ocra">OCRA</a> will convert the ruby file into a preinterpreted format
+which does not require a ruby installation to run. The following will install the gem and run the compiler:</p>
+<div class="highlight-python"><div class="highlight"><pre>gem install ocra
+ocra_compile.bat
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Installation</a><ul>
+<li><a class="reference internal" href="#converter-setup">Converter Setup</a></li>
+<li><a class="reference internal" href="#wrapper-setup">Wrapper Setup</a><ul>
+<li><a class="reference internal" href="#windows-setup">Windows Setup</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#converter-distribution">Converter Distribution</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="sw_overview.html"
+                        title="previous chapter">Selenium Wrapper</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="sw_converter.html"
+                        title="next chapter">Script Converter</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/sw_install.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="sw_converter.html" title="Script Converter"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="sw_overview.html" title="Selenium Wrapper"
+             >previous</a> |</li>
+        <li><a href="index.html">selenium_wrapper 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Billy Rhoades.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>
