@@ -5,12 +5,11 @@ from sw.const import *
 
 class Report:
     """Report handles all the reporting events sent from the Pool, currently it exclusively sends these upstream to a
-       server which then does further handling. The events are sent from the pool via calls to this instance's functions
+       Splunk server which then does further handling. The events are sent from the pool via calls to this instance's functions
        that in turn call :func:`send`.
 
        Reporting can be disabled putting None (or a blank field) in the initial settings page. This has the
-       same effect as not including the #report="url" option within the options header of a script before conversion. This URL
-       should point to the included sinatra server in ``reporting/`` like so: ``http://reporting-server.com:4567/report``. 
+       same effect as not including the #report="url" option within the options header of a script before conversion.
 
        The reporting class also takes in the custom ``id=""``, ``run=""``, and ``project=""`` from kwargs / initial settings. It 
        uses these settings when communicating unstream with the reporting server. 
@@ -18,6 +17,10 @@ class Report:
        :param pool: Reference to our owning pool. This is primarily to access pool.options and not used much elsewhere. 
 
        :return: Report (self)
+
+       .. seealso::
+        
+          :ref:`reporting-terms`
     """
 
     def __init__( self, pool ):
@@ -98,44 +101,31 @@ class Report:
 
 
 
-    # Thinking
     def think( self ):
-        """The think function called by our pool periodically. If enabled, it checks for the need to ping
-           (keepalive) or if the next payload is ready to send. This function also handles the transmission of
-           our payload.
+        """The think function called by our pool periodically. It handles the transmission of
+           our payload (many individual reports) to the Splunk server.
 
            If our report.queue has content in it, it prepares to send everything upstream. The payload is transmitted
            in JSON with the following general format::
+
              { 
                 "cid" => #, // Our client ID assigned by the server, nil if we don't have one yet.
                 "rid" => #, // Our run ID assined by the server, ^
-                "payload" => 
-                    [
-                        { 
-                            "type" => R_START,    // For example, this is the type of payload here.
-                            "time" => UNIX_EPOCH, // Since sometimes the Queue has a delay in transmission, each
-                                                  // payload contains it own timestamp.
-                            // Some miscellaneous identifying information goes in here that's deprecated
-                            // and unused.
+                "type" => R_START,    // For example, this is the type of payload here.
+                "time" => UNIX_EPOCH, // Since sometimes the Queue has a delay in transmission, each
+                                      // payload contains it own timestamp.
+                // Some miscellaneous identifying information goes in here that's deprecated
+                // and unused.
 
-                            // If the type involves a child:
-                            "ChildID" => #, // The index of our child in pool.children / pool.data
+                // If the type involves a child:
+                "ChildID" => #, // The index of our child in pool.children / pool.data
 
-                            // If the type involves a job:
-                            "timetaken" => UNIX_EPOCH //The time the job took to complete.
-                        },
-                        
-                        //{  another here },
-                        ...
-                    ]
-
+                // If the type involves a job:
+                "timetaken" => UNIX_EPOCH //The time the job took to complete.
              }
 
-          The JSON above is arranged and then attempts to open a HTTP request to the provided server. If it fails,
-          it tries 5 more times every 5 seconds with a timeout of 1 second. It attempts to send the JSON up via POST
-          and then waits for an HTTP 200 or similar before considering it a success. If R_START was included in the 
-          payload, the server will respond with a cid and a rid for the client which it then stores internally for 
-          future reports.
+          This module attempts to send the payload upstream 5 times, waiting 5 seconds between reattempts. On the fifth failure
+          it never tries again. It is noted in the log when it gives up.
 
           :returns: None
         """
@@ -189,7 +179,7 @@ class Report:
 
 
     def sendSplunk( self, data ):
-        """Sends data to a splunk server reading from kwargs for options.
+        """Sends data to a Splunk sever encoded in JSON.
 
            :param data: JSON of data to send to the splunk server.
            :returns: The parsed splunk event on success.

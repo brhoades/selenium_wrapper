@@ -252,7 +252,7 @@ class Child:
     def display( self, t ):
         """Sends a display message to the main loop, which is then translated to the UI.
            
-           :param t: The status this child will now show, a constant starting with DISP_ in const.py.
+           :param t: The status this child will now show, a constant starting with DISP in const.py.
 
            :returns: None
         """

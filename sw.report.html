@@ -60,11 +60,10 @@
 <dt id="sw.report.Report">
 <em class="property">class </em><tt class="descclassname">sw.report.</tt><tt class="descname">Report</tt><big>(</big><em>pool</em><big>)</big><a class="reference internal" href="_modules/sw/report.html#Report"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.report.Report" title="Permalink to this definition">¶</a></dt>
 <dd><p>Report handles all the reporting events sent from the Pool, currently it exclusively sends these upstream to a
-server which then does further handling. The events are sent from the pool via calls to this instance&#8217;s functions
+Splunk server which then does further handling. The events are sent from the pool via calls to this instance&#8217;s functions
 that in turn call <a class="reference internal" href="#sw.report.Report.send" title="sw.report.Report.send"><tt class="xref py py-func docutils literal"><span class="pre">send()</span></tt></a>.</p>
 <p>Reporting can be disabled putting None (or a blank field) in the initial settings page. This has the
-same effect as not including the #report=&#8221;url&#8221; option within the options header of a script before conversion. This URL
-should point to the included sinatra server in <tt class="docutils literal"><span class="pre">reporting/</span></tt> like so: <tt class="docutils literal"><span class="pre">http://reporting-server.com:4567/report</span></tt>.</p>
+same effect as not including the #report=&#8221;url&#8221; option within the options header of a script before conversion.</p>
 <p>The reporting class also takes in the custom <tt class="docutils literal"><span class="pre">id=&quot;&quot;</span></tt>, <tt class="docutils literal"><span class="pre">run=&quot;&quot;</span></tt>, and <tt class="docutils literal"><span class="pre">project=&quot;&quot;</span></tt> from kwargs / initial settings. It 
 uses these settings when communicating unstream with the reporting server.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -77,6 +76,10 @@ uses these settings when communicating unstream with the reporting server.</p>
 </tr>
 </tbody>
 </table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="sw_wrapper.html#reporting-terms"><em>Reporting Settings</em></a></p>
+</div>
 <dl class="method">
 <dt id="sw.report.Report.endChild">
 <tt class="descname">endChild</tt><big>(</big><em>child</em><big>)</big><a class="reference internal" href="_modules/sw/report.html#Report.endChild"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.report.Report.endChild" title="Permalink to this definition">¶</a></dt>
@@ -213,7 +216,7 @@ except for further stressing network bandwidth and the JSON parser.</p>
 <dl class="method">
 <dt id="sw.report.Report.sendSplunk">
 <tt class="descname">sendSplunk</tt><big>(</big><em>data</em><big>)</big><a class="reference internal" href="_modules/sw/report.html#Report.sendSplunk"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.report.Report.sendSplunk" title="Permalink to this definition">¶</a></dt>
-<dd><p>Sends data to a splunk server reading from kwargs for options.</p>
+<dd><p>Sends data to a Splunk sever encoded in JSON.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -258,44 +261,31 @@ except for further stressing network bandwidth and the JSON parser.</p>
 <dt id="sw.report.Report.think">
 <tt class="descname">think</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/sw/report.html#Report.think"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sw.report.Report.think" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="docutils">
-<dt>The think function called by our pool periodically. If enabled, it checks for the need to ping</dt>
-<dd><p class="first">(keepalive) or if the next payload is ready to send. This function also handles the transmission of
-our payload.</p>
+<dt>The think function called by our pool periodically. It handles the transmission of</dt>
+<dd><p class="first">our payload (many individual reports) to the Splunk server.</p>
 <p>If our report.queue has content in it, it prepares to send everything upstream. The payload is transmitted
 in JSON with the following general format:</p>
 <div class="last highlight-python"><div class="highlight"><pre>{ 
    &quot;cid&quot; =&gt; #, // Our client ID assigned by the server, nil if we don&#39;t have one yet.
    &quot;rid&quot; =&gt; #, // Our run ID assined by the server, ^
-   &quot;payload&quot; =&gt; 
-       [
-           { 
-               &quot;type&quot; =&gt; R_START,    // For example, this is the type of payload here.
-               &quot;time&quot; =&gt; UNIX_EPOCH, // Since sometimes the Queue has a delay in transmission, each
-                                     // payload contains it own timestamp.
-               // Some miscellaneous identifying information goes in here that&#39;s deprecated
-               // and unused.
+   &quot;type&quot; =&gt; R_START,    // For example, this is the type of payload here.
+   &quot;time&quot; =&gt; UNIX_EPOCH, // Since sometimes the Queue has a delay in transmission, each
+                         // payload contains it own timestamp.
+   // Some miscellaneous identifying information goes in here that&#39;s deprecated
+   // and unused.
 
-               // If the type involves a child:
-               &quot;ChildID&quot; =&gt; #, // The index of our child in pool.children / pool.data
+   // If the type involves a child:
+   &quot;ChildID&quot; =&gt; #, // The index of our child in pool.children / pool.data
 
-               // If the type involves a job:
-               &quot;timetaken&quot; =&gt; UNIX_EPOCH //The time the job took to complete.
-           },
-           
-           //{  another here },
-           ...
-       ]
-
+   // If the type involves a job:
+   &quot;timetaken&quot; =&gt; UNIX_EPOCH //The time the job took to complete.
 }
 </pre></div>
 </div>
 </dd>
 </dl>
-<p>The JSON above is arranged and then attempts to open a HTTP request to the provided server. If it fails,
-it tries 5 more times every 5 seconds with a timeout of 1 second. It attempts to send the JSON up via POST
-and then waits for an HTTP 200 or similar before considering it a success. If R_START was included in the 
-payload, the server will respond with a cid and a rid for the client which it then stores internally for 
-future reports.</p>
+<p>This module attempts to send the payload upstream 5 times, waiting 5 seconds between reattempts. On the fifth failure
+it never tries again. It is noted in the log when it gives up.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
