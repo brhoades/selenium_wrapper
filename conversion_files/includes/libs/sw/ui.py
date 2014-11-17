@@ -1,4 +1,4 @@
-import time, curses
+import time, curses, datetime
 from math import *
 from sw.formatting import *
 
@@ -107,7 +107,6 @@ class Ui:
             i += 2
 
         self.scr.refresh( )
-
 
 
     def think( self ):
@@ -316,19 +315,30 @@ class Ui:
             # Number of Failed Jobs
             statstrs.append( ''.join( [ "Failed: ", str( self.pool.failed( ) ) ] ) )
 
+
             # Average Job Time
             times = self.pool.timeTaken( )
             avgtime = avg( times )
             statstrs.append( ''.join( [ "Avg Job: ", format( avgtime ), "s" ] ) )
+            totaltime = sum( times )
 
             # Jobs per minute
             if len( times ) > 0:
-                jpm = ( 60 / avgtime )
+                jps_ideal = ( 1 / avgtime ) * numactive
 
-                if jpm > 1:
-                    jpstr = ''.join( [ "Jobs/m: ", format( jpm ) ] )
+                if jps_ideal < 0.25:
+                    jpstr = ''.join( [ "Ideal JPM: ", format( jps_ideal * 60 ) ] )
                 else:
-                    jpstr = ''.join( [ "Jobs/s: ", format( jpm / 60 ) ] )
+                    jpstr = ''.join( [ "Ideal JPS: ", format( jps_ideal ) ] )
+
+            if len( times ) > 5 and totaltime > 0:
+                jps_true = self.pool.successful( ) / ( time.time( ) - self.pool.started )
+
+                if jps_true < 0.25:
+                    statstrs.append( ''.join( [ "True JPM: ", format( jps_true * 60 ) ] ) )
+                else:
+                    statstrs.append( ''.join( [ "True JPS: ", format( jps_true ) ] ) )
+
                 
             if jpstr is not None:
                 statstrs.append( jpstr )
