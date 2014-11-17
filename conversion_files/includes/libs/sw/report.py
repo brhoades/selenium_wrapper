@@ -121,10 +121,10 @@ class Report:
                 "timetaken" => UNIX_EPOCH //The time the job took to complete.
              }
 
-            This module attempts to send the payload upstream 5 times, waiting 5 seconds between reattempts. On the fifth failure
-            it never tries again. It is noted in the log when it gives up.
+          This module attempts to send the payload upstream 5 times, waiting 5 seconds between reattempts. On the fifth failure
+          it never tries again. It is noted in the log when it gives up.
 
-            :returns: None
+          :returns: None
         """
         t = time.time( )
         if not self.enabled:
