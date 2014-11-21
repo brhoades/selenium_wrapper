@@ -46,14 +46,14 @@ class ElementCache:
     def add( self, url, e, **kwargs ):
         """Add an element to the cache (ElementCache.cache). It is stored by a handle and deleted automatically after a full run.
 
-        :param url: The URL of element e.
-        :param e: The `WebElement` to be stored.
+        :param url: The URL of element *e*.
+        :param e: The :py:class:`~selenium.webdriver.remote.webelement.WebElement` to be stored.
         
         :Kwargs:
-          * **id** (*None*): Identifier for e on the passed URL. 
-          * **type** (*None*): Type of the identifier for e on the passed URL.
-          * **handle** (*None*): (separate from id/type) A handle to identify this element by internally (unique). A handle is constructed from id and type
-            if one is not provided. If one is provided, id/type are ignored since this is their primary purpose.
+          * **id** (*None*): Identifier for *e* on the passed URL. 
+          * **type** (*None*): Type of the identifier for *e* on the passed URL.
+          * **handle** (*None*): (separate from *id*/*type*) A handle to identify this element by internally (unique). A handle is constructed from *id* and *type*
+            if one is not provided. If one is provided, *id*/*type* are ignored since this is their only purpose.
 
         :return: None
         """
@@ -73,19 +73,19 @@ class ElementCache:
         self.cache[url][handle] = [ None, e ]
 
     def get( self, url, **kwargs ):
-        """Gets an element from the internal cache stored on the given url. If it responds by throwing
-        a NoSuchAttributeException or by not throwing an exception, we return the element. If we get anything
-        else we return None. Expiration is also cheked here.
+        """Gets an element from the internal cache stored on the given URL. If trying to use the element responds by throwing
+        a :py:class:`~selenium.common.exceptions.NoSuchAttributeException` or by not throwing an exception, we return the element. If we get anything
+        else we return None. Expiration is also checked here.
 
-        :param url: The current url to search the cache for.
+        :param url: The current URL to search the cache for.
         
         :Kwargs:
-          * **id** (*None*): Identifier for the element in the cache, on the passed url. 
-          * **type** (*None*): Type of the identifier for the element in the cache, on the passed url.
-          * **handle** (*None*): (separate from id/type) A handle to identify this element by internally (unique). A handle is constructed from id and type
-            if one is not provided. If one is provided, id/type are ignored since this is their primary purpose.
+          * **id** (*None*): Identifier for the element in the cache, on the passed *URL*. Must be passed with *type*.
+          * **type** (*None*): Type of the identifier for the element in the cache, on the passed *URL*. Must be passed with *id*.
+          * **handle** (*None*): (separate from *id*/*type*) A handle to identify this element by internally (unique). A handle is constructed from *id* and *type*
+            if one is not provided. If one is provided, *id*/*type* are ignored since this is their only purpose.
 
-        :return: `WebElement` for the cached item if a matching element exists otherwise None.
+        :return: :py:class:`~selenium.webdriver.remote.webelement.WebElement` for the respective *URL*/*handle* if a matching element exists, otherwise None.
         """
         id = kwargs.get( "id", None )
         type = kwargs.get( "type", None )
@@ -121,7 +121,7 @@ class ElementCache:
 
     def clear( self ):
         """Clears the internal cache, deleting all cached elements. Not configurable as, if cache is enabled, it is called by 
-        :py:func:`~sw.child.Child.think` after every job by this cache's respective child.
+        :py:func:`~sw.child.Child.think` after every job by this cache's child.
         
         :return: None
         """
