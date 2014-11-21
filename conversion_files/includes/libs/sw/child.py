@@ -1,4 +1,4 @@
-from multiprocessing import Process, Queue, Value
+from multiprocessing import Process, Value
 from selenium import webdriver
 from selenium.webdriver.phantomjs.service import Service as PhantomJSService
 from sw.const import * # Constants
@@ -10,60 +10,44 @@ from datetime import datetime
 from selenium.common.exceptions import *
 
 class Child:
-    """Initializes our child and then starts it. It takes our pool's childqueue, our pool's workqueue,
-    our child's number to report back statuses, our base log directory, and a collection of options.
+    """An abstraction upon a process for our :class:`~sw.pool.Pool`. Serves to more easily house a separate process and
+    communicate with it crossprocess. A Child is not entirely a separate container that is spawned from Pool and given
+    free reign. The bulk of a Child is stored on the primary thread with the Pool, UI, and Reporting. However, 
+    :py:func:`~sw.child.Child.think` is on a separate `multiprocessing.Process` along with the provided *func* and
+    GhostDriver / PhantomJS. All communication between Pool and Child is conducted over Child.statusVar (:py:func:`~multiprocessing.Value`) and
+    Child.cq / Child.wq (:py:class:`~multiprocessing.Queue`) to avoid locks (they are multiprocess-safe).
+    
+    The off-thread child handles its own log, status reporting, error reporting, and getting new jobs. Once the process
+    is started control is handed back over to the Pool which then manages the processes. 
 
-    :param cq: ChildQueue, this is passed from :class:`sw.pool` and is used to transmit the status of the child
-        to our pool.
-    :param wq: WorkQueue, also passed from :class:`sw.pool` and child pops a function off of it to run (a job) 
-        when it finishes a job / starts initially.
-    :param num: Number of the child relevant to :class:`sw.pool`'s self.data array. This index is used to 
-        easily communicate results and relate them to the child in that array. `num` is also used when printing
-        out a status message.
-    :param log: Base log directory which we spit logs and screenshots into.
-    :param options: Dict from kwargs which contains directives to pass to GhostDriver.
+    
+    :param cq: ChildQueue reference from :class:`~sw.pool.Pool`. Used to transmit the status of this Child
+        to our Pool.
+    :param wq: WorkQueue reference from :class:`~sw.pool.Pool`. This Child pops a function off this Queue 
+        then executes it, then repeats.
+    :param num: Number of the Child relevant to :class:`~sw.pool.Pool`'s self.data array. This index is used to 
+        easily communicate results and relate them to the child in that array. This number is actually one less
+        than the index displayed on the console (which starts at 1 for the end user's sake).
+    :param log: Base log directory which we spit logs and screenshots into. Just a string which should never change.
+    :param options: Dict of kwargs which contain specific options passed to our wrapper.
 
     :return: Child (self)
     """
     def __init__( self, cq, wq, num, log, options ):
-        # Our output queue (childqueue)
-        self.cq = cq
+        self.cq = cq # Our shared output queue (childqueue) (multiprocessing)
+        self.wq = wq  # Our shared input queue (workqueue) (multiprocessing)
 
-        # Our input queue (workqueue)
-        self.wq = wq
-
-        # Our child number
         self.num = num
-
-        # Our driver instance
         self.driver = None
-
-        # Our log folder which never changes
         self.log = log
-
-        # Our log handle
         self.lh = "" 
-
-        # Do we load images and other options
         self.options = options
-
-        # Logging level
         self.level = self.options.get( 'level', NOTICE )
-
-        # Storage for our function we get
         self.func  = None
-
-        # How long we sleep in loops
         self.sleepTime = self.options.get( 'childsleeptime', 1 )
-
-        # Our per page element cache.
         self.cache = ElementCache( )
-
-        # Our current status, wrapped
         self.statusVar = Value( 'i', STARTING )
         
-
-        # Now start
         self.start( )
 
 

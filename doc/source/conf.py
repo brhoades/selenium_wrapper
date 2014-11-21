@@ -36,7 +36,8 @@ extensions = [
     'sphinx.ext.pngmath'
 ]
 
-intersphinx_mapping = { 'webdriver': ( 'http://selenium-python.readthedocs.org/en/latest/', None ) }
+intersphinx_mapping = { 'webdriver': ( 'http://selenium-python.readthedocs.org/en/latest/', None ),
+                        'multiprocessing': ( 'https://docs.python.org/2', None ), }
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

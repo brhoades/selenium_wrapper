@@ -1,4 +1,4 @@
-from multiprocessing import Process, Queue
+from multiprocessing import Queue
 from sw.child import Child
 import time, os, datetime, curses
 from sw.const import * # Constants
