@@ -5,7 +5,7 @@ class ElementCache:
     """Creates an object to store WebDriver elements on specific pages so subsequent lookups do not require scanning the DOM. 
 
     A great deal of time on some pages is spent looking for elements which have already been found. If the page does not change,
-    any previously used element link will be valid (barring changed CSS). ElementCache wraps a hash table which uses the url with
+    any previously used element link will be valid (barring changed CSS). ElementCache wraps a hash table which uses the URL with
     element name and type for a key to point to a :py:class:`~selenium.webdriver.remote.webelement.WebElement`. This is in turn used 
     for every call to :func:`~sw.utils.exists` before searching for the element (via :func:`get`), as the hash lookup is nearly free compared
     to a page search. 
@@ -50,9 +50,10 @@ class ElementCache:
         :param e: The `WebElement` to be stored.
         
         :Kwargs:
-          * **id** (*None*): Identifier for e on the passed url. 
-          * **type** (*None*): Type of the identifier for e on the passed url.
-          * **handle** (*None*): (separate from id/type) A handle to identify this element by internally (unique).
+          * **id** (*None*): Identifier for e on the passed URL. 
+          * **type** (*None*): Type of the identifier for e on the passed URL.
+          * **handle** (*None*): (separate from id/type) A handle to identify this element by internally (unique). A handle is constructed from id and type
+            if one is not provided. If one is provided, id/type are ignored since this is their primary purpose.
 
         :return: None
         """
@@ -72,16 +73,19 @@ class ElementCache:
         self.cache[url][handle] = [ None, e ]
 
     def get( self, url, **kwargs ):
-        """Gets an element from the internal cache stored on the given url. If it doesn't exist, returns None.
+        """Gets an element from the internal cache stored on the given url. If it responds by throwing
+        a NoSuchAttributeException or by not throwing an exception, we return the element. If we get anything
+        else we return None. Expiration is also cheked here.
 
         :param url: The current url to search the cache for.
         
         :Kwargs:
           * **id** (*None*): Identifier for the element in the cache, on the passed url. 
           * **type** (*None*): Type of the identifier for the element in the cache, on the passed url.
-          * **handle** (*None*): (separate from id/type) A handle to identify this element by internally (unique).
+          * **handle** (*None*): (separate from id/type) A handle to identify this element by internally (unique). A handle is constructed from id and type
+            if one is not provided. If one is provided, id/type are ignored since this is their primary purpose.
 
-        :return: `WebElement` for the cached item if a matching element exists. None if not.
+        :return: `WebElement` for the cached item if a matching element exists otherwise None.
         """
         id = kwargs.get( "id", None )
         type = kwargs.get( "type", None )
@@ -93,17 +97,19 @@ class ElementCache:
         if handle == None:
             handle = '_'.join( [ id, type ] )
 
-        if not url in self.cache:
+        if not url in self.cache or not handle in self.cache[url]:
             return None
 
-        if not handle in self.cache[url]:
-            return None
-
+        # Check for expiration here rather than in a think function. Child is going to clear us anyway,
+        # and if the element is not called there is no point in wasting cycles worrying about unused
+        # elements.
         data = self.cache[url][handle]
-        if data[0] <= time.time( ):
+        if data[0] is not None and data[0] <= time.time( ):
             e = None
         else:
             e = data[1]
+
+        # There is likely a better way of doing this, but this is a simple, single call to GhostDriver and is cheap.
         try:
             e.get_attribute( "class" )
         except NoSuchAttributeException:
@@ -114,7 +120,8 @@ class ElementCache:
         return e
 
     def clear( self ):
-        """Clears the internal cache, deleting all cached elements. Typically called after every run of our test function.
+        """Clears the internal cache, deleting all cached elements. Not configurable as, if cache is enabled, it is called by 
+        :py:func:`~sw.child.Child.think` after every job by this cache's respective child.
         
         :return: None
         """
