@@ -53,20 +53,24 @@ class Child:
 
 
     def think( self ):
-        """The meat of the wrapper, where the main thinking is done. Takes no arguments, just reads from 
-           self variables set in :py:class:`sw.Child`. PhantomJS is added into the python path by run.bat, so
-           that is already handled.
+        """This method is spawned on a separate process from our main thread. It takes no arguments, just reads from 
+           self variables set in :py:class:`~sw.child.Child` that are multiprocess-safe: wq, cq, and statusVar (and various 
+           static variables). It also uses various on class variables for storage which are not touched by pool.
+
+           The purpose of this method is to cleanly start a loop of running PhantomJS with a fresh function pulled from
+           wq every time. When think ends, our Child process ends as well.
 
            :return: None
         """
 
-        # Push a STARTING message to our pool
+        # Change our status ASAP so users actually see it change to black (and know the Child started).
         self.display( DISP_START )
 
         wq = self.wq
         cq = self.cq
 
-        # Monkeypatch our PhantomJS class in, which disables images
+        # This allows custom service arguments to be forced into PhantomJS, as it is not supported with the Python
+        # bindings by default.
         webdriver.phantomjs.webdriver.Service = PhantomJSNoImages
 
         sargs = [ ''.join( [ '--load-images=', str( self.options['images'] ).lower( ) ] ),
@@ -79,7 +83,6 @@ class Child:
             sargs.append( ''.join( [ '--proxy-type=', self.options['proxytype'] ] ) )
 
         try: 
-            # Initialize our driver with our custom log directories and preferences (capabilities)
             self.driver = webdriver.PhantomJS( service_log_path=os.path.join( self.log, self.options.get( 'ghostdriverlog', "ghostdriver.log" ) ), service_args=sargs )
         except Exception as e:
             self.logMsg( ''.join( [ "Webdriver failed to load: ", str( e ), "\n", traceback.format_exc( ) ] ), CRITICAL )
@@ -89,27 +92,31 @@ class Child:
                 return
             return
 
-        # Insert ourself into webdriver
+        # This enables custom callbacks from WebDriver to this Child. Primarily used to read options and throw errors. Usage
+        # can be seen in `sw.utils`.
         self.driver.child = self
 
-        # Change our implicit wait time
+        # WebDriver, by default, waits 15 seconds while intensively scanning the DOM for an element. This forces it to
+        # throw an error instantly if the element does not exist.
         self.driver.implicitly_wait( 0 )
 
         cq.put( [ self.num, READY, "" ] )
 
-        # Write to our log another message indicating we are starting our runs
         self.logMsg( "Child process started and loaded" )
 
-        # While our work queue isn't empty...
         while not wq.empty( ):
+            # Block and wait otherwise exceptions are thrown. I've never seen it fail to get something here as
+            # there's a check below.
             self.func = wq.get( True, 5 )
             res = []
             start = 0
 
-            # Still running
+            # Below we set to an error / done and wait.
+
+            # FIXME: Waiting a second to show a status isn't appropriate. The Pool should change the status
+            # for the child after enough time has elapsed.
             self.status( RUNNING )
             
-            # Try, if an element isn't found an exception is thrown
             try:
                 self.cache.clear( )
                 start = time.time( )
@@ -117,6 +124,7 @@ class Child:
                 self.func( self.driver )
             except TimeoutException as e:
                 self.display( DISP_ERROR )
+
                 screen = self.logError( str( e ) )
                 self.logMsg( ''.join( [ "Stack trace: ", traceback.format_exc( ) ] ), CRITICAL )
                 
@@ -125,6 +133,7 @@ class Child:
                 time.sleep( 1 )
             except Exception as e:
                 self.display( DISP_ERROR )
+
                 screen = self.logError( str( e ) ) # Capture the exception and log it
                 self.logMsg( ''.join( [ "Stack trace: ", traceback.format_exc( ) ] ), CRITICAL )
 
@@ -133,32 +142,33 @@ class Child:
                 break
             else:
                 self.display( DISP_FINISH )
+
                 t = time.time( ) - start
                 cq.put( [ self.num, DONE, ( time.time( ) - start ), "" ] )
                 self.logMsg( ''.join( [ "Successfully finished job (", format( t ), "s)" ] ) )
                 time.sleep( 0.5 )
 
-        # Quit after we have finished our work queue, this kills the phantomjs process.
+        # This line will cleanly kill PhantomJs for us.
         self.driver.quit( )
         self.display( DISP_DONE )
         self.status( FINISHED )
 
 
 
-    def logError( self, e, noScreenshot=False ):
-        """Log Screenshot of Error with Exception
-           Renders a screenshot of what it sees then writes it to our log directory as error_#.png
-           Also takes the exception we received and exports it as text
+    def logError( self, e, screenshot=True ):
+        """Takes a JSON-encoded Selenium exception's text and spits it into the log in a more meaningful format.
+            Can optionally take a screenshot too.
 
-           :param e: Unicode json-encoded string from a webdriver-thrown error.
-           :param False noScreenshot: Whether or not to take a screenshot of the error.
+           :param e: Unicode JSON-encoded string from a WebDriver-thrown exception. *Must be a String*.
+           :param True screenshot: Take a screenshot of the error automatically.
+
            :return: String for screenshot location, if any.
         """
 
         o = pformat( formatError( e, "log" ) )
         self.logMsg( o, CRITICAL )
 
-        if not noScreenshot:
+        if screenshot:
             return self.screenshot( CRITICAL )
 
 
