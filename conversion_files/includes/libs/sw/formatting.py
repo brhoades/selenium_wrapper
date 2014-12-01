@@ -1,26 +1,26 @@
-import re, json, time
-from const import *
+erom const import *
 
-
-
-def format( t ):
-    """Formats a Float into a displayable form, rounding it into converting to a string.
+def format( t, precision=2 ):
+    """Formats a Float into a displayable form, rounding it, and converting to a string.
        
-       :param t: Input float.
-       :return: String that's formatted like so: ``54.32``.
+       :param t: Input Float to round.
+       :param 2 precision: Precision to round to.
+
+       :return: String, ex: ``54.32``.
     """
-    return str( round( t, 2 ) )
+    return str( round( t, precision ) )
 
 
 
 def formatError( res, type="message" ):
-    """Formats the GhostDriver json-encoded error message for easier printing. In the end, this amounts
-       to replacing escaped quotation marks, parsing the JSON message, and extracting the 'errorMessage' portion.
-       It also trims the message to 81 characters if it is over that.
+    """Formats the WebDriver JSON-encoded error message from an exception for easier printing. In the end, this amounts
+       to replacing escaped quotation marks, parsing the JSON message, and extracting the 'errorMessage' key.
+       The message is also trimmed to 80 characters.
 
-       :param res: The json-encoded string from a webdriver exception.
+       :param res: The JSON-encoded string from a WebDriver exception.
        :param message type: The type of message passed to this function. If it isn't the default,
-           regex ignores it. 
+           regex ignores it. If not specified json isn't parsed and the error in its entirety is
+           passed back.
        :return: String of the formatted `res` initially passed in.
     """
     a = re.compile( r"Message: [a-z]'({.+})'" )
@@ -44,54 +44,6 @@ def formatError( res, type="message" ):
     if len( res ) > 80 and type != "log":
         res = res[0:80]
     return res
-
-
-
-def stats( good, bad, timetaken, children, times, starttime ):
-    """Prints out statistics for the current running pool.
-
-       This includes the following:
-         * Successful/failed jobs
-         * Total jobs done
-         * Remaining jobs
-         * Failure rate
-         * Number of children currently and at peak
-         * Average time per job
-         * Average jobs per minute, seconds, and more
-
-
-       :param good: The number of jobs completed successfully.
-       :param bad: The number of jobs that failed.
-       :param timetaken: An array of job completion times from all children.
-       :param children: An array of our pool's children. Counted and checked if alive for display.
-       :param times: The number of jobs initially given to our pool.
-       :param starttime: A timestamp for when our pool started. 
-       :return: None
-    """
-    
-    print( ''.join( [ "\n", ( "=" * 40 ) ] ) )
-    print( ''.join( [ "Successful: ", str( good ), ( " " * 3 ), "Failed: ", str( bad ) ] ) )
-    print( ''.join( [ "Total: ", str( good + bad ), ( " " * 3 ), "Remaining: ", str( times - good ) ] ) )
-
-    active = 0
-    for c in children:
-        if c.is_alive( ) and not c.is_done( ):
-            active += 1
-    print( ''.join( [ "Children (peak): ",  str( len( children ) ),  ( " " * 3 ),  "Children (active): ", str( active ) ] ) )
-
-    if len( timetaken ) > 0:
-        print( ''.join( [ "Failure Rate: ", format( bad / float( good + bad ) * 100 ), "%" ] ) );
-
-        # This gives us our jobs per second
-        jps = good / ( time.time( ) - starttime )
-
-        print( "Average / Estimates:" )
-        print( ''.join( [ "  Time per job: ", format( avg( timetaken ) ), "s" ] ) )
-        print( ''.join( [ "  Jobs/s: ", format( jps ), ( " " * 3 ), "Jobs/m: ", format( jps * 60 ), ( " " * 3 ), "Jobs/hr: ", 
-               format( jps * 60 * 60 ), ( " " * 3 ), "Jobs/day: ", format( jps * 60 * 60 * 24 ) ] ) )
-    else:
-        print "No data to extrapolate or average from"
-    print( ''.join( [ ( "=" * 40 ), "\n" ] ) )
 
 
 
@@ -125,7 +77,7 @@ def errorLevelToStr( level, parens=True ):
 
 
 def avg( numbers ):
-    """Averages a list of numbers.
+    """Averages a list of numbers. Handles lists of length zero.
        
        :param numbers: A list of numbers.
        :return: The average
