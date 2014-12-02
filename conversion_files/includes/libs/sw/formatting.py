@@ -1,4 +1,4 @@
-erom const import *
+from sw.const import *
 
 def format( t, precision=2 ):
     """Formats a Float into a displayable form, rounding it, and converting to a string.

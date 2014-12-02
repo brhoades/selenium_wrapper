@@ -28,6 +28,7 @@ class InitialSettings:
         self.kwmap = { }        # Maps a kwarg to an array [ default value string, default value ] ie [ 'None', '' ]
         self.kwcharmap = { }    # Maps a key to kwarg text (ie 'a' => 'numJobs')
 
+        # Arbitrarily numbered colors that don't clash with the main TUI colors
         curses.init_pair( 100, curses.COLOR_BLACK, curses.COLOR_RED )
         curses.init_pair( 101, curses.COLOR_BLACK, curses.COLOR_YELLOW )
         curses.init_pair( 102, curses.COLOR_GREEN, curses.COLOR_BLACK )
@@ -101,6 +102,7 @@ class InitialSettings:
                 win.refresh( )
                 self.error( )
 
+            # this is placed on the tail to allow reuse on first start (skip config)
             doneCheck = False
             while not doneCheck: 
                 self.stdscr.refresh( )
@@ -125,7 +127,7 @@ class InitialSettings:
            None, in which case it assumes String.
 
            It will also check for specific kwargs, such as report, which upon entry it validates
-           it as being a real URL.
+           it to make sure it's a Splunk server.
 
            :param String out: Input given from the user to fill the field specified by key.
            :param String key: The letter the user entered, which points to a kwarg and its default value.
@@ -135,8 +137,9 @@ class InitialSettings:
            
            :returns: None
         """
-        default = self.kwmap[key][1]    # the default value
+        default = self.kwmap[key][1]
 
+        # Convert types over so program gets what is expected
         try:
             if type( default ) is int:
                 out = int( out ) 
@@ -184,7 +187,7 @@ class InitialSettings:
                 self.kwargs[key] = out
             win.addstr( str( out ) )
         except Exception as e:
-            win.addstr( str( self.kwargs.get( key, default ) ) )
+            win.addstr( str( self.kwargs.get( key, default ) ) ) # slap the default on if there's an error
             self.error( e )
 
         return out
@@ -192,11 +195,9 @@ class InitialSettings:
 
     def checkValues( self ):
         """Checks values after the user enters a blank character (they ask to begin). The primary function this serves
-           is to check that the reporting server exists, if specified, by resolving the address, doing a handshake, and 
-           seeing what requirements, if any, the server has. Currently the only supported requirement is for the project
-           field to not be blank.
+           is to check that the reporting server exists, if specified, by resolving the address and connecting.
            
-           :returns: None
+           :returns: Boolean for validity of settings.
         """
         r = None
         rep = self.kwargs.get( 'report', None )
@@ -229,6 +230,7 @@ class InitialSettings:
         if err is not None:
             self.error( ''.join( [ err, ", press enter again to ignore" ] ), "Warning" )
             return False
+
         return True
 
 
