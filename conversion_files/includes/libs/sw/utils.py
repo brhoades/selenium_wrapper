@@ -91,7 +91,7 @@ def sleepwait( driver, element, type, **kwargs ):
        :return: Boolean if doesn't exist, :py:class:`~selenium.webdriver.remote.webelement.WebElement` if it does.
     """
     start        = time.time( )
-    timeout      = kwargs.get( 'timeout', 15 )
+    timeout      = kwargs.get( 'timeout', driver.child.options.get( 'elementwaittimeout', 15 ) )
     lightConfirm = kwargs.get( 'lightConfirm', driver.child.options.get( 'lightconfirm', False ) )
     cache        = kwargs.get( 'cache', driver.child.options.get( 'cache', True ) )
     url          = kwargs.get( 'url', driver.current_url )
@@ -183,7 +183,7 @@ def waitToDisappear( driver, element, **kwargs ):
     type           = kwargs.get( 'type', 'id' )
     offset         = kwargs.get( 'offset', 0 )
     cache          = kwargs.get( 'cache', True )
-    die            = kwargs.get( 'die', True ) 
+    die            = kwargs.get( 'die', False ) 
 
     start          = time.time( ) - offset
     url            = driver.current_url
@@ -192,15 +192,17 @@ def waitToDisappear( driver, element, **kwargs ):
     if waitForElement:
         kwargs['die'] = False # Override die just in case element doesn't exist
         kwargs['timeout'] = waitTimeout
+        driver.child.display( DISP_WAIT )
         sleepwait( driver, element, type, **kwargs )
         if not exists( driver, element, type, **kwargs ):
-            driver.child.logMsg( ''.join( [ "In waitToDisappear \"", element, "\" was never there to begin with." ] ) )
+            driver.child.logMsg( ''.join( [ "In waitToDisappear \"", element, "\" was never there to begin with." ] ), WARNING )
             # If we should wait for it and it's not here... leave.
+            driver.child.display( DISP_GOOD )
             return
         else:
             if not recur:
-                driver.child.logMsg( ''.join( [ "Waiting for \"", element, "\"." ] ), INFO )
-            driver.child.display( STATI_WAIT )
+                driver.child.logMsg( ''.join( [ "Waiting for \"", element, "\"." ] ), NOTICE )
+            driver.child.display( DISP_WAIT )
             time.sleep( thinkTime )
 
         kwargs['die'] = die
@@ -212,6 +214,7 @@ def waitToDisappear( driver, element, **kwargs ):
                         CRITICAL, locals=locals( ) )
                 if die:
                     driver.child.logMsg( "Child will now terminate.", CRITICAL, locals=locals( ) )
+                    driver.child.flush( )
                     raise TimeoutException( ''.join( [ "Element ", element, " didn't disappear within timeout", str(timeout), "s." ] ) ) 
 
                 break #this skips the else

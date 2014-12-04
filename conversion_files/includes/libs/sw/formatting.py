@@ -1,4 +1,5 @@
 from sw.const import *
+import re
 
 def format( t, precision=2 ):
     """Formats a Float into a displayable form, rounding it, and converting to a string.

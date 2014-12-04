@@ -364,6 +364,15 @@ class Child:
 
         # Close our log
         self.lh.close( )
+        
+
+    def flush( self ):
+        """Flushes our log so that messages are retained on an internal error.
+
+           :return: None
+        """
+
+        self.lh.flush( )
 
 
 
