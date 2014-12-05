@@ -107,6 +107,23 @@ bSubmit_click = Proc.new do
   # Pull one final time from entry fields
   $outputfn = eOutputfn.value
   $filename = eFilename.value
+
+  # Tkvariables are funky
+  $options[:python] = $python.value
+  $options[:images] = $images.value
+  $options[:overwrite] = $overwrite.value
+
+  $options.each do |key, val|
+    if val.to_s == "1" or val =~ /true/i
+      $options[key] = true
+    elsif val.to_s == "0" or val == "" or val =~ /false/i
+      $options[key] = false
+    end
+  end
+
+  print "Vars: #{$options}\n"
+
+
   
   # Check that we aren't running
   if $th.is_a? Thread and $th.alive? 
@@ -141,7 +158,7 @@ bSubmit_click = Proc.new do
   end
 
   # Check if output folder exists
-  if File.directory? $outputfn and Dir.exists? $outputfn and not File.file? $outputfn and not $overwrite
+  if File.directory? $outputfn and Dir.exists? $outputfn and not File.file? $outputfn and not $options[:overwrite]
     action = Tk::messageBox \
       :type => 'yesno', :icon => 'question', :title => 'Folder Exists', \
       :message => "Output folder already exists. Files within the folder that conflict will be " \
@@ -157,10 +174,6 @@ bSubmit_click = Proc.new do
   end
 
   $th = Thread.new do 
-    $options[:python] = $python
-    $options[:images] = $images
-    $options[:recopy] = false
-    $options[:overwrite] = $overwrite
 
     $res = convert $filename, $outputfn
     error "Complete!"
