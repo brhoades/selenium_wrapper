@@ -13,11 +13,17 @@ def convert_keywords( file, filename )
   func = [ ]
   kwargs = [ ]
   imports = [ ]
+  func_name = ""
 
   fn = File.basename filename, ".py"
   file.each do |l|
     i += 1
-    if l =~ /^[\s]{4}def\stest_[^\(]+\(self\):$/ 
+    if /^[\s]{4}def\stest_?(?<function_name>[^\(]+)\(self\):$/ =~ l 
+      if function_name != nil
+        func_name = function_name
+      else
+        func_name = "test_func"
+      end
       start = true
       func << l
       next
@@ -117,10 +123,10 @@ def convert_keywords( file, filename )
     end
   end
   
-  return func, kwargs, imports, base_url
+  return func, kwargs, imports, base_url, func_name
 end
 
-def convert_func_swap( func, kwargs )
+def convert_func_swap( func, kwargs, func_name )
   # Now apply regexes for my custom functions
   func.map! do |l|
     if l !~ /\.send_keys/
@@ -137,7 +143,7 @@ def convert_func_swap( func, kwargs )
 
   # Change the definition to not use self, it should have "driver"
   # For simplicity's sake, the name of the function will be static too
-  func.first.sub! /[^\s\(\)]+\(self\)/, "test_func( driver )"
+  func.first.sub! /[^\s\(\)]+\(self\)/, "#{func_name}( driver )"
 
   # Right afterwards set the window resolution
   func.insert( 1, ( " "*8 ) + "driver.set_window_size( 1920, 1080 )\n" )
@@ -157,7 +163,7 @@ def convert_func_swap( func, kwargs )
   end
 end
 
-def convert_print_prep( func, kwargs, base_url, imports )
+def convert_print_prep( func, kwargs, base_url, imports, func_name )
   # Drop the base_url at the beginning of the function
   func.insert 1, "        base_url = #{base_url}\n"
 
@@ -182,7 +188,7 @@ def convert_print_prep( func, kwargs, base_url, imports )
   # and the footer
   func << "\n" << "\n"
   func << "if __name__ == '__main__':\n" 
-  func << " "*4 + "main( test_func, __file__, #{kwargs.join ", "} )\n"
+  func << " "*4 + "main( #{func_name}, __file__, #{kwargs.join ", "} )\n"
 end
 
 def convert( filename, outputfn )
@@ -191,6 +197,7 @@ def convert( filename, outputfn )
   kwargs = [] 
   base_url = ""
   imports = []      # Manually added imports later
+  func_name = ""
 
   # Grab our $options and make sure keys exist
   $options[:python] = true unless $options.has_key? :python
@@ -199,14 +206,14 @@ def convert( filename, outputfn )
 
   # Read in our input file  
   File.new( filename, "r:UTF-8" ).each_line { |l| file << l }
-  func, kwargs, imports, base_url = convert_keywords file, filename
-  convert_func_swap func, kwargs
+  func, kwargs, imports, base_url, func_name = convert_keywords file, filename
+  convert_func_swap func, kwargs, func_name
 
   ##################
   # Prep for printing
   ##################
 
-  convert_print_prep func, kwargs, base_url, imports
+  convert_print_prep func, kwargs, base_url, imports, func_name
 
   ################
   # Output to file
