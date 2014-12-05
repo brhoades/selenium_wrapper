@@ -128,6 +128,7 @@ class Pool:
 
         if c.status( ) == RUNNING:
             self.workQueue.put( self.func )
+            self.reporting.jobFail( "User or Pool Stopped Child",  c.num ) 
             self.logMsg( "Readding terminated child's job" )
         else:
             self.logMsg( "Not running a job, status: " + str( c.status( ) ) )
@@ -212,6 +213,9 @@ class Pool:
 
             elif r[RESULT] == DISPLAY:
                 self.data[i][DISPLAY] = r[TIME]
+
+            elif r[RESULT] == MESSAGE and r[3]:
+                self.reporting.jobStart( i )
 
         # Still spawning children, ignore their status until done.
         if self.status == STARTING:

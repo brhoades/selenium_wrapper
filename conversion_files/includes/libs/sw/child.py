@@ -121,6 +121,7 @@ class Child:
                 self.cache.clear( )
                 start = time.time( )
                 self.display( DISP_GOOD )
+                cq.put( [ self.num, MESSAGE, time.time( ), R_JOB_START ] )
                 self.func( self.driver )
             except TimeoutException as e:
                 self.display( DISP_ERROR )
