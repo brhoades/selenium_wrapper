@@ -298,6 +298,10 @@ class Pool:
         :param STOPPED type: Type of stopping this is, either pausing or stopping.
         :return: None
         """
+
+        if self.status == type:
+            return
+
         self.logMsg( "Pool stopped, stopping all children." )
 
         for c in self.children:
