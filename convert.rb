@@ -331,8 +331,27 @@ def unzip( fn, dest )
 end
 
 # Gets out output folder name from input filename and the main script
+# Out first try is to check if the input file is in an in(put)/ directory. If it is,
+# we back out before it and put this in the out/ director on the same root.
+# Second try is to see if it's in tmp, if it is we drop the folder where input is unless
+# input is also in temp... If input is also in temp we give up and let them deal with it.
+# The default behaviour is to put the folder in an out/ folder relative to this file.
 def outputFN( input )
-  # This gets our parent folder name and then puts in out/ the base file name of the conversion script.
-  File.join File.dirname( __FILE__ ), "out", File.basename( input, ".py" ) 
+  # First: if we are in a temp folder put it where the script is... 
+  # otherwise we drop it in the temp folder. This only happens with OCRA.
+  tmp =  /\W(temp|tmp)\W/i
+  inreg = /\Win(put)?$/i
+
+  if File.dirname( input ) =~ inreg
+    File.expand_path( File.join( File.dirname( input ), "..", "out" , File.basename( input, ".py" ) ) )
+  elsif tmp =~ File.dirname( __FILE__ )
+    if tmp =~ File.dirname( input )
+      "" # they can choose a directory manually
+    else
+      File.join File.dirname( input ), File.basename( input, ".py" )
+    end
+  else
+    File.join File.dirname( __FILE__ ), "out", File.basename( input, ".py" ) 
+  end
 end
 

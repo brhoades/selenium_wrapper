@@ -64,8 +64,6 @@ bBrowseIn_click = Proc.new do
       if $filename !~ /\.py$/
         Tk::messageBox :message => "Input file must be a python file (end in .py)."
       else
-        inp = /[\/\\]in(put)?/
-        $filename.sub!( inp, "" ) if inp.match( $filename )
         $outputfn = eOutputfn.value = outputFN $filename 
       end
     end
