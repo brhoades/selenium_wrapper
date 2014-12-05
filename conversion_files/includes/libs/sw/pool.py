@@ -61,6 +61,8 @@ class Pool:
         # Our reporting object
         self.reporting = Report( self )
 
+        self.stopped = False
+
         ####### Settings ########
 
         # Time between children spawning

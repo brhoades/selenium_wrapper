@@ -36,7 +36,9 @@ def mainLoop( stdscr, pool ):
 
     pool.ui.drawMainScreen( True )
 
-    while True:
+    while not pool.stopped:
         pool.think( )
         pool.ui.think( )
         pool.ui.sleep( 0.1 )
+
+    curses.endwin( )

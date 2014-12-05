@@ -166,6 +166,7 @@ class Ui:
                 else:
                     # Quit
                     self.pool.stop( )
+                    self.pool.stopped = True
 
             elif key == ord( "p" ) and not self.pool.status >= STOPPED:
                 self.keys = [ chr( key ) ]
