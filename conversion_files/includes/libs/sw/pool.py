@@ -137,7 +137,6 @@ class Pool:
 
         c.stop( "Stopped by GUI", STOPPED )
         self.logMsg( ''.join( [ "Stopping child (#", str( c.num + 1 ), ")" ] ) )
-        self.reporting.stop( )
 
 
 
