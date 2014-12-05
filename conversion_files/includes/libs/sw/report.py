@@ -101,7 +101,7 @@ class Report:
 
 
 
-    def think( self ):
+    def think( self, force=False ):
         """The think function called by our pool periodically. It handles the transmission of
            our payload (many individual reports) to the Splunk server.
 
@@ -127,14 +127,15 @@ class Report:
           This module attempts to send the payload upstream 5 times, waiting 5 seconds between reattempts. On the fifth failure
           it never tries again. It is noted in the log when it gives up.
 
+          :param False force: Force the queue to be sent upstream.
           :returns: None
         """
         t = time.time( )
         if not self.enabled:
             return
-        if self.nextSend != 0 and t < self.nextSend:
-            return
         if self.queue.qsize( ) == 0:
+            return
+        if self.nextSend != 0 and t < self.nextSend and not force:
             return
 
         # We try to smash all of our data into a single array, which is then in
@@ -200,11 +201,12 @@ class Report:
         self.send( { }, R_START )
 
     def stop( self ):
-        """Sends a stop notification payload.
+        """Sends a stop notification payload. Also flushes the queue so when the pool terminates data isn't lost.
             
            :returns: None
         """
         self.send( { }, R_STOP )
+        self.think( True )
 
     def jobStart( self, child ):
         """Sends a job start notification payload.
