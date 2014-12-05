@@ -1,40 +1,51 @@
 require 'zip/zip'
 require 'fileutils'
 
+# Lazy hash for most small variables
+$g = { }
+
 ###################################################################################################
 # Conversion Logic 
 ###################################################################################################
 #
-def convert_keywords( file, filename )
+def convert_keywords( file )
   start = false     # Indicator for the start of our function
   startOps = false  # Indicator for the start of our $options header
-  base_url = ""     # Stores our base url
   i = -1 
   func = [ ]
   kwargs = [ ]
   imports = [ ]
-  func_name = ""
 
-  fn = File.basename filename, ".py"
+  # Defaults in case we don't catch stuff below
+  $g[:funcname] = "test_func"
+  $g[:numspaces] = 4
+
+  fn = File.basename $g[:filename], ".py"
   file.each do |l|
     i += 1
-    if /^[\s]{4}def\stest_?(?<function_name>[^\(]+)\(self\):$/ =~ l 
+    if /^(?<spaces>[\s]{4,})def\stest_?(?<function_name>[^\(]+)\(self\):$/ =~ l 
       if function_name != nil
-        func_name = function_name
-      else
-        func_name = "test_func"
+        $g[:funcname] = function_name
       end
+      
+      # Spaces lets us determine when our block ends reliably. It will be when we drop below
+      # the function's + 4
+      if spaces != ""
+        $g[:numspaces] = spaces.size + 4
+      end
+
       start = true
       func << l
       next
     elsif i == 0 and l =~ /^#OPTIONS/i
+      # Start of our options block, must be line 1
       startOps = true
       next
     end
 
     ################################################################################################
     # $options Parsing Section
-    # If we found #$options at the top of the file, parse any following comment as $options.
+    # If we found #options at the top of the file, parse any following comment as options.
     # Anything that is prefixed with #p is assumed to be a function parameter
     #
     if startOps
@@ -53,7 +64,7 @@ def convert_keywords( file, filename )
     ################################################################################################
     # Catch for the base_url
     if l =~ /self\.base_url[\s]*=[\s]*(.*)$/
-      base_url = $~.captures.first
+      $g[:baseurl] = $~.captures.first
     end
  
     # Once we find the function, copy everything until the end of the block
@@ -100,7 +111,8 @@ def convert_keywords( file, filename )
       # Replace a tab with four spaces
       l.gsub! /[\t]/, (" "*4)
 
-      if l !~ /^[\s]{8,}/
+      # If we detect indentation at or below our function's that appears to be important, we're done
+      if l =~ /^[\s]{0,#{$g[:numspaces]-4}}[\w]+/
         break
       end
 
@@ -123,10 +135,10 @@ def convert_keywords( file, filename )
     end
   end
   
-  return func, kwargs, imports, base_url, func_name
+  return func, kwargs, imports 
 end
 
-def convert_func_swap( func, kwargs, func_name )
+def convert_func_swap( func, kwargs )
   # Now apply regexes for my custom functions
   func.map! do |l|
     if l !~ /\.send_keys/
@@ -143,7 +155,7 @@ def convert_func_swap( func, kwargs, func_name )
 
   # Change the definition to not use self, it should have "driver"
   # For simplicity's sake, the name of the function will be static too
-  func.first.sub! /[^\s\(\)]+\(self\)/, "#{func_name}( driver )"
+  func.first.sub! /[^\s\(\)]+\(self\)/, "#{$g[:funcname]}( driver )"
 
   # Right afterwards set the window resolution
   func.insert( 1, ( " "*8 ) + "driver.set_window_size( 1920, 1080 )\n" )
@@ -163,9 +175,9 @@ def convert_func_swap( func, kwargs, func_name )
   end
 end
 
-def convert_print_prep( func, kwargs, base_url, imports, func_name )
+def convert_print_prep( func, kwargs, imports )
   # Drop the base_url at the beginning of the function
-  func.insert 1, "        base_url = #{base_url}\n"
+  func.insert 1, "        base_url = #{$g[:baseurl]}\n"
 
   # Snip all lines by 4 spaces
   func.map! { |l| l.sub /^[\s]{4}/, "" }
@@ -188,16 +200,16 @@ def convert_print_prep( func, kwargs, base_url, imports, func_name )
   # and the footer
   func << "\n" << "\n"
   func << "if __name__ == '__main__':\n" 
-  func << " "*4 + "main( #{func_name}, __file__, #{kwargs.join ", "} )\n"
+  func << " "*4 + "main( #{$g[:funcname]}, __file__, #{kwargs.join ", "} )\n"
 end
 
 def convert( filename, outputfn )
   file = []
   func = []
   kwargs = [] 
-  base_url = ""
   imports = []      # Manually added imports later
-  func_name = ""
+
+  $g[:filename] = filename
 
   # Grab our $options and make sure keys exist
   $options[:python] = true unless $options.has_key? :python
@@ -206,14 +218,14 @@ def convert( filename, outputfn )
 
   # Read in our input file  
   File.new( filename, "r:UTF-8" ).each_line { |l| file << l }
-  func, kwargs, imports, base_url, func_name = convert_keywords file, filename
-  convert_func_swap func, kwargs, func_name
+  func, kwargs, imports = convert_keywords file
+  convert_func_swap func, kwargs
 
   ##################
   # Prep for printing
   ##################
 
-  convert_print_prep func, kwargs, base_url, imports, func_name
+  convert_print_prep func, kwargs, imports 
 
   ################
   # Output to file

@@ -121,10 +121,6 @@ bSubmit_click = Proc.new do
     end
   end
 
-  print "Vars: #{$options}\n"
-
-
-  
   # Check that we aren't running
   if $th.is_a? Thread and $th.alive? 
     error "Already running conversion routine, please wait. You will be prompted on completion."
