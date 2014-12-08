@@ -31,7 +31,7 @@ for the correct platform.
 Use `pip <https://pip.pypa.io/en/latest/installing.html>`_ to install the
 `Selenium Library <https://pypi.python.org/pypi/selenium>`_ and `Splunklib <https://github.com/splunk/splunk-sdk-python>`_:: 
 
-  pip install selenium splunklib
+  pip install selenium splunk-sdk
 
 Also install the latest version of the `PhantomJS binary <http://phantomjs.org/download.html>`_ for your 
 platform.
@@ -52,7 +52,7 @@ This folder will later be copied to the correct spot.
 Install `pip`_ into your Python installation. Afterwards, use pip to install the `Selenium Library`_ 
 and `Splunklib <https://github.com/splunk/splunk-sdk-python>`_::
 
-  pip install selenium splunklib
+  pip install selenium splunk-sdk
 
 Now install the `curses extension package <http://www.lfd.uci.edu/~gohlke/pythonlibs/#curses>`_.
 
