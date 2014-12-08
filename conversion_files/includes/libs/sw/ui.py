@@ -271,8 +271,8 @@ class Ui:
 
             y += 2 # Scoot down two lines for each number
             if y > self.y( ) - self.STATS_HEIGHT - 4:
-                x += 3 # Over three, an extra character to space
-                y = 0
+                x += 4 # Over three, 2 extra characters to space
+                y = 1 
 
         self.main.refresh( )
 
