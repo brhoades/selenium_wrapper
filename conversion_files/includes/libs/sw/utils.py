@@ -88,6 +88,7 @@ def sleepwait( driver, element, type, **kwargs ):
          * :ref:`cache <common-params>`
          * :ref:`url <common-params>`
          * :ref:`lightConfirm <common-params>`
+         * **quiet** -- Whether to print errors on failure.
        :return: Boolean if doesn't exist, :py:class:`~selenium.webdriver.remote.webelement.WebElement` if it does.
     """
     start        = time.time( )
@@ -96,7 +97,8 @@ def sleepwait( driver, element, type, **kwargs ):
     cache        = kwargs.get( 'cache', driver.child.options.get( 'cache', True ) )
     url          = kwargs.get( 'url', driver.current_url )
     die          = kwargs.get( 'die', True )
-    thinkTime = kwargs.get( 'thinkTime', driver.child.sleepTime )
+    thinkTime    = kwargs.get( 'thinkTime', driver.child.sleepTime )
+    quiet        = kwargs.get( 'quiet', False )
 
     driver.child.display( DISP_WAIT )
     
@@ -117,8 +119,9 @@ def sleepwait( driver, element, type, **kwargs ):
         driver.child.display( DISP_GOOD )
         return e
 
-    driver.child.logMsg( ''.join( [ "Element will not be found on page \"", 
-        driver.current_url, "\"." ] ), CRITICAL, locals=locals( ) )
+    if not quiet:
+        driver.child.logMsg( ''.join( [ "Element will not be found on page \"", 
+            driver.current_url, "\"." ] ), CRITICAL, locals=locals( ) )
 
     if die:
         driver.child.logMsg( "Child will now terminate.", CRITICAL, locals=locals( ) )
@@ -190,8 +193,9 @@ def waitToDisappear( driver, element, **kwargs ):
 
     # Do an initial wait for our element to appear. Any confirmation is confirmation (light).
     if waitForElement:
-        kwargs['die'] = False # Override die just in case element doesn't exist
-        kwargs['timeout'] = waitTimeout
+        kwargs['die']       = False # Override die just in case element doesn't exist
+        kwargs['timeout']   = waitTimeout
+        kwargs['quiet']     = True
         driver.child.display( DISP_WAIT )
         sleepwait( driver, element, type, **kwargs )
         if not exists( driver, element, type, **kwargs ):
