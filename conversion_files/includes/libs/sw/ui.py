@@ -327,12 +327,12 @@ class Ui:
             if len( times ) > 0:
                 jps_ideal = ( 1 / avgtime ) * numactive
 
-                if jps_ideal < 0.25:
+                if jps_ideal < 0.25 and jps_ideal > 0:
                     jpstr = ''.join( [ "Ideal JPM: ", format( jps_ideal * 60 ) ] )
-                else:
+                elif jps_ideal > 0:
                     jpstr = ''.join( [ "Ideal JPS: ", format( jps_ideal ) ] )
 
-            if len( times ) > 5 and totaltime > 0:
+            if len( times ) > 5 and totaltime > 0 and ( time.time( ) - self.pool.started ) > 0:
                 jps_true = self.pool.successful( ) / ( time.time( ) - self.pool.started )
 
                 if jps_true < 0.25:
