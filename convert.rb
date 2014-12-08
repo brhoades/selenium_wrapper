@@ -92,7 +92,7 @@ def convert_keywords( file )
       end
 
       if l =~ /([\s]+)\#error (.+)/
-        func << ( $1 + "driver.child.errorMsg( '#{$2}' )\n" )
+        func << ( $1 + "driver.child.logError( '#{$2}' )\n" )
         next
       end
 
