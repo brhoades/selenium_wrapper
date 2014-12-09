@@ -273,7 +273,7 @@ class InitialSettings:
         
         self.kwarray.append( "" )
         self.kwarray.append( "Pool Settings" )
-        self.kwmap['level']         = [ "Log Lvl (0-5)", 1 ]
+        self.kwmap['level']         = [ "Log Lvl (0-5)", 0 ]
         self.kwarray.append( 'level' )
         self.kwmap['images']        = [ "Get Images", False ]
         self.kwarray.append( 'images' )
