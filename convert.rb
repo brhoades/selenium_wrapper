@@ -188,7 +188,7 @@ def convert_print_prep( func, kwargs, imports )
   func.unshift "from sw.wrapper import main\n"
   func.unshift "from sw.utils import *\n"
   func.unshift "from sw.const import *\n"
-  func.unshift "sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '\\\\includes\\\\libs\\\\')\n"
+  func.unshift "sys.path.append( os.path.join( os.path.dirname( os.path.abspath( __file__ ) ), 'includes', 'libs' ) )\n"
   func.unshift "import sys, os, time\n"
   imports.each do |i|
     func.unshift i + "\n"
