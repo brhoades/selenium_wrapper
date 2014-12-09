@@ -29,9 +29,9 @@ class InitialSettings:
         self.kwcharmap = { }    # Maps a key to kwarg text (ie 'a' => 'numJobs')
 
         # Arbitrarily numbered colors that don't clash with the main TUI colors
-        curses.init_pair( 100, curses.COLOR_BLACK, curses.COLOR_RED )
-        curses.init_pair( 101, curses.COLOR_BLACK, curses.COLOR_YELLOW )
-        curses.init_pair( 102, curses.COLOR_GREEN, curses.COLOR_BLACK )
+        curses.init_pair( 10, curses.COLOR_BLACK, curses.COLOR_RED )
+        curses.init_pair( 11, curses.COLOR_BLACK, curses.COLOR_YELLOW )
+        curses.init_pair( 12, curses.COLOR_GREEN, curses.COLOR_BLACK )
 
         self.maxx = self.stdscr.getmaxyx( )[1]
         self.maxy = self.stdscr.getmaxyx( )[0]
@@ -246,9 +246,9 @@ class InitialSettings:
         """
         if msg != None:
             self.error( ) # Clear ourselves
-            color = 100
+            color = 10
             if type != "Error":
-                color = 101
+                color = 11
             self.stdscr.addstr( self.maxy-5, 1, ''.join( [ type, ": ", str( msg ) ]  ), curses.color_pair( color ) )
         else:
             self.stdscr.addstr( self.maxy-5, 1, " " * self.KWARGS_MAX )
@@ -343,7 +343,7 @@ class InitialSettings:
                 self.kwmap[key][2].refresh( )
             else:
                 # This is a title field
-                self.stdscr.addstr( y, x, key, curses.color_pair( 102 ) )
+                self.stdscr.addstr( y, x, key, curses.color_pair( 12 ) )
                 off += 1
             
             i += 1
